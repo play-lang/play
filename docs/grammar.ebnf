@@ -1,0 +1,89 @@
+(*
+
+	Playtime Grammar
+
+	10/22/2019
+	Joseph Essin
+
+	This file follows the syntax described on the Wikipedia page for
+	[EBNF](https://en.wikipedia.org/wiki/Extended_Backus–Naur_form)
+
+	The following assumptions are made:
+
+	1) Tokens are defined by regular expressions implemented and given to us
+	   from the lexer
+	2) Whitespace tokens are ignored by the parser (since the formatting tool
+	   is intended to be opinionated and recreate necessary whitespace anyways)
+	3) Line-continuation characters are automatically respected and handled
+	   correctly by the parser's advance method (no need to spam the grammar
+		 with them)
+	4) Expressions are parsed via the shunting-yard method (no need to define
+	   their grammar here as it would be unnecessarily complicated)
+	5) Line breaks are not permitted inside expressions
+	6) Line breaks outside expressions (but inside other non-terminals)
+	   are ignored
+	7) Line breaks that are explicitly stated in the grammar are still expected
+	   to be present at the ends of statements must be present
+
+	To view this file with syntax highlighting in Visual Studio Code,
+	you may wish to install the plugin "EBNF Tools"
+
+*)
+
+(* Programs consist of zero or more statements *)
+program = { preprocessorDirective | statement };
+(* A block of code (statements between curly braces) *)
+block = "{", { statement }, "}";
+(* Statements can be any of the following productions *)
+statement =
+	declaration |
+  if |
+	while |
+	doWhile |
+;
+
+
+(* Preprocessor Directives *)
+preprocessorDirective = HASHTAG, "file", string;
+
+(* Statements *)
+
+(* Declare a variable *)
+declaration = typeAnnotation, id, "=", expression, line;
+(* If statement *)
+if = "if", expression, block, { "else", "if", block }, ["else", block];
+(* While loop *)
+while = "while", expression, block;
+(* Do/while loop *)
+doWhile = "do", block, "while", expression, line;
+
+(* Other non-terminals *)
+
+(*
+	A type signature is one or more identifiers chained together to represent
+	a simple value type or a recursive collection type where the innermost value
+	is on the left and the outermost value is on the right.
+
+	E.g., "num list list" is a "list of number lists", and "Wizard list map map"
+	is "a map containing maps which contain lists of Wizard objects"
+
+	Note that there can never be more than one nonCollectionType production,
+	only multiples of collectionType will appear
+
+	For variable declarations, this means the variable name should be the
+	following identifier after all the collectionTypes have been parsed
+	E.g., "Wizard list list hogwartsClasses = [[]]"
+*)
+typeAnnotation = nonCollectionType, { collectionType };
+
+collectionType = "list" | "map";
+nonCollectionType = "num" | "str" | id;
+
+
+(* Non-terminals that don't need grammar definitions here *)
+expression = ? Grammar ommitted, parsed by shunting yard method ?;
+id = ? ID_TOKEN ?;
+number = ? NUMBER_TOKEN ?;
+string = ? STRING_TOKEN ?;
+line = ? ASCII 10 ?;
+hashtag = "#";

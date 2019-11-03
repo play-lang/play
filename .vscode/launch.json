@@ -1,0 +1,55 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "Debug TypeScript",
+			"preLaunchTask": "typescript",
+			"console": "integratedTerminal",
+			"program": "${workspaceFolder}/dist/index.js",
+			"protocol": "inspector",
+			"runtimeArgs": [
+				"--preserve-symlinks"
+			],
+			"outFiles": [
+				"${workspaceFolder}/dist/**/*.js"
+			],
+			"sourceMaps": true
+		},
+		{
+			"name": "Debug Jest Tests",
+			"type": "node",
+			"request": "launch",
+			"runtimeArgs": [
+				"--inspect-brk",
+				"${workspaceRoot}/node_modules/.bin/jest",
+				"--runInBand",
+				"--passWithNoTests",
+				"--config=jest.config.js"
+			],
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen",
+			"port": 9229
+		},
+		{
+			"name": "Debug Current Jest Test",
+			"type": "node",
+			"request": "launch",
+			"runtimeArgs": [
+				"--inspect-brk",
+				"${workspaceRoot}/node_modules/.bin/jest",
+				"--runInBand",
+				"--passWithNoTests",
+				"--code-coverage=false",
+				"--config=jest.config.js",
+				"--",
+				"${fileBasenameNoExtension}"
+			],
+			"disableOptimisticBPs": true,
+			"console": "integratedTerminal",
+			"internalConsoleOptions": "neverOpen",
+			"port": 9229
+		}
+	]
+}
