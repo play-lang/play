@@ -1,0 +1,31 @@
+{
+	"name": "@avatar-online/play",
+	"version": "1.0.0",
+	"description": "A simple, strongly typed language",
+	"main": "./src/index.ts",
+	"scripts": {
+		"lint": "tslint 'src/**/*.{ts,tsx}' --fix",
+		"test": "jest --passWithNoTests --config=jest.config.js --collectCoverage --verbose",
+		"build": "tsc",
+		"start": "npm run build && node dist/index.js",
+		"cloc": "sh ./cloc.sh"
+	},
+	"author": "Joseph Essin",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/josephessin/play.git"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@types/jest": "^24.0.18",
+		"@types/node": "^10.14.19",
+		"jest": "^24.9.0",
+		"prettier": "^1.18.2",
+		"ts-jest": "^24.1.0",
+		"tslint": "^5.20.0",
+		"tslint-config-prettier": "^1.18.0",
+		"tslint-plugin-prettier": "^2.0.1",
+		"typescript": "^3.6.4",
+		"typescript-tslint-plugin": "^0.5.4"
+	}
+}
