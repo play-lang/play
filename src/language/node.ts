@@ -1,4 +1,4 @@
-import { Visitor } from "../parser/visitor/visitor";
+import { Visitor } from "./visitor";
 
 export abstract class Node {
 	public abstract accept(visitor: Visitor): any;

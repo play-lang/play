@@ -172,6 +172,7 @@ export class Parser {
 
 		while (!this.isAtEnd) {
 			switch (this.peek.type) {
+				// List synchronization tokens here
 				case TokenType.Line:
 					this.advance(); // Consume the line
 					return;

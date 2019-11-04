@@ -1,6 +1,6 @@
-import { ProgramNode } from "../nodes/program-node";
-import { VariableNode } from "../nodes/variable-node";
-import { ValueNode } from "../nodes/value-node";
+import { ProgramNode } from "../parser/nodes/program-node";
+import { VariableNode } from "../parser/nodes/variable-node";
+import { ValueNode } from "../parser/nodes/value-node";
 
 export abstract class Visitor {
 	public abstract visitProgramNode(node: ProgramNode): void;
