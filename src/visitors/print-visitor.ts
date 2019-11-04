@@ -1,19 +1,19 @@
-import { Visitor } from "./visitor";
-import { ProgramNode } from "../nodes/program-node";
-import { VariableNode } from "../nodes/variable-node";
-import { ValueNode } from "../nodes/value-node";
-import { Describable } from "../../language/token";
+import { Visitor } from "../language/visitor";
+import { ProgramNode } from "../parser/nodes/program-node";
+import { VariableNode } from "../parser/nodes/variable-node";
+import { ValueNode } from "../parser/nodes/value-node";
+import { Describable } from "../language/token";
 
 export class PrintVisitor extends Visitor implements Describable {
 	private indent: number = 0;
 	private desc: string = "";
 
 	public visitProgramNode(node: ProgramNode): void {
-		this.desc = "Program\n";
+		this.desc += "Program\n";
 		this.indent += 1;
 		for (const statement of node.statements) {
 			const last = statement === node.statements[node.statements.length - 1];
-			this.desc += this.spaces + last ? "└── " : "├── ";
+			this.desc += this.spaces + (last ? "└── " : "├── ");
 			statement.accept(this);
 		}
 		this.indent -= 1;

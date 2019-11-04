@@ -1,4 +1,4 @@
-import { Visitor } from "../visitor/visitor";
+import { Visitor } from "../../language/visitor";
 import { Node } from "../../language/node";
 
 export class ProgramNode extends Node {

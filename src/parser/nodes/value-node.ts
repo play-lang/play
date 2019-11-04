@@ -1,5 +1,5 @@
 import { Expression } from "../../language/node";
-import { Visitor } from "../visitor/visitor";
+import { Visitor } from "../../language/visitor";
 
 export class ValueNode extends Expression {
 	/** Program statements */

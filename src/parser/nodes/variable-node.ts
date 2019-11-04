@@ -1,4 +1,4 @@
-import { Visitor } from "../visitor/visitor";
+import { Visitor } from "../../language/visitor";
 import { Statement, Expression } from "../../language/node";
 
 export class VariableNode extends Statement {
