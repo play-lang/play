@@ -105,3 +105,10 @@ export const idTokenTypes: { [key: string]: TokenType } = {
 	or: TokenType.Or,
 	and: TokenType.And,
 };
+
+/** Tokens that can indicate the start of a variable declaration statement */
+export const leadingTypes: Set<TokenType> = new Set<TokenType>([
+	TokenType.Id,
+	TokenType.Num,
+	TokenType.Str,
+]);
