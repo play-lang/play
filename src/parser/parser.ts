@@ -3,6 +3,10 @@ import { Lexer } from "../lexer";
 import { TokenType } from "../language/token-type";
 import { ParseError } from "./parse-error";
 import { prepareHint, describeErrorToken } from "../common/format-messages";
+import { Statement, Expression } from "../language/node";
+import { ProgramNode } from "./nodes/program-node";
+import { VariableNode } from "./nodes/variable-node";
+import { ValueNode } from "./nodes/value-node";
 
 export class Parser {
 	/** List of errors encountered in the code */
@@ -10,6 +14,9 @@ export class Parser {
 
 	/** Table containing every file encountered */
 	public readonly fileTable: string[] = [];
+
+	/** Lexer used to provide tokens as needed */
+	public readonly lexer: Lexer;
 
 	/** Current token */
 	public get peek(): TokenLike {
@@ -43,8 +50,6 @@ export class Parser {
 	 * file
 	 */
 	protected fileProvider: (path: string) => Promise<string>;
-	/** Lexer used to provide tokens as needed */
-	protected lexer: Lexer;
 
 	/** Current token */
 	protected _token: TokenLike;
@@ -59,7 +64,7 @@ export class Parser {
 		this.fileTable.push(filename);
 		this.fileProvider = fileProvider;
 		this.lexer = new Lexer(contents, 0);
-		this._token = this.lexer.read();
+		this._token = this.lexer.token;
 		this._previous = this._token;
 	}
 
@@ -107,7 +112,7 @@ export class Parser {
 	 * @param token The token where the error occurred
 	 * @param hint The error message hint
 	 */
-	protected error(token: TokenLike, hint: string): ParseError {
+	public error(token: TokenLike, hint: string): ParseError {
 		hint = prepareHint(hint);
 		const message =
 			"Syntax error in " +
@@ -130,7 +135,7 @@ export class Parser {
 	}
 
 	/** Returns true if any of the specified token types were matched */
-	protected match(...types: TokenType[]): boolean {
+	public match(...types: TokenType[]): boolean {
 		for (const type of types) {
 			if (this.check(type)) {
 				this.advance();
@@ -144,7 +149,7 @@ export class Parser {
 	 * Moves on to the next token no matter what (do not call directly,
 	 * only used by advance()
 	 */
-	protected skip(): void {
+	public skip(): void {
 		this._previous = this._token;
 		this._token = this.lexer.read();
 	}
@@ -153,7 +158,103 @@ export class Parser {
 	 * Generates a friendly description for an error token
 	 * @param errorToken Token to examine
 	 */
-	protected describeErrorToken(errorToken: ErrorToken): string {
+	public describeErrorToken(errorToken: ErrorToken): string {
 		return describeErrorToken(this.fileTable, errorToken);
+	}
+
+	/**
+	 * Synchronize the parser by exiting panic mode and skipping to the end of
+	 * the current statement
+	 */
+	public synchronize(): void {
+		this.isPanicking = false;
+		this.advance();
+
+		while (!this.isAtEnd) {
+			switch (this.peek.type) {
+				case TokenType.Line:
+					this.advance(); // Consume the line
+					return;
+			}
+
+			this.advance();
+		}
+	}
+
+	///
+	///
+	/// Recursive Descent
+	///
+	/// Parsing Methods
+	///
+	///
+
+	public parse(): ProgramNode {
+		const statements: Statement[] = [];
+		while (!this.isAtEnd) {
+			try {
+				switch (this.peek.type) {
+					case TokenType.Num:
+					case TokenType.Str:
+					case TokenType.Id:
+						const leadingToken = this.advance();
+						const followingToken = this.peek;
+						if (
+							followingToken.type === TokenType.List ||
+							followingToken.type === TokenType.Map ||
+							followingToken.type === TokenType.Id
+						) {
+							// Found a variable declaration
+							statements.push(this.declaration(leadingToken));
+						} else {
+							// Found an expression
+						}
+						break;
+				}
+			} catch (e) {
+				this.synchronize();
+			}
+		}
+		return new ProgramNode(statements);
+	}
+
+	/**
+	 * Parse a variable declaration
+	 * Example: num list numbers = [1, 2, 3]
+	 *
+	 * @param leadingType First identifier already matched--must be the
+	 * deepest type in the expression (a num, str, or user-defined type)
+	 */
+	public declaration(leadingType: TokenLike): VariableNode {
+		const typeAnnotation: string[] = [];
+		typeAnnotation.push(leadingType.lexeme);
+		while (
+			this.peek.type === TokenType.List ||
+			this.peek.type === TokenType.Map
+		) {
+			// Consume any following "list" or "map" collection type modifiers
+			typeAnnotation.push(this.advance().lexeme);
+		}
+		const nameToken = this.consume(
+			TokenType.Id,
+			"Expected variable name following declaration"
+		);
+		this.consume(TokenType.Equal, "Expected equal sign following declaration");
+		const expr = this.expression();
+		return new VariableNode(nameToken.lexeme, typeAnnotation, expr);
+	}
+
+	public expression(): Expression {
+		return this.value();
+	}
+
+	public value(): ValueNode {
+		// Todo: make this accept more than just number and string literals
+		if (this.match(TokenType.Number, TokenType.String)) {
+			const typeAnnotation: string[] =
+				this.previous.type === TokenType.Number ? ["num"] : ["str"];
+			return new ValueNode(this.previous.lexeme, typeAnnotation);
+		}
+		throw this.error(this.peek, "Expected literal");
 	}
 }

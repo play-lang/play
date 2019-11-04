@@ -51,11 +51,26 @@ export class Lexer {
 		return this.head.pos - this.tail.pos;
 	}
 
+	/**
+	 * Current lexer token
+	 *
+	 * Note: use this to read the first token when the lexer starts as opposed to
+	 * calling read() or you will skip the first token
+	 */
+	public get token(): TokenLike {
+		return this._token;
+	}
+
+	/** Current lexer lookahead token */
+	public get lookahead(): TokenLike {
+		return this._lookahead;
+	}
+
 	/** Current token */
-	protected token: TokenLike;
+	protected _token: TokenLike;
 
 	/** Look-ahead token */
-	protected lookahead: TokenLike;
+	protected _lookahead: TokenLike;
 
 	/** Reference to a file table used by a parser */
 	protected fileTable: string[];
@@ -99,8 +114,8 @@ export class Lexer {
 		this.fileTableIndex = fileTableIndex;
 
 		// Read the first tokens
-		this.token = this.scan();
-		this.lookahead = this.scan();
+		this._token = this.scan();
+		this._lookahead = this.scan();
 	}
 
 	/**
@@ -110,11 +125,11 @@ export class Lexer {
 		const tokens: TokenLike[] = [];
 
 		do {
-			tokens.push(this.token);
+			tokens.push(this._token);
 			this.read();
-		} while (this.token.type !== TokenType.EndOfFile);
+		} while (this._token.type !== TokenType.EndOfFile);
 
-		tokens.push(this.token);
+		tokens.push(this._token);
 
 		return tokens;
 	}
@@ -126,10 +141,10 @@ export class Lexer {
 	 * token
 	 */
 	public read(): TokenLike {
-		this.token = this.lookahead;
-		this.lookahead = this.scan();
+		this._token = this._lookahead;
+		this._lookahead = this.scan();
 		this.coalesceErrorTokens();
-		return this.token;
+		return this._token;
 	}
 
 	/** True if the specified character is whitespace */
@@ -251,15 +266,15 @@ export class Lexer {
 	 */
 	protected coalesceErrorTokens(): void {
 		while (
-			this.token instanceof ErrorToken &&
-			this.lookahead instanceof ErrorToken &&
-			this.token.length === 1 &&
-			this.lookahead.length === 1 &&
-			this.token.line === this.lookahead.line
+			this._token instanceof ErrorToken &&
+			this._lookahead instanceof ErrorToken &&
+			this._token.length === 1 &&
+			this._lookahead.length === 1 &&
+			this._token.line === this._lookahead.line
 		) {
 			// Join these two tokens
-			this.token = this.joinTokens(this.token, this.lookahead);
-			this.lookahead = this.scan();
+			this._token = this.joinTokens(this._token, this._lookahead);
+			this._lookahead = this.scan();
 		}
 	}
 
