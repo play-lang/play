@@ -5,8 +5,9 @@ import { ParseError } from "./parse-error";
 import { prepareHint, describeErrorToken } from "../common/format-messages";
 import { Statement, Expression } from "../language/node";
 import { ProgramNode } from "./nodes/program-node";
-import { VariableNode } from "./nodes/variable-node";
+import { DeclarationNode } from "./nodes/declaration-node";
 import { ValueNode } from "./nodes/value-node";
+import SymbolTable from "../language/symbol-table";
 
 export class Parser {
 	/** List of errors encountered in the code */
@@ -55,6 +56,13 @@ export class Parser {
 	protected _token: TokenLike;
 	/** Previous token */
 	protected _previous: TokenLike;
+	/** Symbol table pointer stack for tracking scopes */
+	protected _symbolTablePtr: SymbolTable[] = [];
+
+	/** Active symbol table for the current scope */
+	protected get symbolTable(): SymbolTable {
+		return this._symbolTablePtr[this._symbolTablePtr.length - 1];
+	}
 
 	constructor(
 		filename: string,
@@ -64,6 +72,7 @@ export class Parser {
 		this.fileTable.push(filename);
 		this.fileProvider = fileProvider;
 		this.lexer = new Lexer(contents, 0);
+		this._symbolTablePtr.push(new SymbolTable("global"));
 		this._token = this.lexer.token;
 		this._previous = this._token;
 	}
@@ -194,23 +203,20 @@ export class Parser {
 		const statements: Statement[] = [];
 		while (!this.isAtEnd) {
 			try {
-				switch (this.peek.type) {
-					case TokenType.Num:
-					case TokenType.Str:
-					case TokenType.Id:
-						const leadingToken = this.advance();
-						const followingToken = this.peek;
-						if (
-							followingToken.type === TokenType.List ||
-							followingToken.type === TokenType.Map ||
-							followingToken.type === TokenType.Id
-						) {
-							// Found a variable declaration
-							statements.push(this.declaration(leadingToken));
-						} else {
-							// Found an expression
-						}
-						break;
+				const idInScope =
+					this.peek.type === TokenType.Id &&
+					!this.symbolTable.identifierInScope(this.peek.lexeme);
+				if (
+					this.peek.type === TokenType.Num ||
+					this.peek.type === TokenType.Str ||
+					!idInScope
+				) {
+					// "num", "str" or other identifier that is not in scope as a variable
+					//
+					// This indicates the start of a variable declaration statement
+					statements.push(this.declaration());
+				} else if (idInScope) {
+					this.expression();
 				}
 			} catch (e) {
 				this.synchronize();
@@ -226,9 +232,13 @@ export class Parser {
 	 * @param leadingType First identifier already matched--must be the
 	 * deepest type in the expression (a num, str, or user-defined type)
 	 */
-	public declaration(leadingType: TokenLike): VariableNode {
+	public declaration(): DeclarationNode {
 		const typeAnnotation: string[] = [];
-		typeAnnotation.push(leadingType.lexeme);
+		if (this.match(TokenType.Id, TokenType.Str, TokenType.Num)) {
+			typeAnnotation.push(this.previous.lexeme);
+		} else {
+			throw this.error(this.peek, "Expected type annotation");
+		}
 		while (
 			this.peek.type === TokenType.List ||
 			this.peek.type === TokenType.Map
@@ -242,7 +252,7 @@ export class Parser {
 		);
 		this.consume(TokenType.Equal, "Expected equal sign following declaration");
 		const expr = this.expression();
-		return new VariableNode(nameToken.lexeme, typeAnnotation, expr);
+		return new DeclarationNode(nameToken.lexeme, typeAnnotation, expr);
 	}
 
 	public expression(): Expression {
@@ -250,6 +260,15 @@ export class Parser {
 	}
 
 	public value(): ValueNode {
+		if (this.peek.type === TokenType.Id) {
+			// Match a variable value
+			const variableName = this.peek.lexeme;
+			if (!this.symbolTable.identifierInScope(variableName)) {
+				throw this.error(this.peek, "Undeclared variable");
+			}
+			this.advance();
+			// return new Expression;
+		}
 		// Todo: make this accept more than just number and string literals
 		if (this.match(TokenType.Number, TokenType.String)) {
 			const typeAnnotation: string[] =

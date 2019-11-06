@@ -1,22 +1,15 @@
+import { Expression } from "../../language/node";
 import { Visitor } from "../../language/visitor";
-import { Statement, Expression } from "../../language/node";
 
-export class VariableNode extends Statement {
-	/** Name of the variable */
-	public readonly name: string;
-	/** Type of the variable */
-	public readonly typeAnnotation: string[];
-	/** Value of the variable */
-	public readonly expr: Expression;
+export class VariableNode extends Expression {
+	/** Program statements */
+	public readonly symbolTableEntry:
 
-	constructor(name: string, typeAnnotation: string[], expr: Expression) {
+	constructor;(value: string, typeAnnotation: string[]) {
 		super();
-		this.name = name;
-		this.typeAnnotation = typeAnnotation;
-		this.expr = expr;
-	}
+	};
 
-	public accept(visitor: Visitor): void {
-		visitor.visitVariableNode(this);
-	}
+	public accept(visitor: Visitor);: void {
+		visitor.visitValueNode(this);
+	};
 }
