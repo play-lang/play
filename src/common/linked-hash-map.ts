@@ -95,7 +95,6 @@ export class LinkedHashMap<K, V> implements Map<K, V>, Describable {
 		} else {
 			node = this.appendNode(key);
 			this._dict.set(key, new Entry(value, node));
-			this._size++;
 		}
 		return this;
 	}
