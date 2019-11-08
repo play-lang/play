@@ -1,4 +1,5 @@
 import { Token, Describable } from "./token";
+import { LinkedHashMap } from "../common/linked-hash-map";
 
 export interface SymbolTableValue {
 	/** Position of the value within the owning scope */
@@ -34,7 +35,7 @@ export default class SymbolTable implements SymbolTableValue, Describable {
 	 * Maps identifier and scope id's to their respective IdentifierSymbols and
 	 * Scopes
 	 */
-	public entries: Map<string, SymbolTableValue> = new Map<
+	public entries: Map<string, SymbolTableValue> = new LinkedHashMap<
 		string,
 		SymbolTableValue
 	>();
