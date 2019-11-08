@@ -9,7 +9,7 @@ describe("print-visitor", () => {
 		ast.accept(printVisitor);
 		const output = printVisitor.description;
 		expect(output).toEqual(
-			"Program\n  └── VariableNode(`myNumber`, num)\n    └── ValueNode(`100`, num)\n"
+			"Program\n  └── DeclarationNode(`myNumber`, num)\n    └── ValueNode(`100`, num)\n"
 		);
 	});
 });
