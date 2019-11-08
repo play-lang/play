@@ -7,7 +7,7 @@ class Entry<K, V> {
 class LinkedListNode<K> {
 	constructor(
 		public readonly key: K,
-		public readonly ordinal: number,
+		public ordinal: number,
 		public next?: LinkedListNode<K>,
 		public prev?: LinkedListNode<K>
 	) {}
@@ -63,7 +63,54 @@ export class LinkedHashMap<K, V> implements Map<K, V>, Describable {
 	public delete(key: K): boolean {
 		// This will be O(n) instead of O(1) since we have to readjust
 		// ordinal numbers in values list
-		throw new Error("delete() not implemented.");
+		if (!this.has(key)) return false;
+		const entry = this._dict.get(key)!;
+		// Perform a textbook linked list node removal:
+		this._dict.delete(key);
+		const node = entry.node;
+		const prev = node.prev;
+		let next = node.next;
+		if (next && prev) {
+			// Delete a node surrounded by other nodes
+			prev.next = next;
+			next.prev = prev;
+		} else if (next && !prev) {
+			// Delete the head node
+			this._head = next;
+		} else if (!next && prev) {
+			// Delete the tail node
+			this._tail = prev;
+		} else if (!next && !prev) {
+			// Delete the only node in the list (both head and tail node)
+			this._head = undefined;
+			this._tail = undefined;
+		}
+
+		// Subtract from the insertion ordering ordinals of the nodes
+		// following the deleted node so that they will still be correct...
+		// this is where the O(n) process kicks in that makes delete slow for
+		// this data structure
+		while (next) {
+			next.ordinal -= 1;
+			next = next.next;
+		}
+
+		// Reduce our size
+		this._size--;
+
+		// TODO: A good test would be to run through the list after every delete
+		// and ensure the following invariants:
+		// - Size == number of elements in map
+		// - All elements have the proper ordinal numbers
+		// - All elements have the appropriate key for their value
+		// - Map has same size as linked list length
+		// - Head and tail are synced properly
+
+		// Let garbage collection have at em:
+		node.next = undefined;
+		node.prev = undefined;
+
+		return true;
 	}
 
 	public forEach(
@@ -138,6 +185,7 @@ export class LinkedHashMap<K, V> implements Map<K, V>, Describable {
 			this._head = node;
 			this._tail = node;
 		} else {
+			node.prev = this._tail;
 			this._tail!.next = node;
 			this._tail = node;
 		}
