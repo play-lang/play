@@ -3,6 +3,10 @@ import { ProgramNode } from "../parser/nodes/program-node";
 import { DeclarationNode } from "../parser/nodes/declaration-node";
 import { ValueNode } from "../parser/nodes/value-node";
 import { Describable } from "../language/token";
+import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
+import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
+import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
+import { TokenType } from "../language/token-type";
 
 export class PrintVisitor extends Visitor implements Describable {
 	private indent: number = 0;
@@ -41,6 +45,28 @@ export class PrintVisitor extends Visitor implements Describable {
 			"`, " +
 			node.typeAnnotation.join(" ") +
 			")\n";
+	}
+
+	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
+		this.desc += "PrefixOp " + TokenType[node.operatorType] + "\n";
+		this.indent += 1;
+		this.desc += this.spaces + "└── ";
+		node.rhs.accept(this);
+		this.indent -= 1;
+	}
+
+	public visitLiteralExpressionNode(node: LiteralExpressionNode): void {
+		this.desc += "Literal(`" + node.token.lexeme + "`)\n";
+	}
+
+	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
+		this.desc += "BinOp " + TokenType[node.operatorType] + "\n";
+		this.indent += 1;
+		this.desc += this.spaces + "├── ";
+		node.lhs.accept(this);
+		this.desc += this.spaces + "└── ";
+		node.rhs.accept(this);
+		this.indent -= 1;
 	}
 
 	private get spaces(): string {

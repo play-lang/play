@@ -8,6 +8,8 @@ import { ProgramNode } from "./nodes/program-node";
 import { DeclarationNode } from "./nodes/declaration-node";
 import { ValueNode } from "./nodes/value-node";
 import SymbolTable from "../language/symbol-table";
+import { prefixParselets, infixParselets } from "../language/operator-grammar";
+import { InfixParselet } from "./expression/parselet";
 
 export class Parser {
 	/** List of errors encountered in the code */
@@ -108,11 +110,20 @@ export class Parser {
 	 *
 	 * Otherwise, it registers and throws an error with the specified message
 	 *
-	 * @param type The type of token to match
+	 * @param type The type of token to match (or an array of token types that
+	 * are permissible to match)
 	 * @param hint The error message hint if the token couldn't be matched
 	 */
-	public consume(type: TokenType, hint: string): TokenLike {
-		if (this.check(type)) return this.advance();
+	public consume(type: TokenType | TokenType[], hint: string): TokenLike {
+		if (Array.isArray(type)) {
+			for (const t of type) {
+				if (this.check(t)) {
+					return this.advance();
+				}
+			}
+		} else if (typeof type === "number") {
+			if (this.check(type)) return this.advance();
+		}
 		throw this.error(this.peek, hint);
 	}
 
@@ -203,21 +214,35 @@ export class Parser {
 		const statements: Statement[] = [];
 		while (!this.isAtEnd) {
 			try {
-				const idInScope =
-					this.peek.type === TokenType.Id &&
-					!this.symbolTable.identifierInScope(this.peek.lexeme);
-				if (
+				// See what we're looking at to figure out what kind of statement
+				// production to make
+				if (this.peek.type === TokenType.Id) {
+					// Looking at an identifier
+					if (this.symbolTable.identifierInScope(this.peek.lexeme)) {
+						// Identifier has been previously declared
+						// Since it's the first thing in the statement this indicates
+						// an expression production
+						statements.push(this.expression(0));
+					} else {
+						// An identifier that we have no knowledge of
+						// This indicates a declaration production (the start of a type
+						// annotation, technically)
+						statements.push(this.declaration());
+					}
+				} else if (
 					this.peek.type === TokenType.Num ||
 					this.peek.type === TokenType.Str ||
-					!idInScope
+					this.peek.type === TokenType.Bool
 				) {
-					// "num", "str" or other identifier that is not in scope as a variable
-					//
-					// This indicates the start of a variable declaration statement
+					// A token for a primitive type at the start of a statement
+					// indicates a variable declaration production
 					statements.push(this.declaration());
-				} else if (idInScope) {
-					this.expression();
 				}
+				// Expect a new line or eof token after each statement
+				this.consume(
+					[TokenType.Line, TokenType.EndOfFile],
+					"Expected end of statement"
+				);
 			} catch (e) {
 				this.synchronize();
 			}
@@ -250,13 +275,29 @@ export class Parser {
 			TokenType.Id,
 			"Expected variable name following declaration"
 		);
+		// Register the declared variable in the symbol table
+		this.symbolTable.register(nameToken, typeAnnotation);
+		// Variable declarations must be followed by an = sign
 		this.consume(TokenType.Equal, "Expected equal sign following declaration");
 		const expr = this.expression();
 		return new DeclarationNode(nameToken.lexeme, typeAnnotation, expr);
 	}
 
-	public expression(): Expression {
-		return this.value();
+	public expression(precedence: number = 0): Expression {
+		// return this.value();
+
+		let token = this.advance();
+		const prefix = prefixParselets.get(token.type);
+		if (!prefix) {
+			throw this.error(token, "Expected start of expression");
+		}
+		let lhs = prefix.parse(this, token);
+		while (precedence < this.getPrecedence()) {
+			token = this.advance();
+			const infix: InfixParselet = infixParselets.get(token.type)!;
+			lhs = infix.parse(this, lhs, token);
+		}
+		return lhs;
 	}
 
 	public value(): ValueNode {
@@ -276,5 +317,14 @@ export class Parser {
 			return new ValueNode(this.previous.lexeme, typeAnnotation);
 		}
 		throw this.error(this.peek, "Expected literal");
+	}
+
+	public getPrecedence(): number {
+		// Infix parser "parselets" have their own precedences set based
+		// on the grammar
+		//
+		const parser = infixParselets.get(this.peek.type);
+		if (parser) return parser.precedence;
+		return 0;
 	}
 }

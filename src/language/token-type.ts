@@ -14,6 +14,7 @@ export enum TokenType {
 	// Reserved type names
 	Str,
 	Num,
+	Bool,
 	Map,
 	List,
 
@@ -41,6 +42,7 @@ export enum TokenType {
 	// Literals
 	String,
 	Number,
+	Boolean,
 
 	Id,
 
@@ -92,6 +94,7 @@ export const idTokenTypes: { [key: string]: TokenType } = {
 	do: TokenType.Do,
 	num: TokenType.Num,
 	str: TokenType.Str,
+	bool: TokenType.Bool,
 	map: TokenType.Map,
 	list: TokenType.List,
 	model: TokenType.Model,
@@ -105,10 +108,3 @@ export const idTokenTypes: { [key: string]: TokenType } = {
 	or: TokenType.Or,
 	and: TokenType.And,
 };
-
-/** Tokens that can indicate the start of a variable declaration statement */
-export const leadingTypes: Set<TokenType> = new Set<TokenType>([
-	TokenType.Id,
-	TokenType.Num,
-	TokenType.Str,
-]);
