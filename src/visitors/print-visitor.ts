@@ -48,7 +48,7 @@ export class PrintVisitor extends Visitor implements Describable {
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
-		this.desc += "PrefixOp " + TokenType[node.operatorType] + "\n";
+		this.desc += "Prefix(" + TokenType[node.operatorType] + ")\n";
 		this.indent += 1;
 		this.desc += this.spaces + "└── ";
 		node.rhs.accept(this);
@@ -60,7 +60,7 @@ export class PrintVisitor extends Visitor implements Describable {
 	}
 
 	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
-		this.desc += "BinOp " + TokenType[node.operatorType] + "\n";
+		this.desc += "Binary(" + TokenType[node.operatorType] + ")\n";
 		this.indent += 1;
 		this.desc += this.spaces + "├── ";
 		node.lhs.accept(this);
