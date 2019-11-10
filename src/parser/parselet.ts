@@ -1,13 +1,14 @@
-import { Expression } from "../../language/node";
-import { Parser } from "../parser";
-import { TokenLike } from "../../language/token";
-import { PrefixExpressionNode } from "../nodes/prefix-expression-node";
-import { LiteralExpressionNode } from "../nodes/literal-expression-node";
-import { BinaryExpressionNode } from "../nodes/binary-expression-node";
-import { TokenType } from "../../language/token-type";
-import { Precedence } from "../../language/precedence";
-import { TernaryConditionalNode } from "../nodes/ternary-conditional-node";
-import { AssignmentExpressionNode } from "../nodes/assignment-expression-node";
+import { Expression } from "../language/node";
+import { Parser } from "./parser";
+import { TokenLike } from "../language/token";
+import { PrefixExpressionNode } from "./nodes/prefix-expression-node";
+import { LiteralExpressionNode } from "./nodes/literal-expression-node";
+import { BinaryExpressionNode } from "./nodes/binary-expression-node";
+import { TokenType } from "../language/token-type";
+import { Precedence } from "../language/precedence";
+import { TernaryConditionalNode } from "./nodes/ternary-conditional-node";
+import { AssignmentExpressionNode } from "./nodes/assignment-expression-node";
+import { PostfixExpressionNode } from "./nodes/postfix-expression-node";
 
 export interface PrefixParselet {
 	parse(parser: Parser, token: TokenLike): Expression;
@@ -88,5 +89,14 @@ export class BinaryOperatorParselet implements InfixParselet {
 			this.precedence - (this.isRightAssociative ? 1 : 0)
 		);
 		return new BinaryExpressionNode(token.type, lhs, rhs);
+	}
+}
+
+export class PostfixOperatorParselet implements InfixParselet {
+	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
+		return new PostfixExpressionNode(token.type, lhs);
+	}
+	public get precedence(): number {
+		return Precedence.Primary;
 	}
 }

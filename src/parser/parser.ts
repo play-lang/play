@@ -9,7 +9,7 @@ import { DeclarationNode } from "./nodes/declaration-node";
 import { ValueNode } from "./nodes/value-node";
 import SymbolTable from "../language/symbol-table";
 import { prefixParselets, infixParselets } from "../language/operator-grammar";
-import { InfixParselet } from "./expression/parselet";
+import { InfixParselet } from "./parselet";
 
 export class Parser {
 	/** List of errors encountered in the code */

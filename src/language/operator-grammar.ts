@@ -9,7 +9,8 @@ import {
 	GroupParselet,
 	TernaryConditionalParselet,
 	AssignmentParselet,
-} from "../parser/expression/parselet";
+	PostfixOperatorParselet,
+} from "../parser/parselet";
 
 // http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
 // https://www.craftinginterpreters.com/compiling-expressions.html
@@ -27,11 +28,11 @@ export const prefixParselets: Map<TokenType, PrefixParselet> = new Map<
 	[TokenType.Boolean, new LiteralParselet()],
 
 	// Prefix operators
-	[TokenType.Bang, new PrefixOperatorParselet(Precedence.Prefix)],
+	[TokenType.Bang, new PrefixOperatorParselet(Precedence.UnaryPrefix)],
 	[TokenType.Plus, new PrefixOperatorParselet(Precedence.UnarySign)],
 	[TokenType.Minus, new PrefixOperatorParselet(Precedence.UnarySign)],
-	[TokenType.PlusPlus, new PrefixOperatorParselet(Precedence.Prefix)],
-	[TokenType.MinusMinus, new PrefixOperatorParselet(Precedence.Prefix)],
+	[TokenType.PlusPlus, new PrefixOperatorParselet(Precedence.UnaryPrefix)],
+	[TokenType.MinusMinus, new PrefixOperatorParselet(Precedence.UnaryPrefix)],
 ]);
 
 /**
@@ -43,8 +44,6 @@ export const infixParselets: Map<TokenType, InfixParselet> = new Map<
 	TokenType,
 	InfixParselet
 >([
-	// Ternary Conditional Operator
-	[TokenType.QuestionMark, new TernaryConditionalParselet()],
 	// Assignment
 	[TokenType.Equal, new AssignmentParselet()],
 	[TokenType.PlusEqual, new AssignmentParselet()],
@@ -53,11 +52,28 @@ export const infixParselets: Map<TokenType, InfixParselet> = new Map<
 	[TokenType.SlashEqual, new AssignmentParselet()],
 	[TokenType.PercentEqual, new AssignmentParselet()],
 	[TokenType.CaretEqual, new AssignmentParselet()],
+	// Ternary Conditional Operator
+	[TokenType.QuestionMark, new TernaryConditionalParselet()],
+	// Nil-coalescing
+	// Logical operators
+	[TokenType.Or, new BinaryOperatorParselet(Precedence.LogicalOr, false)],
+	[TokenType.And, new BinaryOperatorParselet(Precedence.LogicalAnd, false)],
 	// Binary operators
-	[TokenType.Plus, new BinaryOperatorParselet(Precedence.Sum, false)],
-	[TokenType.Minus, new BinaryOperatorParselet(Precedence.Sum, false)],
-	[TokenType.Asterisk, new BinaryOperatorParselet(Precedence.Product, false)],
-	[TokenType.Slash, new BinaryOperatorParselet(Precedence.Product, false)],
-	[TokenType.Percent, new BinaryOperatorParselet(Precedence.Product, false)],
+	[TokenType.Plus, new BinaryOperatorParselet(Precedence.Additive, false)],
+	[TokenType.Minus, new BinaryOperatorParselet(Precedence.Additive, false)],
+	[
+		TokenType.Asterisk,
+		new BinaryOperatorParselet(Precedence.Multiplicative, false),
+	],
+	[
+		TokenType.Slash,
+		new BinaryOperatorParselet(Precedence.Multiplicative, false),
+	],
+	[
+		TokenType.Percent,
+		new BinaryOperatorParselet(Precedence.Multiplicative, false),
+	],
 	[TokenType.Caret, new BinaryOperatorParselet(Precedence.Exponent, true)],
+	// Postfix operators
+	[TokenType.PlusPlus, new PostfixOperatorParselet()],
 ]);
