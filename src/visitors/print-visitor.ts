@@ -7,6 +7,8 @@ import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { TokenType } from "../language/token-type";
+import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
+import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 
 export class PrintVisitor extends Visitor implements Describable {
 	private indent: number = 0;
@@ -69,8 +71,30 @@ export class PrintVisitor extends Visitor implements Describable {
 		this.indent -= 1;
 	}
 
+	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
+		this.desc += "TernaryConditional\n";
+		this.indent += 1;
+		this.desc += this.spaces + "├── Predicate: ";
+		node.predicate.accept(this);
+		this.desc += this.spaces + "├── Consequent: ";
+		node.consequent.accept(this);
+		this.desc += this.spaces + "└── Alternate: ";
+		node.alternate.accept(this);
+		this.indent -= 1;
+	}
+
+	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
+		this.desc += "Assignment(" + TokenType[node.assignmentType] + ")\n";
+		this.indent += 1;
+		this.desc += this.spaces + "├── lhs: ";
+		node.lhs.accept(this);
+		this.desc += this.spaces + "└── rhs: ";
+		node.rhs.accept(this);
+		this.indent -= 1;
+	}
+
 	private get spaces(): string {
-		return " ".repeat(this.indent * 2);
+		return "  ".repeat(this.indent * 3);
 	}
 
 	public get description(): string {
