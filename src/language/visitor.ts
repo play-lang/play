@@ -4,6 +4,8 @@ import { ValueNode } from "../parser/nodes/value-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
+import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
+import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 
 export abstract class Visitor {
 	public abstract visitProgramNode(node: ProgramNode): void;
@@ -12,4 +14,10 @@ export abstract class Visitor {
 	public abstract visitPrefixExpressionNode(node: PrefixExpressionNode): void;
 	public abstract visitLiteralExpressionNode(node: LiteralExpressionNode): void;
 	public abstract visitBinaryExpressionNode(node: BinaryExpressionNode): void;
+	public abstract visitTernaryConditionalNode(
+		node: TernaryConditionalNode
+	): void;
+	public abstract visitAssignmentExpressionNode(
+		node: AssignmentExpressionNode
+	): void;
 }

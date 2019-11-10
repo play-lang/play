@@ -3,6 +3,7 @@ export enum Precedence {
 	Conditional,
 	Sum,
 	Product,
+	UnarySign,
 	Exponent,
 	Prefix,
 	Postfix,
