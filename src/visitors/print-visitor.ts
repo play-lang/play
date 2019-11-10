@@ -9,6 +9,7 @@ import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { TokenType } from "../language/token-type";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
+import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 
 export class PrintVisitor extends Visitor implements Describable {
 	private indent: number = 0;
@@ -54,6 +55,14 @@ export class PrintVisitor extends Visitor implements Describable {
 		this.indent += 1;
 		this.desc += this.spaces + "└── ";
 		node.rhs.accept(this);
+		this.indent -= 1;
+	}
+
+	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
+		this.desc += "Postfix(" + TokenType[node.operatorType] + ")\n";
+		this.indent += 1;
+		this.desc += this.spaces + "└── ";
+		node.lhs.accept(this);
 		this.indent -= 1;
 	}
 
