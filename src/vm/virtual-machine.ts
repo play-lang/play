@@ -37,14 +37,18 @@ export class VirtualMachine {
 						this.push(this.readData());
 						break;
 					}
+					case OpCode.Print: {
+						console.log(this.pop().value);
+						break;
+					}
+					case OpCode.Pop: {
+						this.pop();
+						break;
+					}
 					case OpCode.Negate: {
 						// Negate the top value of the stack
 						const top = this.pop();
 						this.push(new RuntimeValue(top.type, -top.value));
-						break;
-					}
-					case OpCode.Print: {
-						console.log(this.pop().value);
 						break;
 					}
 					case OpCode.Add: {

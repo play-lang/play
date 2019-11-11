@@ -9,6 +9,7 @@ import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { Context } from "../language/context";
+import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 
 export class Compiler extends Visitor {
 	/** Ast to compile */
@@ -36,7 +37,13 @@ export class Compiler extends Visitor {
 	// MARK: Visitor
 
 	public visitProgramNode(node: ProgramNode): void {}
-	public visitDeclarationNode(node: DeclarationNode): void {}
+	public visitBlockStatementNode(node: BlockStatementNode): void {}
+	public visitDeclarationNode(node: DeclarationNode): void {
+		if (!node.expr) {
+			return;
+		}
+		node.expr.accept(this);
+	}
 	public visitValueNode(node: ValueNode): void {}
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {}
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {}

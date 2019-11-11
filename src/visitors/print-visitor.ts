@@ -10,6 +10,7 @@ import { TokenType } from "../language/token-type";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
+import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 
 export class PrintVisitor extends Visitor implements Describable {
 	private indent: number = 0;
@@ -17,6 +18,17 @@ export class PrintVisitor extends Visitor implements Describable {
 
 	public visitProgramNode(node: ProgramNode): void {
 		this.desc += "Program\n";
+		this.indent += 1;
+		for (const statement of node.statements) {
+			const last = statement === node.statements[node.statements.length - 1];
+			this.desc += this.spaces + (last ? "└── " : "├── ");
+			statement.accept(this);
+		}
+		this.indent -= 1;
+	}
+
+	public visitBlockStatementNode(node: BlockStatementNode): void {
+		this.desc += "Block\n";
 		this.indent += 1;
 		for (const statement of node.statements) {
 			const last = statement === node.statements[node.statements.length - 1];

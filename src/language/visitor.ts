@@ -7,9 +7,11 @@ import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
+import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 
 export abstract class Visitor {
 	public abstract visitProgramNode(node: ProgramNode): void;
+	public abstract visitBlockStatementNode(node: BlockStatementNode): void;
 	public abstract visitDeclarationNode(node: DeclarationNode): void;
 	public abstract visitValueNode(node: ValueNode): void;
 	public abstract visitPrefixExpressionNode(node: PrefixExpressionNode): void;

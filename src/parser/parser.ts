@@ -10,6 +10,7 @@ import { ValueNode } from "./nodes/value-node";
 import SymbolTable from "../language/symbol-table";
 import { prefixParselets, infixParselets } from "../language/operator-grammar";
 import { InfixParselet } from "./parselet";
+import { BlockStatementNode } from "./nodes/block-statement-node";
 
 export class Parser {
 	/** List of errors encountered in the code */
@@ -214,30 +215,8 @@ export class Parser {
 		const statements: Statement[] = [];
 		while (!this.isAtEnd) {
 			try {
-				// See what we're looking at to figure out what kind of statement
-				// production to make
-				if (this.peek.type === TokenType.Id) {
-					// Looking at an identifier
-					if (this.symbolTable.identifierInScope(this.peek.lexeme)) {
-						// Identifier has been previously declared
-						// Since it's the first thing in the statement this indicates
-						// an expression production
-						statements.push(this.expression(0));
-					} else {
-						// An identifier that we have no knowledge of
-						// This indicates a declaration production (the start of a type
-						// annotation, technically)
-						statements.push(this.declaration());
-					}
-				} else if (
-					this.peek.type === TokenType.Num ||
-					this.peek.type === TokenType.Str ||
-					this.peek.type === TokenType.Bool
-				) {
-					// A token for a primitive type at the start of a statement
-					// indicates a variable declaration production
-					statements.push(this.declaration());
-				}
+				// A program consists of a series of statements
+				statements.push(this.statement());
 				// Expect a new line or eof token after each statement
 				this.consume(
 					[TokenType.Line, TokenType.EndOfFile],
@@ -248,6 +227,48 @@ export class Parser {
 			}
 		}
 		return new ProgramNode(statements);
+	}
+
+	public statement(): Statement {
+		// See what we're looking at to figure out what kind of statement
+		// production to make
+		if (this.peek.type === TokenType.Id) {
+			// Looking at an identifier
+			if (this.symbolTable.identifierInScope(this.peek.lexeme)) {
+				// Identifier has been previously declared
+				// Since it's the first thing in the statement this indicates
+				// an expression production
+				return this.expression();
+			} else {
+				// An identifier that we have no knowledge of
+				// This indicates a declaration production (the start of a type
+				// annotation, technically)
+				return this.declaration();
+			}
+		} else if (
+			this.peek.type === TokenType.Num ||
+			this.peek.type === TokenType.Str ||
+			this.peek.type === TokenType.Bool
+		) {
+			// A token for a primitive type at the start of a statement
+			// indicates a variable declaration production
+			return this.declaration();
+		} else if (this.peek.type === TokenType.BraceOpen) {
+			// Match a block statement
+			return this.block();
+		} else {
+			// An unrecognized statement must be an expression statement
+			return this.declaration();
+		}
+	}
+
+	public block(): BlockStatementNode {
+		const statements: Statement[] = [];
+		this.consume(TokenType.BraceOpen, "Expect opening brace for block");
+		while (!this.isAtEnd && this.peek.type !== TokenType.BraceClose) {
+			statements.push(this.statement());
+		}
+		return new BlockStatementNode(statements);
 	}
 
 	/**
