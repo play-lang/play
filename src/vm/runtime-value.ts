@@ -1,6 +1,6 @@
 export enum RuntimeType {
+	Number = 1,
 	String,
-	Number,
 	Boolean,
 	Object,
 }

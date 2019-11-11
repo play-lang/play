@@ -9,10 +9,8 @@ describe("print-visitor", () => {
 			// "num myNumber = 100 * 100 + - 100 ^ 3 - (3+3)\n"
 		);
 		const ast = parser.parse();
-		const printVisitor = new PrintVisitor();
-		ast.accept(printVisitor);
-		const output = printVisitor.description;
-		console.log(output);
+		const printer = new PrintVisitor(ast);
+		console.log(printer.print());
 		// expect(output).toEqual(
 		// 	"Program\n" +
 		// 		"  ├── DeclarationNode(`myNumber`, num)\n" +

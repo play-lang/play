@@ -10,8 +10,13 @@ export class Context {
 	public readonly sourceMap: any = undefined;
 	constructor() {}
 
-	// Create a bytecode statement
-	public gen(opCode: number): void {
-		this.bytecode.push(opCode);
+	/**
+	 * Create a new data literal and add it to the data section
+	 * Returns the index to the literal data in the data section
+	 * @param value The literal's runtime value
+	 */
+	public literal(value: RuntimeValue): number {
+		this.data.push(value);
+		return this.data.length - 1;
 	}
 }

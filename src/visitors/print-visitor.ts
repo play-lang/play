@@ -1,7 +1,6 @@
 import { Visitor } from "../language/visitor";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
-import { LiteralNode } from "../parser/nodes/value-node";
 import { Describable } from "../language/token";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
@@ -15,6 +14,15 @@ import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 export class PrintVisitor extends Visitor implements Describable {
 	private indent: number = 0;
 	private desc: string = "";
+
+	constructor(public readonly ast: ProgramNode) {
+		super();
+	}
+
+	public print(): string {
+		this.ast.accept(this);
+		return this.description;
+	}
 
 	public visitProgramNode(node: ProgramNode): void {
 		this.desc += "Program\n";
@@ -52,16 +60,6 @@ export class PrintVisitor extends Visitor implements Describable {
 			node.expr.accept(this);
 			this.indent -= 1;
 		}
-	}
-
-	public visitLiteralNode(node: LiteralNode): void {
-		this.desc +=
-			node.constructor.name +
-			"(`" +
-			node.value +
-			"`, " +
-			node.typeAnnotation.join(" ") +
-			")\n";
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
