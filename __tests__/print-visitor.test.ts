@@ -5,7 +5,7 @@ describe("print-visitor", () => {
 	it("should pass basic sanity test", () => {
 		const parser = new Parser(
 			"test.play",
-			'num x = 10 += ((1 ? 2 : 3)) ? 4 : 5 = 6\nstr myString = "hello"\n'
+			'{ num x = 10 += ((1 ? 2 : 3)) ? 4 : 5 = 6\nstr myString = "hello"\n }'
 			// "num myNumber = 100 * 100 + - 100 ^ 3 - (3+3)\n"
 		);
 		const ast = parser.parse();

@@ -1,6 +1,6 @@
 import { Visitor } from "../language/visitor";
 import { ProgramNode } from "../parser/nodes/program-node";
-import { DeclarationNode } from "../parser/nodes/declaration-node";
+import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
 import { ValueNode } from "../parser/nodes/value-node";
 import { Describable } from "../language/token";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
@@ -38,7 +38,7 @@ export class PrintVisitor extends Visitor implements Describable {
 		this.indent -= 1;
 	}
 
-	public visitDeclarationNode(node: DeclarationNode): void {
+	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
 		this.desc +=
 			node.constructor.name +
 			"(`" +

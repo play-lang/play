@@ -5,7 +5,7 @@ import { ParseError } from "./parse-error";
 import { prepareHint, describeErrorToken } from "../common/format-messages";
 import { Statement, Expression } from "../language/node";
 import { ProgramNode } from "./nodes/program-node";
-import { DeclarationNode } from "./nodes/declaration-node";
+import { VariableDeclarationNode } from "./nodes/variable-declaration-node";
 import { ValueNode } from "./nodes/value-node";
 import SymbolTable from "../language/symbol-table";
 import { prefixParselets, infixParselets } from "../language/operator-grammar";
@@ -60,11 +60,13 @@ export class Parser {
 	/** Previous token */
 	protected _previous: TokenLike;
 	/** Symbol table pointer stack for tracking scopes */
-	protected _symbolTablePtr: SymbolTable[] = [];
+	protected _symbolTables: SymbolTable[] = [];
+	/** Number of scopes encountered */
+	protected _scopes: number = 0;
 
 	/** Active symbol table for the current scope */
 	protected get symbolTable(): SymbolTable {
-		return this._symbolTablePtr[this._symbolTablePtr.length - 1];
+		return this._symbolTables[this._symbolTables.length - 1];
 	}
 
 	constructor(
@@ -75,7 +77,7 @@ export class Parser {
 		this.fileTable.push(filename);
 		this.fileProvider = fileProvider;
 		this.lexer = new Lexer(contents, 0);
-		this._symbolTablePtr.push(new SymbolTable("global"));
+		this._symbolTables.push(new SymbolTable("global"));
 		this._token = this.lexer.token;
 		this._previous = this._token;
 	}
@@ -243,7 +245,7 @@ export class Parser {
 				// An identifier that we have no knowledge of
 				// This indicates a declaration production (the start of a type
 				// annotation, technically)
-				return this.declaration();
+				return this.variableDeclaration();
 			}
 		} else if (
 			this.peek.type === TokenType.Num ||
@@ -252,22 +254,38 @@ export class Parser {
 		) {
 			// A token for a primitive type at the start of a statement
 			// indicates a variable declaration production
-			return this.declaration();
+			return this.variableDeclaration();
 		} else if (this.peek.type === TokenType.BraceOpen) {
 			// Match a block statement
 			return this.block();
 		} else {
 			// An unrecognized statement must be an expression statement
-			return this.declaration();
+			return this.variableDeclaration();
 		}
 	}
 
 	public block(): BlockStatementNode {
+		// Create a new symbol table scope and push it on the symbol table stack
+		const symbolTable = this.symbolTable.addScope();
+		this._symbolTables.push(symbolTable);
 		const statements: Statement[] = [];
 		this.consume(TokenType.BraceOpen, "Expect opening brace for block");
 		while (!this.isAtEnd && this.peek.type !== TokenType.BraceClose) {
 			statements.push(this.statement());
+			if (this.peek.type !== TokenType.BraceClose) {
+				// Expect new line at end of statement if we don't find the block's
+				// closing brace
+				//
+				// Otherwise, the closing brace is fine for marking the end of the
+				// statement here
+				this.consume(
+					[TokenType.Line, TokenType.EndOfFile],
+					"Expected end of statement"
+				);
+			}
 		}
+		// Pop the scope
+		this._symbolTables.pop();
 		return new BlockStatementNode(statements);
 	}
 
@@ -278,7 +296,7 @@ export class Parser {
 	 * @param leadingType First identifier already matched--must be the
 	 * deepest type in the expression (a num, str, or user-defined type)
 	 */
-	public declaration(): DeclarationNode {
+	public variableDeclaration(): VariableDeclarationNode {
 		const typeAnnotation: string[] = [];
 		if (this.match(TokenType.Id, TokenType.Str, TokenType.Num)) {
 			typeAnnotation.push(this.previous.lexeme);
@@ -301,7 +319,7 @@ export class Parser {
 		// Variable declarations must be followed by an = sign
 		this.consume(TokenType.Equal, "Expected equal sign following declaration");
 		const expr = this.expression();
-		return new DeclarationNode(nameToken.lexeme, typeAnnotation, expr);
+		return new VariableDeclarationNode(nameToken.lexeme, typeAnnotation, expr);
 	}
 
 	public expression(precedence: number = 0): Expression {

@@ -1,6 +1,6 @@
 import { Context } from "../language/context";
 import { OpCode } from "../language/op-code";
-import { RuntimeValue } from "./runtime-value";
+import { RuntimeValue, RuntimeType } from "./runtime-value";
 import { RuntimeError } from "./runtime-error";
 import { VMResult } from "./vm-result";
 
@@ -43,6 +43,26 @@ export class VirtualMachine {
 					}
 					case OpCode.Pop: {
 						this.pop();
+						break;
+					}
+					case OpCode.Nil: {
+						this.push(new RuntimeValue(RuntimeType.Object, null));
+						break;
+					}
+					case OpCode.False: {
+						this.push(new RuntimeValue(RuntimeType.Boolean, false));
+						break;
+					}
+					case OpCode.True: {
+						this.push(new RuntimeValue(RuntimeType.Boolean, true));
+						break;
+					}
+					case OpCode.Zero: {
+						this.push(new RuntimeValue(RuntimeType.Number, 0));
+						break;
+					}
+					case OpCode.BlankString: {
+						this.push(new RuntimeValue(RuntimeType.String, ""));
 						break;
 					}
 					case OpCode.Negate: {

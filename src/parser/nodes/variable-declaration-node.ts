@@ -1,7 +1,7 @@
 import { Visitor } from "../../language/visitor";
 import { Statement, Expression } from "../../language/node";
 
-export class DeclarationNode extends Statement {
+export class VariableDeclarationNode extends Statement {
 	/** Name of the variable */
 	public readonly name: string;
 	/** Type of the variable */
@@ -17,6 +17,6 @@ export class DeclarationNode extends Statement {
 	}
 
 	public accept(visitor: Visitor): void {
-		visitor.visitDeclarationNode(this);
+		visitor.visitVariableDeclarationNode(this);
 	}
 }
