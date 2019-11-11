@@ -35,14 +35,13 @@ export enum TokenType {
 	Insert,
 
 	// Reserved Literal Words
-	True,
-	False,
 	Nil,
 
 	// Literals
 	String,
 	Number,
-
+	/** `true` or `false` token */
+	Boolean,
 	Id,
 
 	// Grouping Operators
@@ -99,8 +98,8 @@ export const idTokenTypes: { [key: string]: TokenType } = {
 	model: TokenType.Model,
 	contract: TokenType.Contract,
 	insert: TokenType.Insert,
-	true: TokenType.True,
-	false: TokenType.False,
+	true: TokenType.Boolean,
+	false: TokenType.Boolean,
 	nil: TokenType.Nil,
 	is: TokenType.Is,
 	in: TokenType.In,

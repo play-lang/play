@@ -7,9 +7,9 @@ export class VariableDeclarationNode extends Statement {
 	/** Type of the variable */
 	public readonly typeAnnotation: string[];
 	/** Value of the variable */
-	public readonly expr: Expression;
+	public readonly expr: Expression | undefined;
 
-	constructor(name: string, typeAnnotation: string[], expr: Expression) {
+	constructor(name: string, typeAnnotation: string[], expr?: Expression) {
 		super();
 		this.name = name;
 		this.typeAnnotation = typeAnnotation;
