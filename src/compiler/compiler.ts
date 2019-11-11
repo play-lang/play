@@ -1,7 +1,7 @@
 import { Visitor } from "../language/visitor";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
-import { ValueNode } from "../parser/nodes/value-node";
+import { LiteralNode } from "../parser/nodes/value-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
@@ -44,7 +44,7 @@ export class Compiler extends Visitor {
 		}
 		node.expr.accept(this);
 	}
-	public visitValueNode(node: ValueNode): void {}
+	public visitLiteralNode(node: LiteralNode): void {}
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {}
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {}
 	public visitLiteralExpressionNode(node: LiteralExpressionNode): void {}

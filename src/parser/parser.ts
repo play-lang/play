@@ -6,7 +6,7 @@ import { prepareHint, describeErrorToken } from "../common/format-messages";
 import { Statement, Expression } from "../language/node";
 import { ProgramNode } from "./nodes/program-node";
 import { VariableDeclarationNode } from "./nodes/variable-declaration-node";
-import { ValueNode } from "./nodes/value-node";
+import { LiteralNode } from "./nodes/value-node";
 import SymbolTable from "../language/symbol-table";
 import { prefixParselets, infixParselets } from "../language/operator-grammar";
 import { InfixParselet } from "./parselet";
@@ -339,7 +339,7 @@ export class Parser {
 		return lhs;
 	}
 
-	public value(): ValueNode {
+	public literal(): LiteralNode {
 		if (this.peek.type === TokenType.Id) {
 			// Match a variable value
 			const variableName = this.peek.lexeme;
@@ -347,13 +347,18 @@ export class Parser {
 				throw this.error(this.peek, "Undeclared variable");
 			}
 			this.advance();
+			// TODO: Variable reference
 			// return new Expression;
 		}
 		// Todo: make this accept more than just number and string literals
-		if (this.match(TokenType.Number, TokenType.String)) {
-			const typeAnnotation: string[] =
-				this.previous.type === TokenType.Number ? ["num"] : ["str"];
-			return new ValueNode(this.previous.lexeme, typeAnnotation);
+		if (this.match(TokenType.Number)) {
+			return new LiteralNode(this.previous.lexeme, ["num"]);
+		} else if (this.match(TokenType.True)) {
+			return new LiteralNode(this.previous.lexeme, ["bool"]);
+		} else if (this.match(TokenType.False)) {
+			return new LiteralNode(this.previous.lexeme, ["bool"]);
+		} else if (this.match(TokenType.String)) {
+			return new LiteralNode(this.previous.lexeme, ["str"]);
 		}
 		throw this.error(this.peek, "Expected literal");
 	}

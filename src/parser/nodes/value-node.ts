@@ -1,7 +1,7 @@
 import { Expression } from "../../language/node";
 import { Visitor } from "../../language/visitor";
 
-export class ValueNode extends Expression {
+export class LiteralNode extends Expression {
 	/** Program statements */
 	public readonly value: string;
 	public readonly typeAnnotation: string[];
@@ -13,6 +13,6 @@ export class ValueNode extends Expression {
 	}
 
 	public accept(visitor: Visitor): void {
-		visitor.visitValueNode(this);
+		visitor.visitLiteralNode(this);
 	}
 }
