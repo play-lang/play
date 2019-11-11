@@ -42,7 +42,6 @@ export enum TokenType {
 	// Literals
 	String,
 	Number,
-	Boolean,
 
 	Id,
 

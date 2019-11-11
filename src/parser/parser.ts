@@ -350,7 +350,6 @@ export class Parser {
 			// TODO: Variable reference
 			// return new Expression;
 		}
-		// Todo: make this accept more than just number and string literals
 		if (this.match(TokenType.Number)) {
 			return new LiteralNode(this.previous.lexeme, ["num"]);
 		} else if (this.match(TokenType.True)) {
