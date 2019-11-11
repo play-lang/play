@@ -9,6 +9,13 @@ export enum OpCode {
 	Print,
 	/** Discard the top of the stack */
 	Pop,
+	/** Literals for initializing zero-values */
+	BlankString,
+	Nil,
+	False,
+	True,
+	Zero,
+	/** Arithmetic */
 	Add,
 	Sub,
 	Mul,

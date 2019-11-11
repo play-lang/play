@@ -2,6 +2,7 @@ export enum RuntimeType {
 	String,
 	Number,
 	Boolean,
+	Object,
 }
 
 export class RuntimeValue {
