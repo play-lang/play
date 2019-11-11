@@ -8,8 +8,33 @@ import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
+import { Context } from "../language/context";
 
 export class Compiler extends Visitor {
+	/** Ast to compile */
+	public readonly ast: ProgramNode;
+	/** Current bytecode context */
+	private _context: Context;
+
+	public get context(): Context {
+		return this._context;
+	}
+
+	constructor(ast: ProgramNode) {
+		super();
+		this.ast = ast;
+		this._context = new Context();
+	}
+
+	/** Emit a bytecode opcode and an optional parameter */
+	public emit(opcode: number, param?: number): void {
+		typeof param !== "undefined"
+			? this.context.bytecode.push(opcode, param)
+			: this.context.bytecode.push(opcode);
+	}
+
+	// MARK: Visitor
+
 	public visitProgramNode(node: ProgramNode): void {}
 	public visitDeclarationNode(node: DeclarationNode): void {}
 	public visitValueNode(node: ValueNode): void {}

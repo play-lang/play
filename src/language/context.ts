@@ -1,4 +1,4 @@
-import { RuntimeValue } from "../interpreter/runtime-value";
+import { RuntimeValue } from "../vm/runtime-value";
 
 /** A chunk of bytecode, including literal data and source maps */
 export class Context {

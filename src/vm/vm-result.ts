@@ -1,5 +1,5 @@
 /** Interpreter program result statuses */
-export enum InterpretResult {
+export enum VMResult {
 	/** Program ran successfully */
 	Success,
 	/** Interpreter caught an unexpected exception */
