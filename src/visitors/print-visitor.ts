@@ -47,9 +47,11 @@ export class PrintVisitor extends Visitor implements Describable {
 			node.typeAnnotation.join(" ") +
 			")\n";
 		this.indent += 1;
-		this.desc += this.spaces + "└── ";
-		node.expr.accept(this);
-		this.indent -= 1;
+		if (node.expr) {
+			this.desc += this.spaces + "└── ";
+			node.expr.accept(this);
+			this.indent -= 1;
+		}
 	}
 
 	public visitLiteralNode(node: LiteralNode): void {

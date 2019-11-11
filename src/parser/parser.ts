@@ -298,7 +298,9 @@ export class Parser {
 	 */
 	public variableDeclaration(): VariableDeclarationNode {
 		const typeAnnotation: string[] = [];
-		if (this.match(TokenType.Id, TokenType.Str, TokenType.Num)) {
+		if (
+			this.match(TokenType.Id, TokenType.Str, TokenType.Num, TokenType.Bool)
+		) {
 			typeAnnotation.push(this.previous.lexeme);
 		} else {
 			throw this.error(this.peek, "Expected type annotation");
@@ -316,10 +318,16 @@ export class Parser {
 		);
 		// Register the declared variable in the symbol table
 		this.symbolTable.register(nameToken, typeAnnotation);
-		// Variable declarations must be followed by an = sign
-		this.consume(TokenType.Equal, "Expected equal sign following declaration");
-		const expr = this.expression();
-		return new VariableDeclarationNode(nameToken.lexeme, typeAnnotation, expr);
+		// Variable declarations may be followed by an equals sign to initialize
+		// the value, otherwise we initialize the zero-value for it
+		if (this.match(TokenType.Equal)) {
+			return new VariableDeclarationNode(
+				nameToken.lexeme,
+				typeAnnotation,
+				this.expression()
+			);
+		}
+		return new VariableDeclarationNode(nameToken.lexeme, typeAnnotation);
 	}
 
 	public expression(precedence: number = 0): Expression {
@@ -352,9 +360,7 @@ export class Parser {
 		}
 		if (this.match(TokenType.Number)) {
 			return new LiteralNode(this.previous.lexeme, ["num"]);
-		} else if (this.match(TokenType.True)) {
-			return new LiteralNode(this.previous.lexeme, ["bool"]);
-		} else if (this.match(TokenType.False)) {
+		} else if (this.match(TokenType.Boolean)) {
 			return new LiteralNode(this.previous.lexeme, ["bool"]);
 		} else if (this.match(TokenType.String)) {
 			return new LiteralNode(this.previous.lexeme, ["str"]);

@@ -26,7 +26,6 @@ export const prefixParselets: Map<TokenType, PrefixParselet> = new Map<
 	[TokenType.Number, new LiteralParselet()],
 	[TokenType.String, new LiteralParselet()],
 	[TokenType.Boolean, new LiteralParselet()],
-
 	// Prefix operators
 	[TokenType.Bang, new PrefixOperatorParselet(Precedence.UnaryPrefix)],
 	[TokenType.Plus, new PrefixOperatorParselet(Precedence.UnarySign)],
