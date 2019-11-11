@@ -8,9 +8,11 @@ import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
+import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 
 export class TypeChecker extends Visitor {
 	public visitProgramNode(node: ProgramNode): void {}
+	public visitBlockStatementNode(node: BlockStatementNode): void {}
 	public visitDeclarationNode(node: DeclarationNode): void {}
 	public visitValueNode(node: ValueNode): void {}
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {}

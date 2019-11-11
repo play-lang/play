@@ -5,8 +5,10 @@ export enum OpCode {
 	Data,
 	/** Negate the value */
 	Negate,
-	/** Print the top of the stack */
+	/** Print stack value */
 	Print,
+	/** Discard the top of the stack */
+	Pop,
 	Add,
 	Sub,
 	Mul,
