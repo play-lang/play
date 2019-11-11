@@ -32,14 +32,19 @@ export class VirtualMachine {
 						console.log("Execution complete", top ? top.value : "");
 						return VMResult.Success;
 					}
-					case OpCode.Data:
+					case OpCode.Data: {
 						// Read a data value from the data section and push it to the stack
 						this.push(this.readData());
 						break;
+					}
 					case OpCode.Negate: {
 						// Negate the top value of the stack
 						const top = this.pop();
 						this.push(new RuntimeValue(top.type, -top.value));
+						break;
+					}
+					case OpCode.Print: {
+						console.log(this.pop().value);
 						break;
 					}
 					case OpCode.Add: {
