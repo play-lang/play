@@ -1,20 +1,14 @@
 export enum OpCode {
 	/** Return instruction */
-	Return,
+	Return = 1,
 	/** Read data from data section */
-	Data,
+	Literal,
 	/** Negate the value */
 	Negate,
 	/** Print stack value */
 	Print,
 	/** Discard the top of the stack */
 	Pop,
-	/** Literals for initializing zero-values */
-	BlankString,
-	Nil,
-	False,
-	True,
-	Zero,
 	/** Arithmetic */
 	Add,
 	Sub,
@@ -22,4 +16,7 @@ export enum OpCode {
 	Div,
 	Mod,
 	Exp,
+	/** Logic */
+	And,
+	Or,
 }

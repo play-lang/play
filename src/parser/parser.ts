@@ -6,7 +6,6 @@ import { prepareHint, describeErrorToken } from "../common/format-messages";
 import { Statement, Expression } from "../language/node";
 import { ProgramNode } from "./nodes/program-node";
 import { VariableDeclarationNode } from "./nodes/variable-declaration-node";
-import { LiteralNode } from "./nodes/value-node";
 import SymbolTable from "../language/symbol-table";
 import { prefixParselets, infixParselets } from "../language/operator-grammar";
 import { InfixParselet } from "./parselet";
@@ -260,7 +259,7 @@ export class Parser {
 			return this.block();
 		} else {
 			// An unrecognized statement must be an expression statement
-			return this.variableDeclaration();
+			return this.expression();
 		}
 	}
 
@@ -345,27 +344,6 @@ export class Parser {
 			lhs = infix.parse(this, lhs, token);
 		}
 		return lhs;
-	}
-
-	public literal(): LiteralNode {
-		if (this.peek.type === TokenType.Id) {
-			// Match a variable value
-			const variableName = this.peek.lexeme;
-			if (!this.symbolTable.identifierInScope(variableName)) {
-				throw this.error(this.peek, "Undeclared variable");
-			}
-			this.advance();
-			// TODO: Variable reference
-			// return new Expression;
-		}
-		if (this.match(TokenType.Number)) {
-			return new LiteralNode(this.previous.lexeme, ["num"]);
-		} else if (this.match(TokenType.Boolean)) {
-			return new LiteralNode(this.previous.lexeme, ["bool"]);
-		} else if (this.match(TokenType.String)) {
-			return new LiteralNode(this.previous.lexeme, ["str"]);
-		}
-		throw this.error(this.peek, "Expected literal");
 	}
 
 	public getPrecedence(): number {

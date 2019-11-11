@@ -1,6 +1,5 @@
 import { ProgramNode } from "../parser/nodes/program-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
-import { LiteralNode } from "../parser/nodes/value-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
@@ -15,7 +14,6 @@ export abstract class Visitor {
 	public abstract visitVariableDeclarationNode(
 		node: VariableDeclarationNode
 	): void;
-	public abstract visitLiteralNode(node: LiteralNode): void;
 	public abstract visitPrefixExpressionNode(node: PrefixExpressionNode): void;
 	public abstract visitPostfixExpressionNode(node: PostfixExpressionNode): void;
 	public abstract visitLiteralExpressionNode(node: LiteralExpressionNode): void;
