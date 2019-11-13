@@ -13,7 +13,7 @@ export class Disassembler {
 
 	/** Disassemble data for the specified context */
 	public data(context: Context): string {
-		let str = "DATA:\n";
+		let str = "";
 		this.dp = 0;
 		while (this.dp < context.data.length) {
 			const value = context.data[this.dp];
@@ -25,30 +25,38 @@ export class Disassembler {
 
 	/** Disassemble instructions for the specified context */
 	private instructions(context: Context): string {
-		let str = "INSTRUCTIONS:\n";
+		let str = "\n";
 		this.ip = 0;
 		while (this.ip < context.bytecode.length) {
 			const instr = context.bytecode[this.ip++];
 			switch (instr) {
 				// 1 param instructions
-				case OpCode.Literal: {
+				case OpCode.Data: {
 					const index = context.bytecode[this.ip++];
 					str +=
-						this.ipn + "\t" + OpCode[instr].toUpperCase() + "\t" + index + "\n";
+						this.ipn +
+						"\t" +
+						OpCode[instr].toUpperCase() +
+						"\t(" +
+						index +
+						")\t= " +
+						context.data[index].value +
+						"\n";
 					break;
 				}
 				// 0 param instructions
 				case OpCode.Return:
-				case OpCode.Print:
 				case OpCode.Pop:
-				case OpCode.Negate:
+				case OpCode.Inc:
+				case OpCode.Dec:
+				case OpCode.Neg:
 				case OpCode.And:
 				case OpCode.Or:
 				case OpCode.Add:
 				case OpCode.Sub:
 				case OpCode.Mul:
 				case OpCode.Div:
-				case OpCode.Mod:
+				case OpCode.Remain:
 				case OpCode.Exp:
 					str += this.ipn + "\t" + OpCode[instr].toUpperCase() + "\n";
 			}
@@ -61,17 +69,24 @@ export class Disassembler {
 		return RuntimeType[value.type] + "\t" + value.value + "\n";
 	}
 
-	/** Pad a number */
-	private pad(num: number, places: number): string {
-		return String(num).padStart(places, "0");
+	/** Pad a number and split it */
+	private format(num: number): string {
+		const pad = String(num).padStart(9, "0");
+		return (
+			pad.substring(0, 3) +
+			"\t" +
+			pad.substring(3, 6) +
+			"\t" +
+			pad.substring(6, 9)
+		);
 	}
 
 	/** Formatted version of the instruction pointer */
 	private get ipn(): string {
-		return this.pad(this.ip, 4);
+		return this.format(this.ip);
 	}
 	/** Formatted version of the data pointer */
 	private get dpn(): string {
-		return this.pad(this.dp, 4);
+		return this.format(this.dp);
 	}
 }

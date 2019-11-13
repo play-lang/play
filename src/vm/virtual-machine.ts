@@ -28,24 +28,41 @@ export class VirtualMachine {
 					case OpCode.Return: {
 						// Return from the current procedure or main section
 						const top = this.pop();
-						console.log("Execution complete", top ? top.value : "");
+						console.log("Execution complete:\t", top ? top.value : "");
 						// Todo: Don't return unless in global stack
 						return VMResult.Success;
 					}
-					case OpCode.Literal: {
+					case OpCode.Data: {
 						// Read a data value from the data section and push it to the stack
 						this.push(this.readData());
-						break;
-					}
-					case OpCode.Print: {
-						console.log(this.pop().value);
 						break;
 					}
 					case OpCode.Pop: {
 						this.pop();
 						break;
 					}
-					case OpCode.Negate: {
+					case OpCode.Get: {
+						this.push(this.readStack());
+						break;
+					}
+					case OpCode.Set: {
+						const index = this.readCode();
+						this.stack[index] = this.top;
+						break;
+					}
+					case OpCode.Inc: {
+						// Increment the top value of the stack
+						const top = this.pop();
+						this.push(new RuntimeValue(top.type, top.value + 1));
+						break;
+					}
+					case OpCode.Dec: {
+						// Decrement the top value of the stack
+						const top = this.pop();
+						this.push(new RuntimeValue(top.type, top.value - 1));
+						break;
+					}
+					case OpCode.Neg: {
 						// Negate the top value of the stack
 						const top = this.pop();
 						this.push(new RuntimeValue(top.type, -top.value));
@@ -89,7 +106,7 @@ export class VirtualMachine {
 						this.push(new RuntimeValue(rhs.type, lhs.value / rhs.value));
 						break;
 					}
-					case OpCode.Mod: {
+					case OpCode.Remain: {
 						const rhs = this.pop();
 						const lhs = this.pop();
 						this.push(new RuntimeValue(rhs.type, lhs.value % rhs.value));
@@ -128,6 +145,18 @@ export class VirtualMachine {
 		return new RuntimeValue(data.type, data.value);
 	}
 
+	/**
+	 * Read a value from the stack using the next number in the code as an
+	 * index into the stack
+	 *
+	 * Typically used for reading local variables
+	 */
+	public readStack(): RuntimeValue {
+		const index = this.readCode();
+		const rv = this.stack[index];
+		return new RuntimeValue(rv.type, rv.value);
+	}
+
 	/** Pop an item, or die */
 	public pop(): RuntimeValue {
 		const top = this.stack.pop();
@@ -140,5 +169,10 @@ export class VirtualMachine {
 	/** Push a value to the stack */
 	public push(value: RuntimeValue): void {
 		this.stack.push(value);
+	}
+
+	/** Top value in the stack */
+	public get top(): RuntimeValue {
+		return this.stack[this.stack.length - 1];
 	}
 }

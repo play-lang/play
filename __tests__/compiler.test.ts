@@ -7,7 +7,8 @@ import { VMResult } from "../src/vm/vm-result";
 
 describe("compiler", () => {
 	it("should work", () => {
-		const parser = new Parser("test.play", "1 + 2 * 3 ^ -4 / 5 % 6");
+		const input = "1 + ++2\nprint";
+		const parser = new Parser("test.play", input);
 		const ast = parser.parse();
 		const printer = new PrintVisitor(ast);
 		console.log(printer.print());
@@ -16,8 +17,9 @@ describe("compiler", () => {
 		const disassembler = new Disassembler();
 		const code = disassembler.disassemble(compiler.context);
 		console.log(code);
+		console.log("Code:\t", input);
 		const vm = new VirtualMachine(compiler.context);
 		const result = vm.run();
-		console.log("Execution finished with", VMResult[result], "status");
+		console.log("Execution finished:\t", VMResult[result]);
 	});
 });

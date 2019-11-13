@@ -75,4 +75,5 @@ export const infixParselets: Map<TokenType, InfixParselet> = new Map<
 	[TokenType.Caret, new BinaryOperatorParselet(Precedence.Exponent, true)],
 	// Postfix operators
 	[TokenType.PlusPlus, new PostfixOperatorParselet()],
+	[TokenType.MinusMinus, new PostfixOperatorParselet()],
 ]);
