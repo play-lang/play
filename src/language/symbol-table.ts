@@ -48,7 +48,7 @@ export default class SymbolTable implements Describable {
 	 * child scopes
 	 */
 	public resetAvailable(): void {
-		this.available = -1;
+		this.available = 0;
 		for (const scope of this.scopes) {
 			scope.resetAvailable();
 		}
