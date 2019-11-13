@@ -1,89 +1,61 @@
 import SymbolTable from "../src/language/symbol-table";
 import { Token } from "../src/language/token";
 
+let pos: number = 0;
+const chars: string[] = ["a", "b", "c", "d", "e", "f", "g"];
+function fakeToken(): Token {
+	return new Token({
+		fileTableIndex: 0,
+		trivia: [],
+		type: 1,
+		pos,
+		line: 0,
+		column: pos,
+		length: 1,
+		lexeme: chars[pos++ % chars.length],
+	});
+}
+
 describe("symbol table", () => {
-	const globalScope = new SymbolTable("global");
-	const aToken = new Token({
-		fileTableIndex: 0,
-		trivia: [],
-		type: 1,
-		pos: 0,
-		line: 0,
-		column: 0,
-		length: 1,
-		lexeme: "a",
-	});
-	const bToken = new Token({
-		fileTableIndex: 0,
-		trivia: [],
-		type: 1,
-		pos: 0,
-		line: 0,
-		column: 0,
-		length: 1,
-		lexeme: "b",
-	});
+	const globalScope = new SymbolTable();
+	let s1: SymbolTable;
 	it("should initialize", () => {
 		expect(globalScope).toBeInstanceOf(SymbolTable);
 	});
-	it("should add identifiers and scopes", () => {
-		globalScope.register(aToken, ["num"]);
-		expect(globalScope.description.trim()).toBe("Id(`a`, `num`)");
-		globalScope.register(bToken, ["str"]);
-		expect(globalScope.description.trim()).toBe(
-			"Id(`a`, `num`)\nId(`b`, `str`)"
-		);
-		const nestedScope = globalScope.addScope();
-		expect(globalScope.description.trim()).toBe(
-			"Id(`a`, `num`)\nId(`b`, `str`)\nScope(SCOPE-0)"
-		);
-		const deepScope = nestedScope.addScope();
-		expect(globalScope.description.trim()).toBe(
-			"Id(`a`, `num`)\nId(`b`, `str`)\nScope(SCOPE-0)\n  Scope(SCOPE-0)"
-		);
-		deepScope.register(
-			new Token({
-				fileTableIndex: 0,
-				trivia: [],
-				type: 1,
-				pos: 0,
-				line: 0,
-				column: 0,
-				length: 1,
-				lexeme: "a",
-			}),
-			["num"]
-		);
-		expect(globalScope.description.trim()).toBe(
-			"Id(`a`, `num`)\nId(`b`, `str`)\nScope(SCOPE-0)\n  Scope(SCOPE-0)\n    Id(`a`, `num`)"
-		);
-		expect(deepScope.identifierInScope("a")).toBe(true);
-		// Should also be true because it's available in the outer scope:
-		expect(deepScope.identifierInScope("b")).toBe(true);
-		expect(deepScope.identifierInScope("d")).toBe(false);
-	});
-	it("should recognize identifiers in outer scope", () => {
-		expect(globalScope.identifierInScope("a")).toBe(true);
-		expect(globalScope.identifierInScope("d")).toBe(false);
-	});
-	it("should perform lookups", () => {
-		expect(globalScope.lookup("a")).toEqual({
-			token: aToken,
-			typeAnnotation: ["num"],
-			ordinal: 0,
-		});
-		expect(globalScope.lookup("b")).toEqual({
-			token: bToken,
-			typeAnnotation: ["str"],
-			ordinal: 1,
-		});
-		expect(globalScope.lookup("d")).toBe(null);
-	});
-	it("should prevent duplicate id's from being registered", () => {
-		expect(globalScope.register(aToken, ["num"])).toBe(false);
-		// Re-assert prior condition to make sure it still holds:
-		expect(globalScope.description.trim()).toBe(
-			"Id(`a`, `num`)\nId(`b`, `str`)\nScope(SCOPE-0)\n  Scope(SCOPE-0)\n    Id(`a`, `num`)"
+	it("should register ids", () => {
+		const t1 = fakeToken(); // a
+		const t2 = fakeToken(); // b
+		globalScope.register(t1, ["num"]);
+		expect(globalScope.entries.has(t1.lexeme));
+		globalScope.register(t2, ["str"]);
+		expect(globalScope.entries.has(t2.lexeme));
+		expect(globalScope.description).toEqual(
+			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"]}'
 		);
 	});
+	it("should recognize ids in immediate scope", () => {
+		expect(globalScope.idInScope("a")).toEqual(true);
+		expect(globalScope.idInScope("b")).toEqual(true);
+	});
+	it("should recognize ids in enclosing scopes", () => {
+		s1 = globalScope.addScope();
+		const t3 = fakeToken(); // c
+		const t4 = fakeToken(); // d
+		s1.register(t3, ["num"]);
+		s1.register(t4, ["str"]);
+		expect(s1.idInScope("a")).toBe(true);
+		expect(s1.idInScope("b")).toBe(true);
+		expect(s1.idInScope("e")).toBe(false);
+		expect(globalScope.description).toEqual(
+			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"], "scopes": [{ "ids": ["Id(0, `c`, `num`)", "Id(1, `d`, `str`)"]}]}'
+		);
+		const s2 = globalScope.addScope();
+		expect(globalScope.description).toEqual(
+			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"], "scopes": [{ "ids": ["Id(0, `c`, `num`)", "Id(1, `d`, `str`)"]}, { "ids": []}]}'
+		);
+		const t5 = fakeToken(); // e
+		s2.register(t5, ["num"]);
+	});
+	it("should perform lookups", () => {});
+	it("should prevent duplicate id's from being registered", () => {});
 });

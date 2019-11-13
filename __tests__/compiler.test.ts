@@ -7,7 +7,7 @@ import { VMResult } from "../src/vm/vm-result";
 
 describe("compiler", () => {
 	it("should work", () => {
-		const input = "1 + ++2\nprint";
+		const input = "1 + 2++\nprint";
 		const parser = new Parser("test.play", input);
 		const ast = parser.parse();
 		const printer = new PrintVisitor(ast);

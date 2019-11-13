@@ -5,7 +5,8 @@
 	"main": "./src/index.ts",
 	"scripts": {
 		"lint": "tslint 'src/**/*.{ts,tsx}' --fix",
-		"test": "jest --passWithNoTests --config=jest.config.js --collectCoverage --verbose",
+		"coverage": "jest --passWithNoTests --config=jest.config.js --collectCoverage --verbose",
+		"test": "jest --passWithNoTests --config=jest.config.js --verbose",
 		"build": "tsc",
 		"start": "npm run build && node dist/index.js",
 		"cloc": "sh ./cloc.sh"

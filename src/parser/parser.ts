@@ -76,7 +76,7 @@ export class Parser {
 		this.fileTable.push(filename);
 		this.fileProvider = fileProvider;
 		this.lexer = new Lexer(contents, 0);
-		this._symbolTables.push(new SymbolTable("global"));
+		this._symbolTables.push(new SymbolTable());
 		this._token = this.lexer.token;
 		this._previous = this._token;
 	}
@@ -235,7 +235,7 @@ export class Parser {
 		// production to make
 		if (this.peek.type === TokenType.Id) {
 			// Looking at an identifier
-			if (this.symbolTable.identifierInScope(this.peek.lexeme)) {
+			if (this.symbolTable.idInScope(this.peek.lexeme)) {
 				// Identifier has been previously declared
 				// Since it's the first thing in the statement this indicates
 				// an expression production
