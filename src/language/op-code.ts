@@ -2,21 +2,35 @@ export enum OpCode {
 	/** Return instruction */
 	Return = 1,
 	/** Read data from data section */
-	Literal,
+	Data,
 	/** Negate the value */
-	Negate,
-	/** Print stack value */
-	Print,
+	Neg,
+	/** Increment by one */
+	Inc,
+	/** Decrement by one */
+	Dec,
 	/** Discard the top of the stack */
 	Pop,
-	/** Arithmetic */
+	/** Set a value already in the stack */
+	Set,
+	/** Get a value already in the stack */
+	Get,
+	/** Add using the top two values of the stack */
 	Add,
+	/** Subtract using the top two values of the stack */
 	Sub,
+	/** Multiply using the top two values of the stack */
 	Mul,
+	/** Divide using the top two values of the stack */
 	Div,
-	Mod,
+	/** Calculate remainder using the top two values of the stack */
+	Remain,
+	/** Calculate exponent using the top two values of the stack */
 	Exp,
-	/** Logic */
+	/** Logical conjunction using top two values of the stack */
 	And,
+	/** Logical disjunction using top two values of the stack */
 	Or,
+	/** Logical complement */
+	Not,
 }

@@ -64,19 +64,33 @@ export class Compiler extends Visitor {
 		node.rhs.accept(this);
 		switch (node.operatorType) {
 			case TokenType.Bang:
+				this.emit(OpCode.Not);
 				break;
 			case TokenType.Plus:
+				// nop
 				break;
 			case TokenType.Minus:
-				this.emit(OpCode.Negate);
+				this.emit(OpCode.Neg);
 				break;
 			case TokenType.PlusPlus:
+				this.emit(OpCode.Inc);
 				break;
 			case TokenType.MinusMinus:
+				this.emit(OpCode.Dec);
 				break;
 		}
 	}
-	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {}
+	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
+		node.lhs.accept(this);
+		switch (node.operatorType) {
+			case TokenType.PlusPlus:
+				this.emit(OpCode.Inc);
+				break;
+			case TokenType.MinusMinus:
+				this.emit(OpCode.Dec);
+				break;
+		}
+	}
 	public visitLiteralExpressionNode(node: LiteralExpressionNode): void {
 		let value: any;
 		let type: RuntimeType = RuntimeType.Object;
@@ -101,7 +115,7 @@ export class Compiler extends Visitor {
 		const index = this.context.literal(new RuntimeValue(type, value));
 		// Have the machine push the value of the data at the specified data index
 		// to the top of the stack when this instruction is encountered
-		this.emit(OpCode.Literal, index);
+		this.emit(OpCode.Data, index);
 	}
 	// Compile a binary operator expression
 	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
@@ -121,7 +135,7 @@ export class Compiler extends Visitor {
 				this.emit(OpCode.Div);
 				break;
 			case TokenType.Percent:
-				this.emit(OpCode.Mod);
+				this.emit(OpCode.Remain);
 				break;
 			case TokenType.Caret:
 				this.emit(OpCode.Exp);
