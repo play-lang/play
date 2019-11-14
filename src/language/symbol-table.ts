@@ -44,17 +44,6 @@ export default class SymbolTable implements Describable {
 	}
 
 	/**
-	 * Reset the number of available entries for this scope and all of its
-	 * child scopes
-	 */
-	public resetAvailable(): void {
-		this.available = 0;
-		for (const scope of this.scopes) {
-			scope.resetAvailable();
-		}
-	}
-
-	/**
 	 * Returns true if the specified identifier is in the receiver's scope or any
 	 * of its ancestors
 	 *
@@ -103,9 +92,8 @@ export default class SymbolTable implements Describable {
 	 * @param id The identifier to look up
 	 * @returns The corresponding identifier entry if the identifier was found
 	 */
-	public lookup(id: string): IdentifierSymbol | null {
-		const result = this.entries.get(id);
-		return result && result instanceof IdentifierSymbol ? result : null;
+	public lookup(id: string): IdentifierSymbol | undefined {
+		return this.entries.get(id);
 	}
 
 	/**
