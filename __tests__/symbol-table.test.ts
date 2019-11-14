@@ -19,11 +19,11 @@ function fakeToken(): Token {
 describe("symbol table", () => {
 	const globalScope = new SymbolTable();
 	let s1: SymbolTable;
+	const t1 = fakeToken(); // a
 	it("should initialize", () => {
 		expect(globalScope).toBeInstanceOf(SymbolTable);
 	});
 	it("should register ids", () => {
-		const t1 = fakeToken(); // a
 		const t2 = fakeToken(); // b
 		globalScope.register(t1, ["num"]);
 		expect(globalScope.entries.has(t1.lexeme));
@@ -56,6 +56,22 @@ describe("symbol table", () => {
 		const t5 = fakeToken(); // e
 		s2.register(t5, ["num"]);
 	});
-	it("should perform lookups", () => {});
-	it("should prevent duplicate id's from being registered", () => {});
+	it("should perform lookups", () => {
+		expect(globalScope.lookup("a")).toEqual({
+			token: {
+				column: 0,
+				fileTableIndex: 0,
+				length: 1,
+				lexeme: "a",
+				line: 0,
+				pos: 0,
+				trivia: [],
+				type: 1,
+			},
+			typeAnnotation: ["num"],
+		});
+	});
+	it("should prevent duplicate id's from being registered", () => {
+		expect(globalScope.register(t1, ["num"])).toBe(false);
+	});
 });
