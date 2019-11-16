@@ -3,6 +3,7 @@ import { OpCode } from "../language/op-code";
 import { RuntimeType } from "./runtime-type";
 import { RuntimeValue } from "./runtime-value";
 import { RuntimeError } from "./runtime-error";
+import { VMStatus } from "./vm-status";
 import { VMResult } from "./vm-result";
 
 // Make constants for zero values since they are so widely used
@@ -36,9 +37,7 @@ export class VirtualMachine {
 					case OpCode.Return: {
 						// Return from the current procedure or main section
 						const top = this.pop();
-						console.log("Execution complete:\t", top ? top.value : "");
-						// Todo: Don't return unless in global stack
-						return VMResult.Success;
+						return new VMResult(VMStatus.Success, top);
 					}
 					case OpCode.Constant: {
 						// Read a data value from the data section and push it to the stack
@@ -184,12 +183,12 @@ export class VirtualMachine {
 				}
 				instruction = this.readCode();
 			} while (instruction);
-			return VMResult.Success;
+			return new VMResult(VMStatus.Success, this.top || Nil);
 		} catch (e) {
-			const code: VMResult =
-				e instanceof RuntimeError ? e.code : VMResult.UnknownFailure;
+			const code: VMStatus =
+				e instanceof RuntimeError ? e.code : VMStatus.UnknownFailure;
 			console.error(e);
-			return code;
+			return new VMResult(code, this.top || Nil);
 		}
 	}
 
@@ -224,7 +223,7 @@ export class VirtualMachine {
 	public pop(): RuntimeValue {
 		const top = this.stack.pop();
 		if (!top) {
-			throw new RuntimeError(VMResult.StackUnderflow, "Stack underflow");
+			throw new RuntimeError(VMStatus.StackUnderflow, "Stack underflow");
 		}
 		return top;
 	}

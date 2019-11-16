@@ -1,9 +1,9 @@
 import { Describable } from "../language/token";
 import { Exception } from "../common/exception";
-import { VMResult } from "./vm-result";
+import { VMStatus } from "./vm-status";
 
 export class RuntimeError extends Exception implements Describable {
-	constructor(public readonly code: VMResult, message: string) {
+	constructor(public readonly code: VMStatus, message: string) {
 		super(message);
 	}
 
