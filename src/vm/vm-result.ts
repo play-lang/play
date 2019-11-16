@@ -1,9 +1,11 @@
-/** Interpreter program result statuses */
-export enum VMResult {
-	/** Program ran successfully */
-	Success,
-	/** Interpreter caught an unexpected exception */
-	UnknownFailure,
-	/** Attempted to pop a value from the stack when the stack was empty */
-	StackUnderflow,
+import { VMStatus } from "./vm-status";
+import { RuntimeValue } from "./runtime-value";
+
+export class VMResult {
+	constructor(
+		/** Machine execution status */
+		public readonly status: VMStatus,
+		/** Final value returned */
+		public readonly value: RuntimeValue
+	) {}
 }
