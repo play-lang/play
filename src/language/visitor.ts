@@ -15,9 +15,9 @@ export abstract class Visitor {
 		node: VariableDeclarationNode
 	): void;
 	public abstract visitPrefixExpressionNode(node: PrefixExpressionNode): void;
+	public abstract visitBinaryExpressionNode(node: BinaryExpressionNode): void;
 	public abstract visitPostfixExpressionNode(node: PostfixExpressionNode): void;
 	public abstract visitLiteralExpressionNode(node: LiteralExpressionNode): void;
-	public abstract visitBinaryExpressionNode(node: BinaryExpressionNode): void;
 	public abstract visitTernaryConditionalNode(
 		node: TernaryConditionalNode
 	): void;

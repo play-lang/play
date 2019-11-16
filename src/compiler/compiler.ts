@@ -12,33 +12,33 @@ import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 import { RuntimeValue, RuntimeType } from "../vm/runtime-value";
 import { OpCode } from "../language/op-code";
 import { TokenType } from "../language/token-type";
+import SymbolTable from "../language/symbol-table";
 
 export class Compiler extends Visitor {
 	/** Ast to compile */
 	public readonly ast: ProgramNode;
 	/** Current bytecode context */
 	private _contexts: Context[] = [];
+	/** Global scope */
+	private globalScope: SymbolTable;
+	/** Symbol table for the current scope */
+	private symbolTable: SymbolTable;
+	/** Index of the next child scope to visit for each scope level */
+	private childScopeIndices: number[] = [0];
+	/** Number of scopes deep we are--used as an index to childScopeIndices */
+	private scopeDepth: number = 0;
 
+	/** Current bytecode context */
 	public get context(): Context {
 		return this._contexts[this._contexts.length - 1];
 	}
 
-	constructor(ast: ProgramNode) {
+	constructor(ast: ProgramNode, symbolTable: SymbolTable) {
 		super();
 		this.ast = ast;
+		this.symbolTable = symbolTable;
+		this.globalScope = symbolTable;
 		this._contexts.push(new Context());
-	}
-
-	public compile(): void {
-		this.ast.accept(this);
-		this.emit(OpCode.Return);
-	}
-
-	/** Emit a bytecode opcode and an optional parameter */
-	public emit(opcode: number, param?: number): void {
-		typeof param !== "undefined"
-			? this.context.bytecode.push(opcode, param)
-			: this.context.bytecode.push(opcode);
 	}
 
 	// MARK: Visitor
@@ -49,12 +49,37 @@ export class Compiler extends Visitor {
 		}
 	}
 	public visitBlockStatementNode(node: BlockStatementNode): void {
+		this.enterScope();
 		for (const statement of node.statements) {
 			statement.accept(this);
 		}
+		this.exitScope();
 	}
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
+		if (!this.symbolTable.lookup(node.name)) {
+			throw new Error(
+				"Fatal error: Can't find name " +
+					node.name +
+					" in symbol table at scope depth" +
+					this.scopeDepth
+			);
+		}
 		if (!node.expr) {
+			// There's no initializing expression for the variable, so emit
+			// the "zero value" for that variable's type:
+			switch (node.typeAnnotation[0]) {
+				case "str":
+					this.emit(OpCode.Blank);
+					break;
+				case "num":
+					this.emit(OpCode.Zero);
+					break;
+				case "bool":
+					this.emit(OpCode.False);
+					break;
+				default:
+					this.emit(OpCode.Nil);
+			}
 			return;
 		}
 		node.expr.accept(this);
@@ -83,6 +108,7 @@ export class Compiler extends Visitor {
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
 		node.lhs.accept(this);
 		switch (node.operatorType) {
+			// Postfix operators
 			case TokenType.PlusPlus:
 				this.emit(OpCode.Inc);
 				break;
@@ -115,13 +141,14 @@ export class Compiler extends Visitor {
 		const index = this.context.literal(new RuntimeValue(type, value));
 		// Have the machine push the value of the data at the specified data index
 		// to the top of the stack when this instruction is encountered
-		this.emit(OpCode.Data, index);
+		this.emit(OpCode.Constant, index);
 	}
 	// Compile a binary operator expression
 	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
 		node.lhs.accept(this);
 		node.rhs.accept(this);
 		switch (node.operatorType) {
+			// Binary arithmetic operators
 			case TokenType.Plus:
 				this.emit(OpCode.Add);
 				break;
@@ -140,6 +167,27 @@ export class Compiler extends Visitor {
 			case TokenType.Caret:
 				this.emit(OpCode.Exp);
 				break;
+			// Binary relational operators
+			case TokenType.LessThan:
+				this.emit(OpCode.LessThan);
+				break;
+			case TokenType.LessThanEqual:
+				this.emit(OpCode.LessThanEqual);
+				break;
+			case TokenType.GreaterThan:
+				this.emit(OpCode.GreaterThan);
+				break;
+			case TokenType.GreaterThanEqual:
+				this.emit(OpCode.GreaterThanEqual);
+				break;
+			// Binary comparison operators
+			case TokenType.EqualEqual:
+				this.emit(OpCode.Equality);
+				break;
+			case TokenType.BangEqual:
+				this.emit(OpCode.Inequality);
+				break;
+			// Binary logical operators
 			case TokenType.And:
 				this.emit(OpCode.And);
 				break;
@@ -150,4 +198,33 @@ export class Compiler extends Visitor {
 	}
 	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {}
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {}
+
+	// MARK: Compiler Methods
+
+	public compile(): void {
+		this.ast.accept(this);
+		this.emit(OpCode.Return);
+	}
+
+	/** Emit a bytecode opcode and an optional parameter */
+	public emit(opcode: number, param?: number): void {
+		typeof param !== "undefined"
+			? this.context.bytecode.push(opcode, param)
+			: this.context.bytecode.push(opcode);
+	}
+
+	/** Enter the next child scope of the current symbol table */
+	private enterScope(): void {
+		const childScopeIndex = this.childScopeIndices[this.scopeDepth]++;
+		this.scopeDepth++;
+		this.childScopeIndices.push(0);
+		this.symbolTable = this.symbolTable.scopes[childScopeIndex];
+		this.symbolTable.available = 0;
+	}
+
+	private exitScope(): void {
+		this.scopeDepth--;
+		this.childScopeIndices.pop();
+		this.symbolTable = this.symbolTable.enclosingScope || this.globalScope;
+	}
 }

@@ -1,8 +1,15 @@
 import { Context } from "../language/context";
 import { OpCode } from "../language/op-code";
-import { RuntimeValue } from "./runtime-value";
+import { RuntimeValue, RuntimeType } from "./runtime-value";
 import { RuntimeError } from "./runtime-error";
 import { VMResult } from "./vm-result";
+
+// Make constants for zero values since they are so widely used
+const Nil: RuntimeValue = new RuntimeValue(RuntimeType.Object, null);
+const Zero: RuntimeValue = new RuntimeValue(RuntimeType.Number, 0);
+const Blank: RuntimeValue = new RuntimeValue(RuntimeType.String, "");
+const True: RuntimeValue = new RuntimeValue(RuntimeType.Boolean, true);
+const False: RuntimeValue = new RuntimeValue(RuntimeType.Boolean, false);
 
 /** Virtual machine that runs code */
 export class VirtualMachine {
@@ -32,7 +39,7 @@ export class VirtualMachine {
 						// Todo: Don't return unless in global stack
 						return VMResult.Success;
 					}
-					case OpCode.Data: {
+					case OpCode.Constant: {
 						// Read a data value from the data section and push it to the stack
 						this.push(this.readData());
 						break;
@@ -50,6 +57,12 @@ export class VirtualMachine {
 						this.stack[index] = this.top;
 						break;
 					}
+					case OpCode.Neg: {
+						// Negate the top value of the stack
+						const top = this.pop();
+						this.push(new RuntimeValue(top.type, -top.value));
+						break;
+					}
 					case OpCode.Inc: {
 						// Increment the top value of the stack
 						const top = this.pop();
@@ -60,26 +73,6 @@ export class VirtualMachine {
 						// Decrement the top value of the stack
 						const top = this.pop();
 						this.push(new RuntimeValue(top.type, top.value - 1));
-						break;
-					}
-					case OpCode.Neg: {
-						// Negate the top value of the stack
-						const top = this.pop();
-						this.push(new RuntimeValue(top.type, -top.value));
-						break;
-					}
-					case OpCode.And: {
-						const rhs = this.pop();
-						const lhs = this.pop();
-						// Todo: Fix this logical implementation problem
-						this.push(new RuntimeValue(rhs.type, lhs.value && rhs.value));
-						break;
-					}
-					case OpCode.Or: {
-						const rhs = this.pop();
-						const lhs = this.pop();
-						// Todo: Fix this logical implementation problem
-						this.push(new RuntimeValue(rhs.type, lhs.value || rhs.value));
 						break;
 					}
 					case OpCode.Add: {
@@ -116,6 +109,105 @@ export class VirtualMachine {
 						const rhs = this.pop();
 						const lhs = this.pop();
 						this.push(new RuntimeValue(rhs.type, lhs.value ** rhs.value));
+						break;
+					}
+					case OpCode.LessThan: {
+						const rhs = this.pop();
+						const lhs = this.pop();
+						this.push(
+							new RuntimeValue(
+								RuntimeType.Boolean,
+								lhs.value < rhs.value ? True : False
+							)
+						);
+						break;
+					}
+					case OpCode.LessThanEqual: {
+						const rhs = this.pop();
+						const lhs = this.pop();
+						this.push(
+							new RuntimeValue(
+								RuntimeType.Boolean,
+								lhs.value <= rhs.value ? True : False
+							)
+						);
+						break;
+					}
+					case OpCode.GreaterThan: {
+						const rhs = this.pop();
+						const lhs = this.pop();
+						this.push(
+							new RuntimeValue(
+								RuntimeType.Boolean,
+								lhs.value > rhs.value ? True : False
+							)
+						);
+						break;
+					}
+					case OpCode.GreaterThanEqual: {
+						const rhs = this.pop();
+						const lhs = this.pop();
+						this.push(
+							new RuntimeValue(
+								RuntimeType.Boolean,
+								lhs.value >= rhs.value ? True : False
+							)
+						);
+						break;
+					}
+					case OpCode.Equality: {
+						const rhs = this.pop();
+						const lhs = this.pop();
+						this.push(
+							new RuntimeValue(
+								RuntimeType.Boolean,
+								lhs.value === rhs.value ? True : False
+							)
+						);
+						break;
+					}
+					case OpCode.Inequality: {
+						const rhs = this.pop();
+						const lhs = this.pop();
+						this.push(
+							new RuntimeValue(
+								RuntimeType.Boolean,
+								lhs.value !== rhs.value ? True : False
+							)
+						);
+						break;
+					}
+					case OpCode.And: {
+						// Todo
+						break;
+					}
+					case OpCode.Or: {
+						// Todo
+						break;
+					}
+					case OpCode.Not: {
+						// Todo
+						break;
+					}
+					// Zero-values (like in Go)
+					case OpCode.Nil: {
+						this.push(Nil);
+						break;
+					}
+					case OpCode.Zero: {
+						this.push(Zero);
+						break;
+					}
+					case OpCode.Blank: {
+						this.push(Blank);
+						break;
+					}
+					case OpCode.True: {
+						this.push(True);
+						break;
+					}
+					case OpCode.False: {
+						this.push(False);
 						break;
 					}
 				}
