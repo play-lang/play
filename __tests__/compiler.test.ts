@@ -13,7 +13,8 @@ describe("compiler/vm", () => {
 		expect(run("10 > 11").value.value).toBe(false);
 	});
 	it("should compute conditionals", () => {
-		compile("true ? 2+3 : 4+5");
+		expect(run("true ? 2+3 : 4+5").value.value).toBe(5);
+		expect(run("false ? 2+3 : 4+5", true).value.value).toBe(9);
 	});
 });
 
@@ -41,15 +42,15 @@ function run(code: string, verbose: boolean = false): VMResult {
 // 	console.log(printer.print());
 // }
 
-function compile(code: string): void {
-	const parser = new Parser("test.play", code);
-	const ast = parser.parse();
-	const printer = new PrintVisitor(ast);
-	console.log(printer.print());
-	const compiler = new Compiler(ast, parser.globalScope);
-	compiler.compile();
-	const disassembler = new Disassembler();
-	const deconstruction = disassembler.disassemble(compiler.context);
-	console.log(deconstruction);
-	console.log("Code:\t", code);
-}
+// function compile(code: string): void {
+// 	const parser = new Parser("test.play", code);
+// 	const ast = parser.parse();
+// 	const printer = new PrintVisitor(ast);
+// 	console.log(printer.print());
+// 	const compiler = new Compiler(ast, parser.globalScope);
+// 	compiler.compile();
+// 	const disassembler = new Disassembler();
+// 	const deconstruction = disassembler.disassemble(compiler.context);
+// 	console.log(deconstruction);
+// 	console.log("Code:\t", code);
+// }
