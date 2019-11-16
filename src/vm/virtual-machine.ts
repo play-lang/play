@@ -31,8 +31,8 @@ export class VirtualMachine {
 
 	public run(): VMResult {
 		try {
-			let instruction = this.readCode();
-			do {
+			while (true) {
+				const instruction = this.readCode();
 				switch (instruction) {
 					case OpCode.Return: {
 						// Return from the current procedure or main section
@@ -181,14 +181,17 @@ export class VirtualMachine {
 						break;
 					}
 					case OpCode.Jump: {
+						this.ip = this.readCode();
 						break;
 					}
 					case OpCode.JumpFalse: {
-						break;
+						const dest = this.readCode();
+						if (this.top === False) this.ip = dest;
 					}
 				}
-				instruction = this.readCode();
-			} while (instruction);
+				// Return if we reached the end
+				if (this.ip >= this.context.bytecode.length) break;
+			}
 			return new VMResult(VMStatus.Success, this.top || Nil);
 		} catch (e) {
 			const code: VMStatus =
