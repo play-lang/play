@@ -100,6 +100,11 @@ export const lexerTrie: Trie = {
 	},
 	"!": {
 		type: TokenType.Bang,
+		next: {
+			"=": {
+				type: TokenType.BangEqual,
+			},
+		},
 	},
 	".": {
 		type: TokenType.Dot,

@@ -31,7 +31,7 @@ export class Disassembler {
 			const instr = context.bytecode[this.ip++];
 			switch (instr) {
 				// 1 param instructions
-				case OpCode.Data: {
+				case OpCode.Constant: {
 					const index = context.bytecode[this.ip++];
 					str +=
 						this.ipn +
@@ -58,6 +58,10 @@ export class Disassembler {
 				case OpCode.Div:
 				case OpCode.Remain:
 				case OpCode.Exp:
+				case OpCode.Nil:
+				case OpCode.Zero:
+				case OpCode.Blank:
+				case OpCode.False:
 					str += this.ipn + "\t" + OpCode[instr].toUpperCase() + "\n";
 			}
 		}

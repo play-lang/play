@@ -63,6 +63,11 @@ export class Parser {
 	/** Number of scopes encountered */
 	protected _scopes: number = 0;
 
+	/** Global scope symbol table */
+	public get globalScope(): SymbolTable {
+		return this._symbolTables[0];
+	}
+
 	/** Active symbol table for the current scope */
 	protected get symbolTable(): SymbolTable {
 		return this._symbolTables[this._symbolTables.length - 1];

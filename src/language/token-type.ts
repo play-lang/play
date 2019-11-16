@@ -59,6 +59,7 @@ export enum TokenType {
 	And,
 	Asterisk,
 	Bang,
+	BangEqual,
 	QuestionMark,
 	Colon,
 	Comma,
