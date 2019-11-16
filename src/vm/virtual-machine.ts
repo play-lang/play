@@ -183,7 +183,7 @@ export class VirtualMachine {
 					case OpCode.Jump: {
 						break;
 					}
-					case OpCode.JumpF: {
+					case OpCode.JumpFalse: {
 						break;
 					}
 				}

@@ -217,12 +217,15 @@ export class Compiler extends Visitor {
 		this.emit(OpCode.Return);
 	}
 
-	/** Emit a bytecode opcode and an optional parameter */
+	/**
+	 * Emit a bytecode opcode and an optional parameter,
+	 * returning the index of the last emitted byte
+	 */
 	public emit(opcode: number, param?: number): number {
 		typeof param !== "undefined"
 			? this.context.bytecode.push(opcode, param)
 			: this.context.bytecode.push(opcode);
-		return this.context.bytecode.length;
+		return this.context.bytecode.length - 1;
 	}
 
 	public jump(): number {
@@ -230,7 +233,7 @@ export class Compiler extends Visitor {
 	}
 
 	public jumpIfFalse(): number {
-		return this.emit(OpCode.JumpF, 0) - 1;
+		return this.emit(OpCode.JumpFalse, 0) - 1;
 	}
 
 	public patch(context: Context, jump: number, index: number): void {

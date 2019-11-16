@@ -13,7 +13,7 @@ describe("compiler/vm", () => {
 		expect(run("10 > 11").value.value).toBe(false);
 	});
 	it("should compute conditionals", () => {
-		compile("true ? 2 : 3");
+		compile("true ? 2+3 : 4+5");
 	});
 });
 
