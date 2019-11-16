@@ -75,5 +75,5 @@ export enum OpCode {
 	/** Unconditional jump */
 	Jump,
 	/** Jump if false */
-	JumpF,
+	JumpFalse,
 }

@@ -4,7 +4,11 @@ import { RuntimeValue } from "../runtime-value";
 import { OpCode } from "../../language/op-code";
 
 export class Disassembler {
+	/** Pointer to the last found instruction */
 	private ip: number = 0;
+	/** Bytecode pointer */
+	private p: number = 0;
+	/** Data pointer */
 	private dp: number = 0;
 
 	/** Disassemble the specified context */
@@ -27,17 +31,18 @@ export class Disassembler {
 	/** Disassemble instructions for the specified context */
 	private instructions(context: Context): string {
 		let str = "\n";
-		this.ip = 0;
-		while (this.ip < context.bytecode.length) {
-			const instr = context.bytecode[this.ip++];
+		this.p = 0;
+		while (this.p < context.bytecode.length) {
+			this.ip = this.p;
+			const instr = context.bytecode[this.p++];
 			switch (instr) {
 				// 1 param instructions
 				case OpCode.Constant: {
-					const index = context.bytecode[this.ip++];
+					const index = context.bytecode[this.p++];
 					str +=
 						this.ipn +
 						"\t" +
-						OpCode[instr].toUpperCase() +
+						this.instr(instr) +
 						"\t(" +
 						index +
 						")\t= " +
@@ -75,18 +80,12 @@ export class Disassembler {
 				case OpCode.Blank:
 				case OpCode.True:
 				case OpCode.False:
-					str += this.ipn + "\t" + OpCode[instr].toUpperCase() + "\n";
+					str += this.ipn + "\t" + this.instr(instr) + "\n";
 					break;
 				case OpCode.Jump:
-				case OpCode.JumpF: {
-					const jumpTarget = context.bytecode[this.ip++];
-					str +=
-						this.ipn +
-						"\t" +
-						OpCode[instr].toUpperCase() +
-						"\t" +
-						jumpTarget +
-						"\n";
+				case OpCode.JumpFalse: {
+					const jumpTarget = context.bytecode[this.p++];
+					str += this.ipn + "\t" + this.instr(instr) + "\t" + jumpTarget + "\n";
 				}
 			}
 		}
@@ -110,5 +109,9 @@ export class Disassembler {
 	/** Formatted version of the data pointer */
 	private get dpn(): string {
 		return this.format(this.dp);
+	}
+
+	private instr(code: OpCode): string {
+		return String(OpCode[code].toUpperCase()).padStart(20, " ");
 	}
 }
