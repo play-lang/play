@@ -48,7 +48,7 @@ export interface TokenLike extends Describable {
 	 * Decorative tokens that may have preceded this one
 	 * (such as comments and whitespace)
 	 */
-	readonly trivia: TokenLike[];
+	trivia: TokenLike[];
 }
 
 export class Token implements TokenLike, Position, Describable {
@@ -59,9 +59,9 @@ export class Token implements TokenLike, Position, Describable {
 	public readonly column: number;
 	public readonly length: number;
 	public readonly lexeme: string;
-	public readonly trivia: TokenLike[];
+	public trivia: TokenLike[] = [];
 
-	constructor(options: Omit<TokenLike, "description">) {
+	constructor(options: Omit<TokenLike, "description" | "trivia">) {
 		this.fileTableIndex = options.fileTableIndex;
 		this.type = options.type;
 		this.pos = options.pos;
@@ -69,7 +69,6 @@ export class Token implements TokenLike, Position, Describable {
 		this.column = options.column;
 		this.length = options.length;
 		this.lexeme = options.lexeme;
-		this.trivia = options.trivia;
 	}
 
 	public get description(): string {
@@ -87,7 +86,7 @@ export class ErrorToken extends Token {
 	public readonly fileTable: string[];
 
 	constructor(
-		options: Omit<TokenLike, "description"> & {
+		options: Omit<TokenLike, "description" | "trivia"> & {
 			hints: Set<string>;
 			fileTable: string[];
 		}

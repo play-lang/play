@@ -66,6 +66,11 @@ export class Lexer {
 		return this._lookahead;
 	}
 
+	/** Number of tokens scanned */
+	public get numTokens(): number {
+		return this._numTokens;
+	}
+
 	/** Current token */
 	protected _token: TokenLike;
 
@@ -89,14 +94,14 @@ export class Lexer {
 		column: 0,
 	};
 
-	/** Trivia accumulated while searching for the next non-trivial token */
-	protected trivia: TokenLike[] = [];
-
 	/** Index of the file this lexer is scanning */
 	protected fileTableIndex: number;
 
 	/** Contents of the file we are scanning */
 	protected readonly contents: string;
+
+	/** Number of tokens read */
+	protected _numTokens: number = 0;
 
 	/**
 	 * Create a lexer for a given file and its contents
@@ -189,7 +194,6 @@ export class Lexer {
 		return new ErrorToken({
 			fileTableIndex: this.fileTableIndex,
 			lexeme: this.lexeme,
-			trivia: this.trivia,
 			length: this.length,
 			pos: this.tail.pos,
 			line: this.tail.line,
@@ -211,7 +215,6 @@ export class Lexer {
 			new ErrorToken({
 				fileTableIndex: this.fileTableIndex,
 				lexeme: this.peek,
-				trivia: this.trivia,
 				length: 1,
 				pos: this.head.pos,
 				line: this.head.line,
@@ -239,7 +242,7 @@ export class Lexer {
 
 		// Trivia consists of junk tokens like whitespace, comments, and
 		// comment blocks that precede a useful token
-		this.trivia = [];
+		const trivia = [];
 
 		let token = this.scanNextToken();
 		// Keep a list of all the consecutive trivia tokens we find
@@ -250,10 +253,11 @@ export class Lexer {
 			token.type === TokenType.Comment ||
 			token.type === TokenType.CommentBlock
 		) {
-			this.trivia.push(token);
+			trivia.push(token);
 			this.tail = { ...this.head };
 			token = this.scanNextToken();
 		}
+		token.trivia = trivia;
 		return token;
 	}
 
@@ -293,7 +297,6 @@ export class Lexer {
 			line: first.line,
 			column: first.column,
 			lexeme: String(first.lexeme) + String(second.lexeme),
-			trivia: this.trivia,
 			length: first.length + second.length,
 			type: Number.NaN,
 			hints: combinedHints,
@@ -305,7 +308,6 @@ export class Lexer {
 		return new Token({
 			fileTableIndex: this.fileTableIndex,
 			lexeme: lexeme || this.lexeme,
-			trivia: this.trivia,
 			length: this.length,
 			pos: this.tail.pos,
 			line: this.tail.line,
@@ -315,6 +317,8 @@ export class Lexer {
 	}
 
 	private scanNextToken(): TokenLike {
+		this._numTokens++;
+
 		let char = this.advance();
 
 		// Examine each initial character to determine which lexer
