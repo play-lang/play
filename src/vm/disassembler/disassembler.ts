@@ -1,5 +1,6 @@
 import { Context } from "../../language/context";
-import { RuntimeType, RuntimeValue } from "../runtime-value";
+import { RuntimeType } from "../runtime-type";
+import { RuntimeValue } from "../runtime-value";
 import { OpCode } from "../../language/op-code";
 
 export class Disassembler {
@@ -44,23 +45,35 @@ export class Disassembler {
 						"\n";
 					break;
 				}
+				case OpCode.Get:
+				case OpCode.Set:
+					// Todo: Describe locals
+					break;
 				// 0 param instructions
 				case OpCode.Return:
 				case OpCode.Pop:
+				case OpCode.Neg:
 				case OpCode.Inc:
 				case OpCode.Dec:
-				case OpCode.Neg:
-				case OpCode.And:
-				case OpCode.Or:
 				case OpCode.Add:
 				case OpCode.Sub:
 				case OpCode.Mul:
 				case OpCode.Div:
 				case OpCode.Remain:
 				case OpCode.Exp:
+				case OpCode.LessThan:
+				case OpCode.LessThanEqual:
+				case OpCode.GreaterThan:
+				case OpCode.GreaterThanEqual:
+				case OpCode.Equality:
+				case OpCode.Inequality:
+				case OpCode.And:
+				case OpCode.Or:
+				case OpCode.Not:
 				case OpCode.Nil:
 				case OpCode.Zero:
 				case OpCode.Blank:
+				case OpCode.True:
 				case OpCode.False:
 					str += this.ipn + "\t" + OpCode[instr].toUpperCase() + "\n";
 			}

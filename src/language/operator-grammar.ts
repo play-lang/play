@@ -57,6 +57,29 @@ export const infixParselets: Map<TokenType, InfixParselet> = new Map<
 	// Logical operators
 	[TokenType.Or, new BinaryOperatorParselet(Precedence.LogicalOr, false)],
 	[TokenType.And, new BinaryOperatorParselet(Precedence.LogicalAnd, false)],
+	// Equality
+	[
+		TokenType.EqualEqual,
+		new BinaryOperatorParselet(Precedence.Equality, false),
+	],
+	[TokenType.BangEqual, new BinaryOperatorParselet(Precedence.Equality, false)],
+	// Relational operators
+	[
+		TokenType.LessThan,
+		new BinaryOperatorParselet(Precedence.Relational, false),
+	],
+	[
+		TokenType.LessThanEqual,
+		new BinaryOperatorParselet(Precedence.Relational, false),
+	],
+	[
+		TokenType.GreaterThan,
+		new BinaryOperatorParselet(Precedence.Relational, false),
+	],
+	[
+		TokenType.GreaterThanEqual,
+		new BinaryOperatorParselet(Precedence.Relational, false),
+	],
 	// Binary operators
 	[TokenType.Plus, new BinaryOperatorParselet(Precedence.Additive, false)],
 	[TokenType.Minus, new BinaryOperatorParselet(Precedence.Additive, false)],
@@ -73,6 +96,7 @@ export const infixParselets: Map<TokenType, InfixParselet> = new Map<
 		new BinaryOperatorParselet(Precedence.Multiplicative, false),
 	],
 	[TokenType.Caret, new BinaryOperatorParselet(Precedence.Exponent, true)],
+
 	// Postfix operators
 	[TokenType.PlusPlus, new PostfixOperatorParselet()],
 	[TokenType.MinusMinus, new PostfixOperatorParselet()],

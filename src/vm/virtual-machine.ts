@@ -1,6 +1,7 @@
 import { Context } from "../language/context";
 import { OpCode } from "../language/op-code";
-import { RuntimeValue, RuntimeType } from "./runtime-value";
+import { RuntimeType } from "./runtime-type";
+import { RuntimeValue } from "./runtime-value";
 import { RuntimeError } from "./runtime-error";
 import { VMResult } from "./vm-result";
 
@@ -114,67 +115,37 @@ export class VirtualMachine {
 					case OpCode.LessThan: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(
-							new RuntimeValue(
-								RuntimeType.Boolean,
-								lhs.value < rhs.value ? True : False
-							)
-						);
+						this.push(lhs.value < rhs.value ? True : False);
 						break;
 					}
 					case OpCode.LessThanEqual: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(
-							new RuntimeValue(
-								RuntimeType.Boolean,
-								lhs.value <= rhs.value ? True : False
-							)
-						);
+						this.push(lhs.value <= rhs.value ? True : False);
 						break;
 					}
 					case OpCode.GreaterThan: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(
-							new RuntimeValue(
-								RuntimeType.Boolean,
-								lhs.value > rhs.value ? True : False
-							)
-						);
+						this.push(lhs.value > rhs.value ? True : False);
 						break;
 					}
 					case OpCode.GreaterThanEqual: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(
-							new RuntimeValue(
-								RuntimeType.Boolean,
-								lhs.value >= rhs.value ? True : False
-							)
-						);
+						this.push(lhs.value >= rhs.value ? True : False);
 						break;
 					}
 					case OpCode.Equality: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(
-							new RuntimeValue(
-								RuntimeType.Boolean,
-								lhs.value === rhs.value ? True : False
-							)
-						);
+						this.push(lhs.value === rhs.value ? True : False);
 						break;
 					}
 					case OpCode.Inequality: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(
-							new RuntimeValue(
-								RuntimeType.Boolean,
-								lhs.value !== rhs.value ? True : False
-							)
-						);
+						this.push(lhs.value !== rhs.value ? True : False);
 						break;
 					}
 					case OpCode.And: {

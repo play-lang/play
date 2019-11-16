@@ -9,7 +9,8 @@ import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { Context } from "../language/context";
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
-import { RuntimeValue, RuntimeType } from "../vm/runtime-value";
+import { RuntimeType } from "../vm/runtime-type";
+import { RuntimeValue } from "../vm/runtime-value";
 import { OpCode } from "../language/op-code";
 import { TokenType } from "../language/token-type";
 import SymbolTable from "../language/symbol-table";
