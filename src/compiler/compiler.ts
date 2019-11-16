@@ -128,8 +128,8 @@ export class Compiler extends Visitor {
 				break;
 			case TokenType.Boolean:
 				value = node.token.lexeme === "true" ? true : false;
-				type = RuntimeType.Boolean;
-				break;
+				value ? this.emit(OpCode.True) : this.emit(OpCode.False);
+				return;
 			case TokenType.Number:
 				value = Number.parseFloat(node.token.lexeme);
 				type = RuntimeType.Number;
@@ -197,7 +197,17 @@ export class Compiler extends Visitor {
 				break;
 		}
 	}
-	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {}
+
+	// Compiler ternary operator: true ? a : b
+	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
+		node.predicate.accept(this);
+		const falseJump = this.jumpIfFalse();
+		node.consequent.accept(this);
+		const jump = this.jump();
+		this.patch(this.context, falseJump, this.context.bytecode.length);
+		node.alternate.accept(this);
+		this.patch(this.context, jump, this.context.bytecode.length);
+	}
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {}
 
 	// MARK: Compiler Methods
@@ -208,10 +218,23 @@ export class Compiler extends Visitor {
 	}
 
 	/** Emit a bytecode opcode and an optional parameter */
-	public emit(opcode: number, param?: number): void {
+	public emit(opcode: number, param?: number): number {
 		typeof param !== "undefined"
 			? this.context.bytecode.push(opcode, param)
 			: this.context.bytecode.push(opcode);
+		return this.context.bytecode.length;
+	}
+
+	public jump(): number {
+		return this.emit(OpCode.Jump, 0) - 1;
+	}
+
+	public jumpIfFalse(): number {
+		return this.emit(OpCode.JumpF, 0) - 1;
+	}
+
+	public patch(context: Context, jump: number, index: number): void {
+		context.bytecode[jump + 1] = index;
 	}
 
 	/** Enter the next child scope of the current symbol table */

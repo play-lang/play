@@ -69,4 +69,11 @@ export enum OpCode {
 	True,
 	/** Push the false value to the stack */
 	False,
+
+	// Jumps
+
+	/** Unconditional jump */
+	Jump,
+	/** Jump if false */
+	JumpF,
 }
