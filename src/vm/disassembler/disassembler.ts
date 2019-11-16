@@ -76,6 +76,18 @@ export class Disassembler {
 				case OpCode.True:
 				case OpCode.False:
 					str += this.ipn + "\t" + OpCode[instr].toUpperCase() + "\n";
+					break;
+				case OpCode.Jump:
+				case OpCode.JumpF: {
+					const jumpTarget = context.bytecode[this.ip++];
+					str +=
+						this.ipn +
+						"\t" +
+						OpCode[instr].toUpperCase() +
+						"\t" +
+						jumpTarget +
+						"\n";
+				}
 			}
 		}
 		return str;
@@ -88,14 +100,7 @@ export class Disassembler {
 
 	/** Pad a number and split it */
 	private format(num: number): string {
-		const pad = String(num).padStart(9, "0");
-		return (
-			pad.substring(0, 3) +
-			"\t" +
-			pad.substring(3, 6) +
-			"\t" +
-			pad.substring(6, 9)
-		);
+		return String(num).padStart(4, "0");
 	}
 
 	/** Formatted version of the instruction pointer */

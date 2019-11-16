@@ -8,11 +8,12 @@ import { VMResult } from "../src/vm/vm-result";
 
 describe("compiler/vm", () => {
 	it("should compute expressions", () => {
+		expect(run("5 + (3 - 2 ^ (-3 + 3) % 3) * 6 + 2 / 2").value.value).toBe(18);
 		expect(run("10 + 11").value.value).toBe(21);
 		expect(run("10 > 11").value.value).toBe(false);
 	});
 	it("should compute conditionals", () => {
-		printAst("true ? 2 : 3");
+		compile("true ? 2 : 3");
 	});
 });
 
@@ -33,9 +34,22 @@ function run(code: string, verbose: boolean = false): VMResult {
 	return result;
 }
 
-function printAst(code: string): void {
+// function printAst(code: string): void {
+// 	const parser = new Parser("test.play", code);
+// 	const ast = parser.parse();
+// 	const printer = new PrintVisitor(ast);
+// 	console.log(printer.print());
+// }
+
+function compile(code: string): void {
 	const parser = new Parser("test.play", code);
 	const ast = parser.parse();
 	const printer = new PrintVisitor(ast);
 	console.log(printer.print());
+	const compiler = new Compiler(ast, parser.globalScope);
+	compiler.compile();
+	const disassembler = new Disassembler();
+	const deconstruction = disassembler.disassemble(compiler.context);
+	console.log(deconstruction);
+	console.log("Code:\t", code);
 }

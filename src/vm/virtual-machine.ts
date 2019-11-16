@@ -180,6 +180,12 @@ export class VirtualMachine {
 						this.push(False);
 						break;
 					}
+					case OpCode.Jump: {
+						break;
+					}
+					case OpCode.JumpF: {
+						break;
+					}
 				}
 				instruction = this.readCode();
 			} while (instruction);
