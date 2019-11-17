@@ -8,17 +8,24 @@ import { VMResult } from "../src/vm/vm-result";
 
 describe("compiler/vm", () => {
 	it("should compute expressions", () => {
+		// Throw some math at the language:
 		expect(run("5 + (3 - 2 ^ (-3 + 3) % 3) * 6 + 2 / 2").value.value).toBe(18);
 		expect(run("10 + 11").value.value).toBe(21);
 		expect(run("10 > 11").value.value).toBe(false);
 	});
-	it("should compute conditionals", () => {
+	it("should compute ternary conditional operator", () => {
 		expect(run("true ? 2+3 : 4+5").value.value).toBe(5);
 		expect(run("false ? 2+3 : 4+5").value.value).toBe(9);
-		printAst("true ? true ? 1 : 2 : 3");
-		// expect(run("true ? true ? 1 : 2 : 3", true).value.value).toBe(1);
-		// expect(run("true ? false ? 1 : 2 : 3").value.value).toBe(2);
-		// expect(run("false ? true ? 1 : 2 : 3").value.value).toBe(3);
+		// Ensure that nested ternary operators evaluate correctly
+		//
+		// Nested on inside:
+		expect(run("true ? true ? 1 : 2 : 3").value.value).toBe(1);
+		expect(run("true ? false ? 1 : 2 : 3").value.value).toBe(2);
+		expect(run("false ? true ? 1 : 2 : 3").value.value).toBe(3);
+		// Nested on outside:
+		expect(run("true ? 1 : true ? 2: 3").value.value).toBe(1);
+		expect(run("false ? 1 : true ? 2: 3").value.value).toBe(2);
+		expect(run("false ? 1 : false ? 2: 3").value.value).toBe(3);
 	});
 });
 
@@ -39,12 +46,12 @@ function run(code: string, verbose: boolean = false): VMResult {
 	return result;
 }
 
-function printAst(code: string): void {
-	const parser = new Parser("test.play", code);
-	const ast = parser.parse();
-	const printer = new PrintVisitor(ast);
-	console.log(printer.print());
-}
+// function printAst(code: string): void {
+// 	const parser = new Parser("test.play", code);
+// 	const ast = parser.parse();
+// 	const printer = new PrintVisitor(ast);
+// 	console.log(printer.print());
+// }
 
 // function compile(code: string): void {
 // 	const parser = new Parser("test.play", code);
