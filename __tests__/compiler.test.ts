@@ -28,10 +28,19 @@ describe("compiler/vm", () => {
 		expect(run("false ? 1 : false ? 2: 3").value.value).toBe(3);
 	});
 	it("should short-circuit logical operators", () => {
+		// And
+		expect(run("false and false").value.value).toBe(false);
+		expect(run("false and 0").value.value).toBe(false);
 		expect(run("true and true").value.value).toBe(true);
-		expect(run("false and 20").value.value).toBe(20);
-		expect(run("20 and 30").value.value).toBe(20);
-		expect(run("0 and 30").value.value).toBe(30);
+		expect(run("false and 20").value.value).toBe(false);
+		expect(run("20 and 30").value.value).toBe(30);
+		expect(run("0 and 30").value.value).toBe(0);
+		// Or
+		expect(run("0 or 1", true).value.value).toBe(1);
+		expect(run("1 or 0").value.value).toBe(1);
+		expect(run("true or 20").value.value).toBe(true);
+		expect(run("false or true").value.value).toBe(true);
+		expect(run("false or 0").value.value).toBe(0);
 	});
 });
 
