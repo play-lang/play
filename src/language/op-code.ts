@@ -3,7 +3,7 @@ export enum OpCode {
 
 	/** Return instruction */
 	Return = 1,
-	/** Push constant from data section */
+	/** Push constant from constant pool */
 	Constant,
 	/** Discard the top of the stack */
 	Pop,

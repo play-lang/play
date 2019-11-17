@@ -20,8 +20,8 @@ export class Disassembler {
 	public data(context: Context): string {
 		let str = "";
 		this.dp = 0;
-		while (this.dp < context.data.length) {
-			const value = context.data[this.dp];
+		while (this.dp < context.constantPool.length) {
+			const value = context.constantPool[this.dp];
 			str += this.dpn + "\t" + this.describe(value);
 			this.dp++;
 		}
@@ -46,7 +46,7 @@ export class Disassembler {
 						"\t(" +
 						index +
 						")\t= " +
-						context.data[index].value +
+						context.constantPool[index].value +
 						"\n";
 					break;
 				}
