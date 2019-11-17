@@ -200,14 +200,14 @@ export class Compiler extends Visitor {
 		switch (node.operatorType) {
 			// Binary logical operators
 			case TokenType.And: {
-				const skipJump = this.jumpIfTrue();
+				const skipJump = this.jumpIfFalse();
 				this.emit(OpCode.Pop);
 				node.rhs.accept(this);
 				this.patch(this.context, skipJump, this.context.bytecode.length);
 				break;
 			}
 			case TokenType.Or: {
-				const skipJump = this.jumpIfFalse();
+				const skipJump = this.jumpIfTrue();
 				this.emit(OpCode.Pop);
 				node.rhs.accept(this);
 				this.patch(this.context, skipJump, this.context.bytecode.length);
