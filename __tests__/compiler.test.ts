@@ -14,7 +14,11 @@ describe("compiler/vm", () => {
 	});
 	it("should compute conditionals", () => {
 		expect(run("true ? 2+3 : 4+5").value.value).toBe(5);
-		expect(run("false ? 2+3 : 4+5", true).value.value).toBe(9);
+		expect(run("false ? 2+3 : 4+5").value.value).toBe(9);
+		printAst("true ? true ? 1 : 2 : 3");
+		// expect(run("true ? true ? 1 : 2 : 3", true).value.value).toBe(1);
+		// expect(run("true ? false ? 1 : 2 : 3").value.value).toBe(2);
+		// expect(run("false ? true ? 1 : 2 : 3").value.value).toBe(3);
 	});
 });
 
@@ -35,12 +39,12 @@ function run(code: string, verbose: boolean = false): VMResult {
 	return result;
 }
 
-// function printAst(code: string): void {
-// 	const parser = new Parser("test.play", code);
-// 	const ast = parser.parse();
-// 	const printer = new PrintVisitor(ast);
-// 	console.log(printer.print());
-// }
+function printAst(code: string): void {
+	const parser = new Parser("test.play", code);
+	const ast = parser.parse();
+	const printer = new PrintVisitor(ast);
+	console.log(printer.print());
+}
 
 // function compile(code: string): void {
 // 	const parser = new Parser("test.play", code);

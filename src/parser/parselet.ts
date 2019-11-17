@@ -44,7 +44,8 @@ export class GroupParselet implements PrefixParselet {
 export class TernaryConditionalParselet implements InfixParselet {
 	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
 		const predicate = lhs;
-		const consequent = parser.expression(this.precedence);
+		// Since ternary is right associative, we must subtract one from precedence
+		const consequent = parser.expression(this.precedence - 1);
 		parser.consume(
 			TokenType.Colon,
 			"Expected colon after conditional operator"
