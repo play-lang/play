@@ -182,23 +182,11 @@ export class VirtualMachine {
 						if (!this.isTruthy(this.top)) this.ip = dest;
 						break;
 					}
-					// case OpCode.JumpFalsePop: {
-					// 	const dest = this.readCode();
-					// 	if (this.top === False) this.ip = dest;
-					// 	this.pop();
-					// 	break;
-					// }
 					case OpCode.JumpTrue: {
 						const dest = this.readCode();
 						if (this.isTruthy(this.top)) this.ip = dest;
 						break;
 					}
-					// case OpCode.JumpTruePop: {
-					// 	const dest = this.readCode();
-					// 	if (this.top === True) this.ip = dest;
-					// 	this.pop();
-					// 	break;
-					// }
 				}
 				// Return if we reached the end
 				if (this.ip >= this.context.bytecode.length) break;
