@@ -211,7 +211,7 @@ export class VirtualMachine {
 	 */
 	public readData(): RuntimeValue {
 		const index = this.readCode();
-		const data = this.context.data[index];
+		const data = this.context.constantPool[index];
 		return new RuntimeValue(data.type, data.value);
 	}
 

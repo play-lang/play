@@ -17,8 +17,19 @@ import SymbolTable from "../language/symbol-table";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
 
 export class Compiler extends Visitor {
+	/** Current bytecode context */
+	public get context(): Context {
+		return this._contexts[this._contexts.length - 1];
+	}
 	/** Ast to compile */
 	public readonly ast: ProgramNode;
+
+	/** Constant pool preceding the code */
+	public readonly constantPool: RuntimeValue[] = [];
+	/**
+	 * Maps constant values to their index in the constant pool to prevent duplicate entries
+	 */
+	public readonly constants: Map<any, number> = new Map();
 	/** Current bytecode context */
 	private _contexts: Context[] = [];
 	/** Global scope */
@@ -30,17 +41,12 @@ export class Compiler extends Visitor {
 	/** Number of scopes deep we are--used as an index to childScopeIndices */
 	private scopeDepth: number = 0;
 
-	/** Current bytecode context */
-	public get context(): Context {
-		return this._contexts[this._contexts.length - 1];
-	}
-
 	constructor(ast: ProgramNode, symbolTable: SymbolTable) {
 		super();
 		this.ast = ast;
 		this.symbolTable = symbolTable;
 		this.globalScope = symbolTable;
-		this._contexts.push(new Context());
+		this._contexts.push(new Context(this.constantPool, this.constants));
 	}
 
 	// MARK: Visitor
@@ -136,8 +142,8 @@ export class Compiler extends Visitor {
 				type = RuntimeType.Number;
 				break;
 			case TokenType.Nil:
-				type = RuntimeType.Object;
-				value = null;
+				this.emit(OpCode.Nil);
+				return;
 		}
 		// Add the literal to the data section of the current context
 		const index = this.context.literal(new RuntimeValue(type, value));

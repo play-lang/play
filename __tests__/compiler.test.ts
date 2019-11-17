@@ -6,6 +6,13 @@ import { VirtualMachine } from "../src/vm/virtual-machine";
 import { VMStatus } from "../src/vm/vm-status";
 
 describe("compiler/vm", () => {
+	it("should not register duplicates in the constant pool", () => {
+		expect(
+			compile('str x = "x"\nstr y = "x"').startsWith(
+				"0000\tString\tx\n\n0000\t            CONSTANT\t(0)\t= x\n"
+			)
+		).toBe(true);
+	});
 	it("should compute expressions", () => {
 		// Throw some math at the language:
 		expect(run("5 + (3 - 2 ^ (-3 + 3) % 3) * 6 + 2 / 2")).toBe(18);
@@ -67,15 +74,12 @@ function run(code: string, verbose: boolean = false): any {
 // 	console.log(printer.print());
 // }
 
-// function compile(code: string): void {
-// 	const parser = new Parser("test.play", code);
-// 	const ast = parser.parse();
-// 	const printer = new PrintVisitor(ast);
-// 	console.log(printer.print());
-// 	const compiler = new Compiler(ast, parser.globalScope);
-// 	compiler.compile();
-// 	const disassembler = new Disassembler();
-// 	const deconstruction = disassembler.disassemble(compiler.context);
-// 	console.log(deconstruction);
-// 	console.log("Code:\t", code);
-// }
+function compile(code: string): string {
+	const parser = new Parser("test.play", code);
+	const ast = parser.parse();
+	const compiler = new Compiler(ast, parser.globalScope);
+	compiler.compile();
+	const disassembler = new Disassembler();
+	const deconstruction = disassembler.disassemble(compiler.context);
+	return deconstruction;
+}
