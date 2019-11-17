@@ -10,6 +10,7 @@ import {
 	TernaryConditionalParselet,
 	AssignmentParselet,
 	PostfixOperatorParselet,
+	BinaryLogicalOperatorParselet,
 } from "../parser/parselet";
 
 // http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
@@ -55,8 +56,8 @@ export const infixParselets: Map<TokenType, InfixParselet> = new Map<
 	[TokenType.QuestionMark, new TernaryConditionalParselet()],
 	// Nil-coalescing
 	// Logical operators
-	[TokenType.Or, new BinaryOperatorParselet(Precedence.LogicalOr, false)],
-	[TokenType.And, new BinaryOperatorParselet(Precedence.LogicalAnd, false)],
+	[TokenType.Or, new BinaryLogicalOperatorParselet(Precedence.LogicalOr)],
+	[TokenType.And, new BinaryLogicalOperatorParselet(Precedence.LogicalAnd)],
 	// Equality
 	[
 		TokenType.EqualEqual,

@@ -72,8 +72,6 @@ export class Disassembler {
 				case OpCode.GreaterThanEqual:
 				case OpCode.Equality:
 				case OpCode.Inequality:
-				case OpCode.And:
-				case OpCode.Or:
 				case OpCode.Not:
 				case OpCode.Nil:
 				case OpCode.Zero:
@@ -83,7 +81,10 @@ export class Disassembler {
 					str += this.ipn + "\t" + this.instr(instr) + "\n";
 					break;
 				case OpCode.Jump:
-				case OpCode.JumpFalse: {
+				case OpCode.JumpFalse:
+				// case OpCode.JumpFalsePop:
+				// case OpCode.JumpTruePop:
+				case OpCode.JumpTrue: {
 					const jumpTarget = context.bytecode[this.p++];
 					str += this.ipn + "\t" + this.instr(instr) + "\t" + jumpTarget + "\n";
 				}
