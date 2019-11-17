@@ -10,6 +10,7 @@ import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
+import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
 
 export class PrintVisitor extends Visitor implements Describable {
 	private indent: number = 0;
@@ -84,6 +85,18 @@ export class PrintVisitor extends Visitor implements Describable {
 
 	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
 		this.desc += "Binary(" + TokenType[node.operatorType] + ")\n";
+		this.indent += 1;
+		this.desc += this.spaces + "├── ";
+		node.lhs.accept(this);
+		this.desc += this.spaces + "└── ";
+		node.rhs.accept(this);
+		this.indent -= 1;
+	}
+
+	public visitBinaryLogicalExpressionNode(
+		node: BinaryLogicalExpressionNode
+	): void {
+		this.desc += "BinaryLogical(" + TokenType[node.operatorType] + ")\n";
 		this.indent += 1;
 		this.desc += this.spaces + "├── ";
 		node.lhs.accept(this);

@@ -9,6 +9,7 @@ import { Precedence } from "../language/precedence";
 import { TernaryConditionalNode } from "./nodes/ternary-conditional-node";
 import { AssignmentExpressionNode } from "./nodes/assignment-expression-node";
 import { PostfixExpressionNode } from "./nodes/postfix-expression-node";
+import { BinaryLogicalExpressionNode } from "./nodes/binary-logical-expression-node";
 
 export interface PrefixParselet {
 	parse(parser: Parser, token: TokenLike): Expression;
@@ -90,6 +91,16 @@ export class BinaryOperatorParselet implements InfixParselet {
 			this.precedence - (this.isRightAssociative ? 1 : 0)
 		);
 		return new BinaryExpressionNode(token.type, lhs, rhs);
+	}
+}
+
+export class BinaryLogicalOperatorParselet implements InfixParselet {
+	constructor(public readonly precedence: number) {}
+	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
+		// We drop the precedence slightly for right associative operators
+		// so that another right associative operator will bind more tightly
+		const rhs: Expression = parser.expression(this.precedence);
+		return new BinaryLogicalExpressionNode(token.type, lhs, rhs);
 	}
 }
 

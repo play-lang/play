@@ -147,16 +147,9 @@ export class VirtualMachine {
 						this.push(lhs.value !== rhs.value ? True : False);
 						break;
 					}
-					case OpCode.And: {
-						// Todo
-						break;
-					}
-					case OpCode.Or: {
-						// Todo
-						break;
-					}
 					case OpCode.Not: {
-						// Todo
+						const rhs = this.pop();
+						this.push(this.isTruthy(rhs) ? False : True);
 						break;
 					}
 					// Zero-values (like in Go)
@@ -186,8 +179,26 @@ export class VirtualMachine {
 					}
 					case OpCode.JumpFalse: {
 						const dest = this.readCode();
-						if (this.top === False) this.ip = dest;
+						if (!this.isTruthy(this.top)) this.ip = dest;
+						break;
 					}
+					// case OpCode.JumpFalsePop: {
+					// 	const dest = this.readCode();
+					// 	if (this.top === False) this.ip = dest;
+					// 	this.pop();
+					// 	break;
+					// }
+					case OpCode.JumpTrue: {
+						const dest = this.readCode();
+						if (this.isTruthy(this.top)) this.ip = dest;
+						break;
+					}
+					// case OpCode.JumpTruePop: {
+					// 	const dest = this.readCode();
+					// 	if (this.top === True) this.ip = dest;
+					// 	this.pop();
+					// 	break;
+					// }
 				}
 				// Return if we reached the end
 				if (this.ip >= this.context.bytecode.length) break;
@@ -245,5 +256,19 @@ export class VirtualMachine {
 	/** Top value in the stack */
 	public get top(): RuntimeValue {
 		return this.stack[this.stack.length - 1];
+	}
+
+	/** Returns true if the specified runtime value evaluates to true */
+	public isTruthy(value: RuntimeValue): boolean {
+		switch (value.type) {
+			case RuntimeType.Boolean:
+				return value === True;
+			case RuntimeType.Number:
+				return value.value !== 0 && value.value !== -0;
+			case RuntimeType.String:
+				return value.value !== "";
+			case RuntimeType.Object:
+				return value !== Nil;
+		}
 	}
 }

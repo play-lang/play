@@ -27,6 +27,12 @@ describe("compiler/vm", () => {
 		expect(run("false ? 1 : true ? 2: 3").value.value).toBe(2);
 		expect(run("false ? 1 : false ? 2: 3").value.value).toBe(3);
 	});
+	it("should short-circuit logical operators", () => {
+		expect(run("true and true").value.value).toBe(true);
+		expect(run("false and 20").value.value).toBe(20);
+		expect(run("20 and 30").value.value).toBe(20);
+		expect(run("0 and 30").value.value).toBe(30);
+	});
 });
 
 function run(code: string, verbose: boolean = false): VMResult {

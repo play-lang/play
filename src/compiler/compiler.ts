@@ -14,6 +14,7 @@ import { RuntimeValue } from "../vm/runtime-value";
 import { OpCode } from "../language/op-code";
 import { TokenType } from "../language/token-type";
 import SymbolTable from "../language/symbol-table";
+import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
 
 export class Compiler extends Visitor {
 	/** Ast to compile */
@@ -188,14 +189,32 @@ export class Compiler extends Visitor {
 			case TokenType.BangEqual:
 				this.emit(OpCode.Inequality);
 				break;
-			// Binary logical operators
-			case TokenType.And:
-				this.emit(OpCode.And);
-				break;
-			case TokenType.Or:
-				this.emit(OpCode.Or);
-				break;
 		}
+	}
+
+	// Visit binary logical operators and implement short-circuiting
+	public visitBinaryLogicalExpressionNode(
+		node: BinaryLogicalExpressionNode
+	): void {
+		node.lhs.accept(this);
+		switch (node.operatorType) {
+			// Binary logical operators
+			case TokenType.And: {
+				const skipJump = this.jumpIfTrue();
+				this.emit(OpCode.Pop);
+				node.rhs.accept(this);
+				this.patch(this.context, skipJump, this.context.bytecode.length);
+				break;
+			}
+			case TokenType.Or: {
+				const skipJump = this.jumpIfFalse();
+				this.emit(OpCode.Pop);
+				node.rhs.accept(this);
+				this.patch(this.context, skipJump, this.context.bytecode.length);
+				break;
+			}
+		}
+		return;
 	}
 
 	// Compiler ternary operator: true ? a : b
@@ -234,6 +253,10 @@ export class Compiler extends Visitor {
 
 	public jumpIfFalse(): number {
 		return this.emit(OpCode.JumpFalse, 0) - 1;
+	}
+
+	public jumpIfTrue(): number {
+		return this.emit(OpCode.JumpTrue, 0) - 1;
 	}
 
 	public patch(context: Context, jump: number, index: number): void {

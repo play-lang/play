@@ -48,12 +48,6 @@ export enum OpCode {
 	/** Inequality */
 	Inequality,
 
-	// Logical Operators
-
-	/** Logical conjunction using top two values of the stack */
-	And,
-	/** Logical disjunction using top two values of the stack */
-	Or,
 	/** Logical complement */
 	Not,
 
@@ -76,4 +70,6 @@ export enum OpCode {
 	Jump,
 	/** Jump if false */
 	JumpFalse,
+	/** Jump if true */
+	JumpTrue,
 }
