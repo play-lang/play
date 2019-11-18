@@ -8,6 +8,7 @@ import { LoadedProgram } from "./loaded-program";
  * from the compiler
  */
 export class Context extends LoadedProgram {
+	public readonly name: string;
 	/**
 	 * Maps constant values to their index in the constant pool to prevent duplicate entries
 	 */
@@ -15,17 +16,24 @@ export class Context extends LoadedProgram {
 	/** Source map: maps bytecode offsets to original source code positions */
 	public readonly sourceMap: any = undefined;
 
-	constructor(constantPool: RuntimeValue[], constants: Map<any, number>) {
+	constructor(
+		name: string,
+		constantPool: RuntimeValue[],
+		constants: Map<any, number>
+	) {
 		super(constantPool, []);
+		this.name = name;
 		this.constants = constants;
 	}
 
 	/**
-	 * Create a new data literal and add it to the data section
-	 * Returns the index to the literal data in the data section
-	 * @param value The literal's runtime value
+	 * Creates a new data constant for a literal and adds it to the
+	 * constant pool
+	 *
+	 * @returns The index to the constant in the constant pool
+	 * @param value The constant's runtime value
 	 */
-	public literal(value: RuntimeValue): number {
+	public constant(value: RuntimeValue): number {
 		if (this.constants.has(value.value)) {
 			return this.constants.get(value.value)!;
 		} else {

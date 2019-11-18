@@ -1,6 +1,7 @@
 import { Context } from "../language/context";
-import { LoadedProgram } from "../language/loaded-program";
+import { LinkedProgram } from "../language/linked-program";
 import { RuntimeValue } from "../vm/runtime-value";
+import { LoadedProgram } from "../language/loaded-program";
 
 // Multiple compiled "contexts" (one per function) need to be "linked"
 // together into one context and jumps spanning between contexts
@@ -11,16 +12,20 @@ export class Linker {
 		public readonly constantPool: RuntimeValue[]
 	) {}
 
-	public link(): LoadedProgram {
+	public link(): LinkedProgram {
+		const contextMap: Map<string, number> = new Map();
 		if (this.contexts.length < 1) {
 			throw new Error("Must have at least 1 context");
 		}
-		if (this.contexts.length === 1) return this.contexts[0];
 		let bytecode: number[] = [];
 		for (const context of this.contexts) {
+			contextMap.set(context.name, bytecode.length - 1);
 			bytecode = [...bytecode, ...context.bytecode];
 		}
 
-		return new LoadedProgram(this.constantPool, bytecode);
+		return new LinkedProgram(
+			new LoadedProgram(this.constantPool, bytecode),
+			contextMap
+		);
 	}
 }
