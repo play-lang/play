@@ -1,5 +1,5 @@
+import { Expression, Statement } from "../../language/node";
 import { Visitor } from "../../language/visitor";
-import { Statement, Expression } from "../../language/node";
 
 export class VariableDeclarationNode extends Statement {
 	/** Name of the variable */

@@ -1,10 +1,10 @@
 import { Context } from "../language/context";
 import { OpCode } from "../language/op-code";
+import { RuntimeError } from "./runtime-error";
 import { RuntimeType } from "./runtime-type";
 import { RuntimeValue } from "./runtime-value";
-import { RuntimeError } from "./runtime-error";
-import { VMStatus } from "./vm-status";
 import { VMResult } from "./vm-result";
+import { VMStatus } from "./vm-status";
 
 // Make constants for zero values since they are so widely used
 const Nil: RuntimeValue = new RuntimeValue(RuntimeType.Object, null);

@@ -1,5 +1,5 @@
-import { Token, Describable } from "./token";
 import { LinkedHashMap } from "../common/linked-hash-map";
+import { Describable, Token } from "./token";
 
 /** Represents an entry in a symbol table */
 export class IdentifierSymbol {

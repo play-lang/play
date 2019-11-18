@@ -1,5 +1,5 @@
-import { Describable } from "../language/token";
 import { Exception } from "../common/exception";
+import { Describable } from "../language/token";
 import { VMStatus } from "./vm-status";
 
 export class RuntimeError extends Exception implements Describable {

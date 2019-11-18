@@ -1,17 +1,17 @@
-import { TokenType } from "./token-type";
-import { Precedence } from "./precedence";
 import {
-	PrefixParselet,
-	InfixParselet,
-	LiteralParselet,
-	PrefixOperatorParselet,
+	AssignmentParselet,
+	BinaryLogicalOperatorParselet,
 	BinaryOperatorParselet,
 	GroupParselet,
-	TernaryConditionalParselet,
-	AssignmentParselet,
+	InfixParselet,
+	LiteralParselet,
 	PostfixOperatorParselet,
-	BinaryLogicalOperatorParselet,
+	PrefixOperatorParselet,
+	PrefixParselet,
+	TernaryConditionalParselet,
 } from "../parser/parselet";
+import { Precedence } from "./precedence";
+import { TokenType } from "./token-type";
 
 // http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
 // https://www.craftinginterpreters.com/compiling-expressions.html

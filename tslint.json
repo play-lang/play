@@ -63,7 +63,13 @@
 		"object-literal-key-quotes": false,
 		"max-classes-per-file": false,
 		"no-var-keyword": true,
-		"ordered-imports": false,
+		"ordered-imports": [
+			true,
+			{
+				"import-sources-order": "lowercase-first",
+				"named-imports-order": "lowercase-first"
+			}
+		],
 		"typedef": [
 			true,
 			"call-signature",

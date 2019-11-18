@@ -1,7 +1,7 @@
-import { Visitor } from "../../language/visitor";
 import { Expression } from "../../language/node";
-import { TokenType } from "../../language/token-type";
 import { TokenLike } from "../../language/token";
+import { TokenType } from "../../language/token-type";
+import { Visitor } from "../../language/visitor";
 
 export class LiteralExpressionNode extends Expression {
 	public readonly token: TokenLike;
