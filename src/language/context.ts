@@ -1,11 +1,13 @@
 import { RuntimeValue } from "../vm/runtime-value";
+import { LoadedProgram } from "./loaded-program";
 
-/** A chunk of bytecode, including literal data and source maps */
-export class Context {
-	/** Bytecode instructions, packed together */
-	public readonly bytecode: number[] = [];
-	/** Constant pool preceding the code */
-	public readonly constantPool: RuntimeValue[];
+/**
+ * A chunk of bytecode, including literal data and source maps
+ *
+ * This represents a compiled piece of code (usually representing one function)
+ * from the compiler
+ */
+export class Context extends LoadedProgram {
 	/**
 	 * Maps constant values to their index in the constant pool to prevent duplicate entries
 	 */
@@ -14,7 +16,7 @@ export class Context {
 	public readonly sourceMap: any = undefined;
 
 	constructor(constantPool: RuntimeValue[], constants: Map<any, number>) {
-		this.constantPool = constantPool;
+		super(constantPool, []);
 		this.constants = constants;
 	}
 
