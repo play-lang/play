@@ -1,3 +1,33 @@
+const escapeRegex = /\\(u\{([0-9A-Fa-f]+)\}|(['"tbrnfv0\\]))/g;
+
+/** Map letters to the char code they represent */
+const escapeCodes: { [key: string]: string } = {
+	"0": "\0",
+	b: "\b",
+	f: "\f",
+	n: "\n",
+	r: "\r",
+	t: "\t",
+	v: "\v",
+	"'": "'",
+	'"': '"',
+	"\\": "\\",
+};
+
+/** Map char codes to the escape sequences they represent */
+const codesToEscape: { [key: string]: string } = {
+	"\0": "0",
+	"\b": "b",
+	"\f": "f",
+	"\n": "n",
+	"\r": "r",
+	"\t": "t",
+	"\v": "v",
+	"'": "'",
+	'"': '"',
+	"\\": "\\",
+};
+
 /**
  * Escapes a JavaScript string for output to a UTF8 file
  *
@@ -17,38 +47,16 @@ export function escapeString(string: string): string {
 		if (codePoint > 0xffff) {
 			// Character is outside Unicode BMP
 			result += "\\u{" + codePoint.toString(16) + "}";
+		} else if (char in codesToEscape) {
+			result += "\\" + codesToEscape[char];
 		} else {
-			if (char === "\n") {
-				// Escape new line characters
-				result += "\\n";
-			} else if (char === "\r") {
-				// Escape other new line characters
-				result += "\\r";
-			} else {
-				result += char;
-			}
+			result += char;
 		}
 	}
 	return result;
 }
 
 // https://github.com/iamakulov/unescape-js
-
-// const escapeRegex = /(\\u\{([0-9A-Fa-f]+)\})/g;
-const escapeRegex = /\\(u\{([0-9A-Fa-f]+)\}|(['"tbrnfv0\\]))/g;
-
-const escapeCodes: { [key: string]: string } = {
-	"0": "\0",
-	b: "\b",
-	f: "\f",
-	n: "\n",
-	r: "\r",
-	t: "\t",
-	v: "\v",
-	"'": "'",
-	'"': '"',
-	"\\": "\\",
-};
 
 function fromHex(str: string): string {
 	return String.fromCodePoint(Number.parseInt(str, 16));
