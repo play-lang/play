@@ -18,7 +18,15 @@ export function escapeString(string: string): string {
 			// Character is outside Unicode BMP
 			result += "\\u{" + codePoint.toString(16) + "}";
 		} else {
-			result += char;
+			if (char === "\n") {
+				// Escape new line characters
+				result += "\\n";
+			} else if (char === "\r") {
+				// Escape other new line characters
+				result += "\\r";
+			} else {
+				result += char;
+			}
 		}
 	}
 	return result;
@@ -26,7 +34,21 @@ export function escapeString(string: string): string {
 
 // https://github.com/iamakulov/unescape-js
 
-const escapeRegex = /(\\u\{([0-9A-Fa-f]+)\})/g;
+// const escapeRegex = /(\\u\{([0-9A-Fa-f]+)\})/g;
+const escapeRegex = /\\(u\{([0-9A-Fa-f]+)\}|(['"tbrnfv0\\]))/g;
+
+const escapeCodes: { [key: string]: string } = {
+	"0": "\0",
+	b: "\b",
+	f: "\f",
+	n: "\n",
+	r: "\r",
+	t: "\t",
+	v: "\v",
+	"'": "'",
+	'"': '"',
+	"\\": "\\",
+};
 
 function fromHex(str: string): string {
 	return String.fromCodePoint(Number.parseInt(str, 16));
@@ -37,7 +59,14 @@ function fromHex(str: string): string {
  * @param string String containing valid JavaScript escape sequences
  */
 export function unescapeString(string: string): string {
-	return string.replace(escapeRegex, (_, __, codePointHex) => {
-		return fromHex(codePointHex);
-	});
+	return string.replace(
+		escapeRegex,
+		(_, __: string, codePointHex: string, specialCharacter: string) => {
+			if (codePointHex) {
+				return fromHex(codePointHex);
+			} else {
+				return escapeCodes[specialCharacter];
+			}
+		}
+	);
 }
