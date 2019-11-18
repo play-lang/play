@@ -6,7 +6,6 @@ const chars: string[] = ["a", "b", "c", "d", "e", "f", "g"];
 function fakeToken(): Token {
 	return new Token({
 		fileTableIndex: 0,
-		trivia: [],
 		type: 1,
 		pos,
 		line: 0,
