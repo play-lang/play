@@ -1,13 +1,13 @@
-import { TokenLike, ErrorToken, Position, Token } from "./language/token";
-import { TokenType, idTokenTypes } from "./language/token-type";
-import { stringEscapes } from "./language/string-escapes";
+import { prepareHint } from "./common/format-messages";
 import {
-	isWhitespace,
-	isValidIdStart,
 	isValidIdChar,
+	isValidIdStart,
+	isWhitespace,
 } from "./language/character-mappings";
 import { lexerTrie } from "./language/lexer-trie";
-import { prepareHint } from "./common/format-messages";
+import { stringEscapes } from "./language/string-escapes";
+import { ErrorToken, Position, Token, TokenLike } from "./language/token";
+import { idTokenTypes, TokenType } from "./language/token-type";
 
 export class Lexer {
 	/**

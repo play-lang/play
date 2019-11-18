@@ -1,7 +1,7 @@
 import { Context } from "../language/context";
 import { LinkedProgram } from "../language/linked-program";
-import { RuntimeValue } from "../vm/runtime-value";
 import { LoadedProgram } from "../language/loaded-program";
+import { RuntimeValue } from "../vm/runtime-value";
 
 // Multiple compiled "contexts" (one per function) need to be "linked"
 // together into one context and jumps spanning between contexts

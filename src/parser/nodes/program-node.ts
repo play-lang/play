@@ -1,5 +1,5 @@
-import { Visitor } from "../../language/visitor";
 import { Node } from "../../language/node";
+import { Visitor } from "../../language/visitor";
 
 export class ProgramNode extends Node {
 	/** Program statements */

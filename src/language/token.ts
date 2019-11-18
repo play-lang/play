@@ -1,5 +1,5 @@
-import { TokenType } from "./token-type";
 import { describeErrorToken } from "../common/format-messages";
+import { TokenType } from "./token-type";
 
 export interface Position {
 	pos: number;

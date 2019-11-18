@@ -1,5 +1,5 @@
-import { Visitor } from "../../language/visitor";
 import { Expression } from "../../language/node";
+import { Visitor } from "../../language/visitor";
 
 export class TernaryConditionalNode extends Expression {
 	constructor(

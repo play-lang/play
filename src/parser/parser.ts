@@ -1,15 +1,15 @@
-import { TokenLike, ErrorToken } from "../language/token";
-import { Lexer } from "../lexer";
+import { describeErrorToken, prepareHint } from "../common/format-messages";
+import { Expression, Statement } from "../language/node";
+import { infixParselets, prefixParselets } from "../language/operator-grammar";
+import SymbolTable from "../language/symbol-table";
+import { ErrorToken, TokenLike } from "../language/token";
 import { TokenType } from "../language/token-type";
-import { ParseError } from "./parse-error";
-import { prepareHint, describeErrorToken } from "../common/format-messages";
-import { Statement, Expression } from "../language/node";
+import { Lexer } from "../lexer";
+import { BlockStatementNode } from "./nodes/block-statement-node";
 import { ProgramNode } from "./nodes/program-node";
 import { VariableDeclarationNode } from "./nodes/variable-declaration-node";
-import SymbolTable from "../language/symbol-table";
-import { prefixParselets, infixParselets } from "../language/operator-grammar";
+import { ParseError } from "./parse-error";
 import { InfixParselet } from "./parselet";
-import { BlockStatementNode } from "./nodes/block-statement-node";
 
 export class Parser {
 	/** List of errors encountered in the code */

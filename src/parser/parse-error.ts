@@ -1,5 +1,5 @@
-import { TokenLike, Describable } from "../language/token";
 import { Exception } from "../common/exception";
+import { Describable, TokenLike } from "../language/token";
 
 export class ParseError extends Exception implements Describable {
 	/** Error token */
