@@ -1,6 +1,6 @@
 import { Parser } from "../src/parser/parser";
 import { Compiler } from "../src/compiler/compiler";
-import { Disassembler } from "../src/vm/disassembler/disassembler";
+import { Disassembler } from "../src/disassembler/disassembler";
 import { PrintVisitor } from "../src/visitors/print-visitor";
 import { VirtualMachine } from "../src/vm/virtual-machine";
 import { VMStatus } from "../src/vm/vm-status";
