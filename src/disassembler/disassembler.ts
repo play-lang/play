@@ -1,7 +1,7 @@
-import { Context } from "../../language/context";
-import { RuntimeType } from "../runtime-type";
-import { RuntimeValue } from "../runtime-value";
-import { OpCode } from "../../language/op-code";
+import { Context } from "../language/context";
+import { RuntimeType } from "../vm/runtime-type";
+import { RuntimeValue } from "../vm/runtime-value";
+import { OpCode } from "../language/op-code";
 
 export class Disassembler {
 	/** Pointer to the last found instruction */
