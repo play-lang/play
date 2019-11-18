@@ -16,7 +16,7 @@ export function escapeString(string: string): string {
 		const codePoint = char.codePointAt(0)!;
 		if (codePoint > 0xffff) {
 			// Character is outside Unicode BMP
-			result += "\\u{" + codePoint + "}";
+			result += "\\u{" + codePoint.toString(16) + "}";
 		} else {
 			result += char;
 		}
