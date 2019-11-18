@@ -46,7 +46,7 @@ export class Compiler extends Visitor {
 		this.ast = ast;
 		this.symbolTable = symbolTable;
 		this.globalScope = symbolTable;
-		this._contexts.push(new Context(this.constantPool, this.constants));
+		this._contexts.push(new Context("main", this.constantPool, this.constants));
 	}
 
 	// MARK: Visitor
@@ -146,7 +146,7 @@ export class Compiler extends Visitor {
 				return;
 		}
 		// Add the literal to the data section of the current context
-		const index = this.context.literal(new RuntimeValue(type, value));
+		const index = this.context.constant(new RuntimeValue(type, value));
 		// Have the machine push the value of the data at the specified data index
 		// to the top of the stack when this instruction is encountered
 		this.emit(OpCode.Constant, index);
@@ -265,8 +265,8 @@ export class Compiler extends Visitor {
 		return this.emit(OpCode.JumpTrue, 0) - 1;
 	}
 
-	public patch(context: Context, jump: number, index: number): void {
-		context.bytecode[jump + 1] = index;
+	public patch(context: Context, jumpOffset: number, destOffset: number): void {
+		context.bytecode[jumpOffset + 1] = destOffset;
 	}
 
 	/** Enter the next child scope of the current symbol table */
