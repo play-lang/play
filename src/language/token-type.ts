@@ -27,6 +27,7 @@ export enum TokenType {
 	// Reserved declaration words
 	Model,
 	Contract,
+	Action,
 	Has,
 	Uses,
 
@@ -87,6 +88,7 @@ export enum TokenType {
 
 /** Mapping of identifier lexemes to particular id token types */
 export const idTokenTypes: { [key: string]: TokenType } = {
+	action: TokenType.Action,
 	if: TokenType.If,
 	while: TokenType.While,
 	for: TokenType.For,

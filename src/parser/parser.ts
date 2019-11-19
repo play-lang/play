@@ -5,6 +5,7 @@ import SymbolTable from "../language/symbol-table";
 import { ErrorToken, TokenLike } from "../language/token";
 import { TokenType } from "../language/token-type";
 import { Lexer } from "../lexer";
+import { ActionDeclarationNode } from "./nodes/action-declaration-node";
 import { BlockStatementNode } from "./nodes/block-statement-node";
 import { ProgramNode } from "./nodes/program-node";
 import { VariableDeclarationNode } from "./nodes/variable-declaration-node";
@@ -62,6 +63,12 @@ export class Parser {
 	protected _symbolTables: SymbolTable[] = [];
 	/** Number of scopes encountered */
 	protected _scopes: number = 0;
+
+	/**
+	 * Context names mapped to action nodes
+	 * This allows us to look-up functions by name without having to walk the tree
+	 */
+	protected actionTable: Map<string, ActionDeclarationNode> = new Map();
 
 	/** Global scope symbol table */
 	public get globalScope(): SymbolTable {
@@ -262,6 +269,9 @@ export class Parser {
 		} else if (this.peek.type === TokenType.BraceOpen) {
 			// Match a block statement
 			return this.block();
+		} else if (this.peek.type === TokenType.Action) {
+			// Function definition
+			return this.actionDeclaration();
 		} else {
 			// An unrecognized statement must be an expression statement
 			return this.expression();
@@ -294,13 +304,10 @@ export class Parser {
 	}
 
 	/**
-	 * Parse a variable declaration
-	 * Example: num list numbers = [1, 2, 3]
-	 *
-	 * @param leadingType First identifier already matched--must be the
-	 * deepest type in the expression (a num, str, or user-defined type)
+	 * Utility parsing method to parse a type annotation in code and
+	 * return it as an array of strings
 	 */
-	public variableDeclaration(): VariableDeclarationNode {
+	public typeAnnotation(): string[] {
 		const typeAnnotation: string[] = [];
 		if (
 			this.match(TokenType.Id, TokenType.Str, TokenType.Num, TokenType.Bool)
@@ -316,6 +323,18 @@ export class Parser {
 			// Consume any following "list" or "map" collection type modifiers
 			typeAnnotation.push(this.advance().lexeme);
 		}
+		return typeAnnotation;
+	}
+
+	/**
+	 * Parse a variable declaration
+	 * Example: num list numbers = [1, 2, 3]
+	 *
+	 * @param leadingType First identifier already matched--must be the
+	 * deepest type in the expression (a num, str, or user-defined type)
+	 */
+	public variableDeclaration(): VariableDeclarationNode {
+		const typeAnnotation = this.typeAnnotation();
 		const nameToken = this.consume(
 			TokenType.Id,
 			"Expected variable name following declaration"
@@ -332,6 +351,54 @@ export class Parser {
 			);
 		}
 		return new VariableDeclarationNode(nameToken.lexeme, typeAnnotation);
+	}
+
+	/**
+	 * Parse an action declaration
+	 *
+	 * e.g.,
+	 *
+	 * ```
+	 * action str map makeStringMap(str param1, str param2) {
+	 *   ...
+	 * }
+	 * ```
+	 */
+	public actionDeclaration(): ActionDeclarationNode {
+		const typeAnnotation = this.typeAnnotation();
+		// Todo: register action in global scope
+		const nameToken = this.consume(
+			TokenType.Id,
+			"Expected action name following declaration"
+		);
+		const name = nameToken.lexeme;
+		if (this.actionTable.has(name)) {
+			throw this.error(
+				nameToken,
+				"Cannot redeclare action with the name `" + name + "`"
+			);
+		}
+		// Create a node
+		const node = new ActionDeclarationNode(name, typeAnnotation);
+		this.match(TokenType.ParenOpen);
+		while (!this.isAtEnd && this.peek.type !== TokenType.ParenClose) {
+			// Attempt to match one or more parameters
+			const paramType = this.typeAnnotation();
+			const paramToken = this.consume(
+				TokenType.Id,
+				"Expected parameter name following parameter type annotation"
+			);
+			// Store the parameter information in the node
+			node.parameters.set(paramToken.lexeme, paramType);
+			node.numParameters++;
+		}
+		this.match(TokenType.ParenClose);
+		// Register the function name and the AST node that it points to
+		// This will make compilation of functions simpler
+		this.actionTable.set(name, node);
+		// Grab the block of statements inside the function curly braces
+		node.block = this.block();
+		return node;
 	}
 
 	public expression(precedence: number = 0): Expression {

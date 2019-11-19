@@ -3,6 +3,7 @@ import { OpCode } from "../language/op-code";
 import SymbolTable from "../language/symbol-table";
 import { TokenType } from "../language/token-type";
 import { Visitor } from "../language/visitor";
+import { ActionDeclarationNode } from "../parser/nodes/action-declaration-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
@@ -91,6 +92,10 @@ export class Compiler extends Visitor {
 			return;
 		}
 		node.expr.accept(this);
+	}
+
+	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
+		throw new Error("Method not implemented.");
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
