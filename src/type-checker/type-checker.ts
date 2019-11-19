@@ -1,4 +1,5 @@
 import { Visitor } from "../language/visitor";
+import { ActionDeclarationNode } from "../parser/nodes/action-declaration-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
@@ -14,6 +15,7 @@ export class TypeChecker extends Visitor {
 	public visitProgramNode(node: ProgramNode): void {}
 	public visitBlockStatementNode(node: BlockStatementNode): void {}
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {}
+	public visitActionDeclarationNode(node: ActionDeclarationNode): void {}
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {}
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {}
 	public visitLiteralExpressionNode(node: LiteralExpressionNode): void {}

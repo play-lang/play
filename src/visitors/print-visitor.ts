@@ -1,6 +1,7 @@
 import { Describable } from "../language/token";
 import { TokenType } from "../language/token-type";
 import { Visitor } from "../language/visitor";
+import { ActionDeclarationNode } from "../parser/nodes/action-declaration-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
@@ -61,6 +62,10 @@ export class PrintVisitor extends Visitor implements Describable {
 			node.expr.accept(this);
 			this.indent -= 1;
 		}
+	}
+
+	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
+		throw new Error("Method not implemented.");
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {

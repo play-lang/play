@@ -1,3 +1,4 @@
+import { ActionDeclarationNode } from "../parser/nodes/action-declaration-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
@@ -15,6 +16,7 @@ export abstract class Visitor {
 	public abstract visitVariableDeclarationNode(
 		node: VariableDeclarationNode
 	): void;
+	public abstract visitActionDeclarationNode(node: ActionDeclarationNode): void;
 	public abstract visitPrefixExpressionNode(node: PrefixExpressionNode): void;
 	public abstract visitBinaryExpressionNode(node: BinaryExpressionNode): void;
 	public abstract visitBinaryLogicalExpressionNode(
