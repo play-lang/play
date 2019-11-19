@@ -1,9 +1,4 @@
-import { Parser } from "../src/parser/parser";
-import { Compiler } from "../src/compiler/compiler";
-import { Disassembler } from "../src/disassembler/disassembler";
-import { PrintVisitor } from "../src/visitors/print-visitor";
-import { VirtualMachine } from "../src/vm/virtual-machine";
-import { VMStatus } from "../src/vm/vm-status";
+import { compile, run } from "../shared/test-utils";
 
 describe("compiler/vm", () => {
 	it("should not register duplicates in the constant pool", () => {
@@ -49,37 +44,3 @@ describe("compiler/vm", () => {
 		expect(run("false or 0")).toBe(0);
 	});
 });
-
-function run(code: string, verbose: boolean = false): any {
-	const parser = new Parser("test.play", code);
-	const ast = parser.parse();
-	const printer = new PrintVisitor(ast);
-	if (verbose) console.log(printer.print());
-	const compiler = new Compiler(ast, parser.globalScope);
-	compiler.compile();
-	const disassembler = new Disassembler();
-	const deconstruction = disassembler.disassemble(compiler.context);
-	if (verbose) console.log(deconstruction);
-	if (verbose) console.log("Code:\t", code);
-	const vm = new VirtualMachine(compiler.context);
-	const result = vm.run();
-	if (verbose) console.log("Execution finished:\t", VMStatus[result.status]);
-	return result.value.value;
-}
-
-// function printAst(code: string): void {
-// 	const parser = new Parser("test.play", code);
-// 	const ast = parser.parse();
-// 	const printer = new PrintVisitor(ast);
-// 	console.log(printer.print());
-// }
-
-function compile(code: string): string {
-	const parser = new Parser("test.play", code);
-	const ast = parser.parse();
-	const compiler = new Compiler(ast, parser.globalScope);
-	compiler.compile();
-	const disassembler = new Disassembler();
-	const deconstruction = disassembler.disassemble(compiler.context);
-	return deconstruction;
-}

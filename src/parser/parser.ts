@@ -235,6 +235,7 @@ export class Parser {
 					[TokenType.Line, TokenType.EndOfFile],
 					"Expected end of statement"
 				);
+				this.eatLines();
 			} catch (e) {
 				this.synchronize();
 			}
@@ -279,11 +280,12 @@ export class Parser {
 	}
 
 	public block(): BlockStatementNode {
+		this.consume(TokenType.BraceOpen, "Expect opening brace for block");
+		this.eatLines();
 		// Create a new symbol table scope and push it on the symbol table stack
 		const symbolTable = this.symbolTable.addScope();
 		this._symbolTables.push(symbolTable);
 		const statements: Statement[] = [];
-		this.consume(TokenType.BraceOpen, "Expect opening brace for block");
 		while (!this.isAtEnd && this.peek.type !== TokenType.BraceClose) {
 			statements.push(this.statement());
 			if (this.peek.type !== TokenType.BraceClose) {
@@ -296,8 +298,11 @@ export class Parser {
 					[TokenType.Line, TokenType.EndOfFile],
 					"Expected end of statement"
 				);
+				this.eatLines();
 			}
 		}
+		this.eatLines();
+		this.consume(TokenType.BraceClose, "Expected closing brace for block");
 		// Pop the scope
 		this._symbolTables.pop();
 		return new BlockStatementNode(statements);
@@ -324,6 +329,15 @@ export class Parser {
 			typeAnnotation.push(this.advance().lexeme);
 		}
 		return typeAnnotation;
+	}
+
+	/**
+	 * Utility parsing method to match any subsequent lines
+	 */
+	public eatLines(): void {
+		while (!this.isAtEnd && this.peek.type === TokenType.Line) {
+			this.match(TokenType.Line);
+		}
 	}
 
 	/**
@@ -365,6 +379,7 @@ export class Parser {
 	 * ```
 	 */
 	public actionDeclaration(): ActionDeclarationNode {
+		this.match(TokenType.Action);
 		const typeAnnotation = this.typeAnnotation();
 		// Todo: register action in global scope
 		const nameToken = this.consume(
@@ -381,16 +396,18 @@ export class Parser {
 		// Create a node
 		const node = new ActionDeclarationNode(name, typeAnnotation);
 		this.match(TokenType.ParenOpen);
-		while (!this.isAtEnd && this.peek.type !== TokenType.ParenClose) {
-			// Attempt to match one or more parameters
-			const paramType = this.typeAnnotation();
-			const paramToken = this.consume(
-				TokenType.Id,
-				"Expected parameter name following parameter type annotation"
-			);
-			// Store the parameter information in the node
-			node.parameters.set(paramToken.lexeme, paramType);
-			node.numParameters++;
+		if (!this.isAtEnd && this.peek.type !== TokenType.ParenClose) {
+			do {
+				// Attempt to match one or more parameters
+				const paramType = this.typeAnnotation();
+				const paramToken = this.consume(
+					TokenType.Id,
+					"Expected parameter name following parameter type annotation"
+				);
+				// Store the parameter information in the node
+				node.parameters.set(paramToken.lexeme, paramType);
+				node.numParameters++;
+			} while (this.match(TokenType.Comma));
 		}
 		this.match(TokenType.ParenClose);
 		// Register the function name and the AST node that it points to

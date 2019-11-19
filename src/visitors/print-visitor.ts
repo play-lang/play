@@ -65,7 +65,22 @@ export class PrintVisitor extends Visitor implements Describable {
 	}
 
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
-		throw new Error("Method not implemented.");
+		let params = "";
+		let i = 0;
+		for (const [param, typeAnnotation] of node.parameters.entries()) {
+			const type = typeAnnotation.join(" ");
+			params += type + " " + param;
+			if (i < node.parameters.size - 1) params += ", ";
+			i++;
+		}
+		this.desc +=
+			"Action " +
+			node.typeAnnotation.join(" ") +
+			" " +
+			node.name +
+			"(" +
+			params +
+			")";
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
