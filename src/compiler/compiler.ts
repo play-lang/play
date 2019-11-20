@@ -1,5 +1,6 @@
 import { Context } from "../language/context";
 import { OpCode } from "../language/op-code";
+import { Patcher } from "../language/patcher";
 import SymbolTable from "../language/symbol-table";
 import { TokenType } from "../language/token-type";
 import { Visitor } from "../language/visitor";
@@ -20,17 +21,19 @@ import { RuntimeValue } from "../vm/runtime-value";
 export class Compiler extends Visitor {
 	/** Ast to compile */
 	public readonly ast: ProgramNode;
-
 	/** Constant pool preceding the code */
 	public readonly constantPool: RuntimeValue[] = [];
 	/**
 	 * Maps constant values to their index in the constant pool to prevent duplicate entries
 	 */
 	public readonly constants: Map<any, number> = new Map();
+	/** Contains the list of all compiled contexts after compilation */
+	public readonly contexts: Context[] = [];
 	/** Current bytecode context */
 	public get context(): Context {
 		return this.symbolTable.context!;
 	}
+
 	/** Global scope */
 	private globalScope: SymbolTable;
 	/** Symbol table for the current scope */
@@ -39,13 +42,15 @@ export class Compiler extends Visitor {
 	private childScopeIndices: number[] = [0];
 	/** Number of scopes deep we are--used as an index to childScopeIndices */
 	private scopeDepth: number = 0;
+	/** Registers labels and patches jumps between contexts */
+	private patcher: Patcher = new Patcher();
 
 	constructor(ast: ProgramNode, symbolTable: SymbolTable) {
 		super();
 		this.ast = ast;
 		this.symbolTable = symbolTable;
 		this.globalScope = symbolTable;
-		this.symbolTable.context = new Context(
+		this.symbolTable.context = this.createContext(
 			"main",
 			this.constantPool,
 			this.constants
@@ -107,6 +112,7 @@ export class Compiler extends Visitor {
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
 		this.enterScope(node.name);
 		node.block!.accept(this);
+
 		this.exitScope();
 	}
 
@@ -301,12 +307,30 @@ export class Compiler extends Visitor {
 		this.symbolTable.context =
 			contextName === ""
 				? context
-				: new Context(contextName, this.constantPool, this.constants);
+				: this.createContext(contextName, this.constantPool, this.constants);
 	}
 
 	private exitScope(): void {
 		this.scopeDepth--;
 		this.childScopeIndices.pop();
 		this.symbolTable = this.symbolTable.enclosingScope || this.globalScope;
+	}
+
+	/**
+	 * Creates a new context and adds it to the list of contexts so that
+	 * they can be given to the linker later
+	 * @param contextName Name of the context (should be the function name)
+	 * @param constantPool Shared constant pool
+	 * @param constants Shared constants look-up map for avoiding duplicates
+	 */
+	private createContext(
+		contextName: string,
+		constantPool: RuntimeValue[],
+		constants: Map<any, number>
+	): Context {
+		const context = new Context(contextName, constantPool, constants);
+		this.contexts.push(context);
+		this.patcher.prepare(this.context);
+		return context;
 	}
 }

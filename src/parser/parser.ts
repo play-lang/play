@@ -228,6 +228,7 @@ export class Parser {
 		const statements: Statement[] = [];
 		while (!this.isAtEnd) {
 			try {
+				this.eatLines();
 				// A program consists of a series of statements
 				statements.push(this.statement());
 				// Expect a new line or eof token after each statement
