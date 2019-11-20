@@ -59,13 +59,18 @@ export class Compiler extends Visitor {
 			statement.accept(this);
 		}
 	}
+
 	public visitBlockStatementNode(node: BlockStatementNode): void {
-		this.enterScope();
+		// Only enter and exit a scope if we're not inside an action block
+		// Action block scope is handled for us elsewhere
+		const isActionBlock = node.isActionBlock;
+		if (!isActionBlock) this.enterScope();
 		for (const statement of node.statements) {
 			statement.accept(this);
 		}
-		this.exitScope();
+		if (!isActionBlock) this.exitScope();
 	}
+
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
 		if (!this.symbolTable.lookup(node.name)) {
 			throw new Error(
@@ -94,10 +99,15 @@ export class Compiler extends Visitor {
 			return;
 		}
 		node.expr.accept(this);
+		// Mark the next variable as available in the symbol table
+		this.symbolTable.available++;
+		// TODO: Push local value to stack inside whatever block
 	}
 
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
-		throw new Error("Method not implemented.");
+		this.enterScope(node.name);
+		node.block!.accept(this);
+		this.exitScope();
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
@@ -276,11 +286,15 @@ export class Compiler extends Visitor {
 		context.bytecode[jumpOffset + 1] = destOffset;
 	}
 
-	/** Enter the next child scope of the current symbol table */
+	/**
+	 * Enter the next child scope of the current symbol table
+	 *
+	 * @param [contextName] If provided, this will create a new compilation
+	 * context for the added scope with the specified name
+	 */
 	private enterScope(contextName: string = ""): void {
 		const context = this.context;
-		const childScopeIndex = this.childScopeIndices[this.scopeDepth]++;
-		this.scopeDepth++;
+		const childScopeIndex = this.childScopeIndices[this.scopeDepth++]++;
 		this.childScopeIndices.push(0);
 		this.symbolTable = this.symbolTable.scopes[childScopeIndex];
 		this.symbolTable.available = 0;

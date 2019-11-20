@@ -279,7 +279,11 @@ export class Parser {
 		}
 	}
 
-	public block(): BlockStatementNode {
+	/**
+	 * Parse a block statement, optionally specifying if it represents an
+	 * action block
+	 */
+	public block(isActionBlock: boolean = false): BlockStatementNode {
 		this.consume(TokenType.BraceOpen, "Expect opening brace for block");
 		this.eatLines();
 		// Create a new symbol table scope and push it on the symbol table stack
@@ -305,7 +309,7 @@ export class Parser {
 		this.consume(TokenType.BraceClose, "Expected closing brace for block");
 		// Pop the scope
 		this._symbolTables.pop();
-		return new BlockStatementNode(statements);
+		return new BlockStatementNode(statements, isActionBlock);
 	}
 
 	/**
@@ -414,7 +418,7 @@ export class Parser {
 		// This will make compilation of functions simpler
 		this.actionTable.set(name, node);
 		// Grab the block of statements inside the function curly braces
-		node.block = this.block();
+		node.block = this.block(true);
 		return node;
 	}
 

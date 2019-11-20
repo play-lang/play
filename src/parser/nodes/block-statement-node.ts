@@ -2,12 +2,13 @@ import { Statement } from "../../language/node";
 import { Visitor } from "../../language/visitor";
 
 export class BlockStatementNode extends Statement {
-	/** Block statements */
-	public readonly statements: Statement[];
-
-	constructor(statements: Statement[]) {
+	constructor(
+		/** Block statements */
+		public readonly statements: Statement[],
+		/** True if the block represents an action (function) block */
+		public readonly isActionBlock: boolean
+	) {
 		super();
-		this.statements = statements;
 	}
 
 	public accept(visitor: Visitor): void {
