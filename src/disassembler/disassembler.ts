@@ -1,4 +1,4 @@
-import { Context } from "../language/context";
+import { LoadedProgram } from "../language/loaded-program";
 import { OpCode } from "../language/op-code";
 import { RuntimeType } from "../vm/runtime-type";
 import { RuntimeValue } from "../vm/runtime-value";
@@ -11,34 +11,34 @@ export class Disassembler {
 	/** Data pointer */
 	private dp: number = 0;
 
-	/** Disassemble the specified context */
-	public disassemble(context: Context): string {
-		return (this.data(context) + this.instructions(context)).trim();
+	/** Disassemble the specified program */
+	public disassemble(program: LoadedProgram): string {
+		return (this.data(program) + this.instructions(program)).trim();
 	}
 
-	/** Disassemble data for the specified context */
-	public data(context: Context): string {
+	/** Disassemble data for the specified program */
+	public data(program: LoadedProgram): string {
 		let str = "";
 		this.dp = 0;
-		while (this.dp < context.constantPool.length) {
-			const value = context.constantPool[this.dp];
+		while (this.dp < program.constantPool.length) {
+			const value = program.constantPool[this.dp];
 			str += this.dpn + "\t" + this.describe(value);
 			this.dp++;
 		}
 		return str;
 	}
 
-	/** Disassemble instructions for the specified context */
-	private instructions(context: Context): string {
+	/** Disassemble instructions for the specified program */
+	private instructions(program: LoadedProgram): string {
 		let str = "\n";
 		this.p = 0;
-		while (this.p < context.bytecode.length) {
+		while (this.p < program.bytecode.length) {
 			this.ip = this.p;
-			const instr = context.bytecode[this.p++];
+			const instr = program.bytecode[this.p++];
 			switch (instr) {
 				// 1 param instructions
 				case OpCode.Constant: {
-					const index = context.bytecode[this.p++];
+					const index = program.bytecode[this.p++];
 					str +=
 						this.ipn +
 						"\t" +
@@ -46,7 +46,7 @@ export class Disassembler {
 						"\t(" +
 						index +
 						")\t= " +
-						context.constantPool[index].value +
+						program.constantPool[index].value +
 						"\n";
 					break;
 				}
@@ -83,7 +83,7 @@ export class Disassembler {
 				case OpCode.Jump:
 				case OpCode.JumpFalse:
 				case OpCode.JumpTrue: {
-					const jumpTarget = context.bytecode[this.p++];
+					const jumpTarget = program.bytecode[this.p++];
 					str += this.ipn + "\t" + this.instr(instr) + "\t" + jumpTarget + "\n";
 				}
 			}

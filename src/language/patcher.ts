@@ -40,6 +40,7 @@ export class Patcher {
 	 * @param context The context to initialize
 	 */
 	public prepare(context: Context): void {
+		if (this.jumps.has(context)) return;
 		this.jumps.set(context, []);
 	}
 

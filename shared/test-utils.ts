@@ -1,5 +1,6 @@
 import { Compiler } from "../src/compiler/compiler";
 import { Disassembler } from "../src/disassembler/disassembler";
+import { Linker } from "../src/linker/linker";
 import { Parser } from "../src/parser/parser";
 import { PrintVisitor } from "../src/visitors/print-visitor";
 import { VirtualMachine } from "../src/vm/virtual-machine";
@@ -53,5 +54,17 @@ export function compile(code: string): string {
 	compiler.compile();
 	const disassembler = new Disassembler();
 	const deconstruction = disassembler.disassemble(compiler.context);
+	return deconstruction;
+}
+
+export function compileAndLink(code: string): string {
+	const parser = new Parser("test.play", code);
+	const ast = parser.parse();
+	const compiler = new Compiler(ast, parser.globalScope);
+	compiler.compile();
+	const linker = new Linker(compiler.contexts, compiler.constantPool);
+	const linkedProgram = linker.link();
+	const disassembler = new Disassembler();
+	const deconstruction = disassembler.disassemble(linkedProgram.program);
 	return deconstruction;
 }
