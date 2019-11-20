@@ -154,8 +154,13 @@ export class Lexer {
 
 	/** True if the specified character is whitespace */
 	public isWhitespace(char: string): boolean {
-		const codePoint = char.codePointAt(0)!;
-		return isWhitespace(codePoint);
+		try {
+			const codePoint = char.codePointAt(0)!;
+			return isWhitespace(codePoint);
+		} catch (e) {
+			console.error(e);
+			return false;
+		}
 	}
 
 	/** True if the specified character is a new-line feed */
@@ -236,10 +241,6 @@ export class Lexer {
 	protected scan(): TokenLike {
 		this.tail = { ...this.head };
 
-		if (this.isAtEnd) {
-			return this.makeToken(TokenType.EndOfFile);
-		}
-
 		// Trivia consists of junk tokens like whitespace, comments, and
 		// comment blocks that precede a useful token
 		const trivia = [];
@@ -256,6 +257,7 @@ export class Lexer {
 			trivia.push(token);
 			this.tail = { ...this.head };
 			token = this.scanNextToken();
+			if (token.type === TokenType.EndOfFile) break;
 		}
 		token.trivia = trivia;
 		return token;
@@ -317,6 +319,10 @@ export class Lexer {
 	}
 
 	private scanNextToken(): TokenLike {
+		if (this.isAtEnd) {
+			return this.makeToken(TokenType.EndOfFile);
+		}
+
 		this._numTokens++;
 
 		let char = this.advance();

@@ -416,7 +416,8 @@ export class Parser {
 		}
 		this.match(TokenType.ParenClose);
 		// Register the function name and the AST node that it points to
-		// This will make compilation of functions simpler
+		// This will make compilation of functions simpler since we can look up
+		// how many parameters and what kind a function takes when we call it
 		this.actionTable.set(name, node);
 		// Grab the block of statements inside the function curly braces
 		node.block = this.block(true);

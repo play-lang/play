@@ -50,6 +50,10 @@ export function describeAst(code: string): string {
 export function compile(code: string): string {
 	const parser = new Parser("test.play", code);
 	const ast = parser.parse();
+	if (parser.errors.length > 0) {
+		console.error(parser.errors);
+		throw new Error("Parser errors");
+	}
 	const compiler = new Compiler(ast, parser.globalScope);
 	compiler.compile();
 	const disassembler = new Disassembler();
@@ -60,6 +64,10 @@ export function compile(code: string): string {
 export function compileAndLink(code: string): string {
 	const parser = new Parser("test.play", code);
 	const ast = parser.parse();
+	if (parser.errors.length > 0) {
+		console.error(parser.errors);
+		throw new Error("Parser errors");
+	}
 	const compiler = new Compiler(ast, parser.globalScope);
 	compiler.compile();
 	const linker = new Linker(compiler.contexts, compiler.constantPool);

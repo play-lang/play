@@ -80,7 +80,7 @@ export class PrintVisitor extends Visitor implements Describable {
 			node.name +
 			"(" +
 			params +
-			")";
+			")\n";
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
