@@ -4,6 +4,7 @@ import {
 	BinaryOperatorParselet,
 	GroupParselet,
 	InfixParselet,
+	InvocationOperatorParselet,
 	LiteralParselet,
 	PostfixOperatorParselet,
 	PrefixOperatorParselet,
@@ -101,4 +102,6 @@ export const infixParselets: Map<TokenType, InfixParselet> = new Map<
 	// Postfix operators
 	[TokenType.PlusPlus, new PostfixOperatorParselet()],
 	[TokenType.MinusMinus, new PostfixOperatorParselet()],
+	// Call operator (function invocation)
+	[TokenType.ParenOpen, new InvocationOperatorParselet()],
 ]);

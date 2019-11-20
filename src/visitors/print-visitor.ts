@@ -6,6 +6,7 @@ import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
+import { InvocationExpressionNode } from "../parser/nodes/invocation-operator-parselet";
 import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
@@ -81,6 +82,15 @@ export class PrintVisitor extends Visitor implements Describable {
 			"(" +
 			params +
 			")\n";
+	}
+
+	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
+		this.desc += "Call\n";
+		for (const arg of node.args) {
+			const last = arg === node.args[node.args.length - 1];
+			this.desc += this.spaces + (last ? "└── " : "├── ");
+			arg.accept(this);
+		}
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {

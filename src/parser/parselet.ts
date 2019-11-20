@@ -5,6 +5,7 @@ import { TokenType } from "../language/token-type";
 import { AssignmentExpressionNode } from "./nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "./nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "./nodes/binary-logical-expression-node";
+import { InvocationExpressionNode } from "./nodes/invocation-operator-parselet";
 import { LiteralExpressionNode } from "./nodes/literal-expression-node";
 import { PostfixExpressionNode } from "./nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "./nodes/prefix-expression-node";
@@ -107,6 +108,26 @@ export class BinaryLogicalOperatorParselet implements InfixParselet {
 export class PostfixOperatorParselet implements InfixParselet {
 	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
 		return new PostfixExpressionNode(token.type, lhs);
+	}
+	public get precedence(): number {
+		return Precedence.Primary;
+	}
+}
+
+export class InvocationOperatorParselet implements InfixParselet {
+	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
+		const args: Expression[] = [];
+		if (!parser.match(TokenType.ParenClose)) {
+			do {
+				args.push(parser.expression());
+			} while (parser.match(TokenType.Comma));
+			parser.consume(
+				TokenType.ParenClose,
+				"Expected closing parenthesis following action arguments"
+			);
+		}
+
+		return new InvocationExpressionNode(lhs, args);
 	}
 	public get precedence(): number {
 		return Precedence.Primary;

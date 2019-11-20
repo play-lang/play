@@ -9,6 +9,7 @@ import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
+import { InvocationExpressionNode } from "../parser/nodes/invocation-operator-parselet";
 import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
@@ -19,6 +20,10 @@ import { RuntimeType } from "../vm/runtime-type";
 import { RuntimeValue } from "../vm/runtime-value";
 
 export class Compiler extends Visitor {
+	/** Current bytecode context */
+	public get context(): Context {
+		return this.symbolTable.context!;
+	}
 	/** Ast to compile */
 	public readonly ast: ProgramNode;
 	/** Constant pool preceding the code */
@@ -29,10 +34,6 @@ export class Compiler extends Visitor {
 	public readonly constants: Map<any, number> = new Map();
 	/** Contains the list of all compiled contexts after compilation */
 	public readonly contexts: Context[] = [];
-	/** Current bytecode context */
-	public get context(): Context {
-		return this.symbolTable.context!;
-	}
 
 	/** Global scope */
 	private globalScope: SymbolTable;
@@ -114,6 +115,10 @@ export class Compiler extends Visitor {
 		node.block!.accept(this);
 
 		this.exitScope();
+	}
+
+	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
+		throw new Error("Method not implemented.");
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
