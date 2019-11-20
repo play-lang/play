@@ -18,10 +18,6 @@ import { RuntimeType } from "../vm/runtime-type";
 import { RuntimeValue } from "../vm/runtime-value";
 
 export class Compiler extends Visitor {
-	/** Current bytecode context */
-	public get context(): Context {
-		return this._contexts[this._contexts.length - 1];
-	}
 	/** Ast to compile */
 	public readonly ast: ProgramNode;
 
@@ -32,7 +28,9 @@ export class Compiler extends Visitor {
 	 */
 	public readonly constants: Map<any, number> = new Map();
 	/** Current bytecode context */
-	private _contexts: Context[] = [];
+	public get context(): Context {
+		return this.symbolTable.context!;
+	}
 	/** Global scope */
 	private globalScope: SymbolTable;
 	/** Symbol table for the current scope */
@@ -47,7 +45,11 @@ export class Compiler extends Visitor {
 		this.ast = ast;
 		this.symbolTable = symbolTable;
 		this.globalScope = symbolTable;
-		this._contexts.push(new Context("main", this.constantPool, this.constants));
+		this.symbolTable.context = new Context(
+			"main",
+			this.constantPool,
+			this.constants
+		);
 	}
 
 	// MARK: Visitor
@@ -275,12 +277,17 @@ export class Compiler extends Visitor {
 	}
 
 	/** Enter the next child scope of the current symbol table */
-	private enterScope(): void {
+	private enterScope(contextName: string = ""): void {
+		const context = this.context;
 		const childScopeIndex = this.childScopeIndices[this.scopeDepth]++;
 		this.scopeDepth++;
 		this.childScopeIndices.push(0);
 		this.symbolTable = this.symbolTable.scopes[childScopeIndex];
 		this.symbolTable.available = 0;
+		this.symbolTable.context =
+			contextName === ""
+				? context
+				: new Context(contextName, this.constantPool, this.constants);
 	}
 
 	private exitScope(): void {
