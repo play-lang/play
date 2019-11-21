@@ -9,7 +9,7 @@ describe("print-visitor", () => {
 			// "num myNumber = 100 * 100 + - 100 ^ 3 - (3+3)\n"
 		);
 		const ast = parser.parse();
-		const printer = new PrintVisitor(ast);
+		const printer = new PrintVisitor(ast.root);
 		console.log(printer.print());
 		// expect(output).toEqual(
 		// 	"Program\n" +

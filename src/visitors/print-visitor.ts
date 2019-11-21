@@ -2,6 +2,7 @@ import { Describable } from "../language/token";
 import { TokenType } from "../language/token-type";
 import { Visitor } from "../language/visitor";
 import { ActionDeclarationNode } from "../parser/nodes/action-declaration-node";
+import { ActionReferenceNode } from "../parser/nodes/action-reference-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
@@ -13,6 +14,7 @@ import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
+import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
 
 export class PrintVisitor extends Visitor implements Describable {
 	private indent: number = 0;
@@ -61,8 +63,12 @@ export class PrintVisitor extends Visitor implements Describable {
 		if (node.expr) {
 			this.desc += this.spaces + "└── ";
 			node.expr.accept(this);
-			this.indent -= 1;
 		}
+		this.indent -= 1;
+	}
+
+	public visitVariableReferenceNode(node: VariableReferenceNode): void {
+		this.desc += "VariableReference(" + node.variableName + ")\n";
 	}
 
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
@@ -84,13 +90,19 @@ export class PrintVisitor extends Visitor implements Describable {
 			")\n";
 	}
 
+	public visitActionReferenceNode(node: ActionReferenceNode): void {
+		this.desc += "ActionReference(" + node.actionName + ")\n";
+	}
+
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
-		this.desc += "Call\n";
+		this.desc += "Call(" + node.actionName + ")\n";
+		this.indent += 1;
 		for (const arg of node.args) {
 			const last = arg === node.args[node.args.length - 1];
 			this.desc += this.spaces + (last ? "└── " : "├── ");
 			arg.accept(this);
 		}
+		this.indent -= 1;
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {

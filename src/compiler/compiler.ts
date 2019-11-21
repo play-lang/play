@@ -1,3 +1,4 @@
+import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { Context } from "../language/context";
 import { OpCode } from "../language/op-code";
 import { Patcher } from "../language/patcher";
@@ -5,6 +6,7 @@ import SymbolTable from "../language/symbol-table";
 import { TokenType } from "../language/token-type";
 import { Visitor } from "../language/visitor";
 import { ActionDeclarationNode } from "../parser/nodes/action-declaration-node";
+import { ActionReferenceNode } from "../parser/nodes/action-reference-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
@@ -16,6 +18,7 @@ import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
+import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
 import { RuntimeType } from "../vm/runtime-type";
 import { RuntimeValue } from "../vm/runtime-value";
 
@@ -24,8 +27,8 @@ export class Compiler extends Visitor {
 	public get context(): Context {
 		return this.symbolTable.context!;
 	}
-	/** Ast to compile */
-	public readonly ast: ProgramNode;
+	/** Ast root to compile */
+	public readonly ast: AbstractSyntaxTree;
 	/** Constant pool preceding the code */
 	public readonly constantPool: RuntimeValue[] = [];
 	/**
@@ -34,6 +37,12 @@ export class Compiler extends Visitor {
 	public readonly constants: Map<any, number> = new Map();
 	/** Contains the list of all compiled contexts after compilation */
 	public readonly contexts: Context[] = [];
+
+	/**
+	 * Context names mapped to action nodes
+	 * Should be provided from the parser
+	 */
+	public readonly actionTable: Map<string, ActionDeclarationNode>;
 
 	/** Global scope */
 	private globalScope: SymbolTable;
@@ -46,16 +55,17 @@ export class Compiler extends Visitor {
 	/** Registers labels and patches jumps between contexts */
 	private patcher: Patcher = new Patcher();
 
-	constructor(ast: ProgramNode, symbolTable: SymbolTable) {
+	constructor(ast: AbstractSyntaxTree) {
 		super();
 		this.ast = ast;
-		this.symbolTable = symbolTable;
-		this.globalScope = symbolTable;
+		this.symbolTable = ast.symbolTable;
+		this.globalScope = ast.symbolTable;
 		this.symbolTable.context = this.createContext(
 			"main",
 			this.constantPool,
 			this.constants
 		);
+		this.actionTable = ast.actionTable;
 	}
 
 	// MARK: Visitor
@@ -110,11 +120,17 @@ export class Compiler extends Visitor {
 		// TODO: Push local value to stack inside whatever block
 	}
 
+	public visitVariableReferenceNode(node: VariableReferenceNode): void {}
+
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
 		this.enterScope(node.name);
 		node.block!.accept(this);
 
 		this.exitScope();
+	}
+
+	public visitActionReferenceNode(node: ActionReferenceNode): void {
+		throw new Error("Not implemented");
 	}
 
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
@@ -266,7 +282,7 @@ export class Compiler extends Visitor {
 	// MARK: Compiler Methods
 
 	public compile(): void {
-		this.ast.accept(this);
+		this.ast.root.accept(this);
 		this.emit(OpCode.Return);
 	}
 
