@@ -14,9 +14,9 @@ import { VMStatus } from "../src/vm/vm-status";
 export function run(code: string, verbose: boolean = false): any {
 	const parser = new Parser("test.play", code);
 	const ast = parser.parse();
-	const printer = new PrintVisitor(ast);
+	const printer = new PrintVisitor(ast.root);
 	if (verbose) console.log(printer.print());
-	const compiler = new Compiler(ast, parser.globalScope);
+	const compiler = new Compiler(ast);
 	compiler.compile();
 	const disassembler = new Disassembler();
 	const deconstruction = disassembler.disassemble(compiler.context);
@@ -39,7 +39,7 @@ export function describeAst(code: string): string {
 		console.error(parser.errors);
 		throw new Error("Parser errors");
 	}
-	const printer = new PrintVisitor(ast);
+	const printer = new PrintVisitor(ast.root);
 	return printer.print();
 }
 
@@ -54,7 +54,7 @@ export function compile(code: string): string {
 		console.error(parser.errors);
 		throw new Error("Parser errors");
 	}
-	const compiler = new Compiler(ast, parser.globalScope);
+	const compiler = new Compiler(ast);
 	compiler.compile();
 	const disassembler = new Disassembler();
 	const deconstruction = disassembler.disassemble(compiler.context);
@@ -68,7 +68,7 @@ export function compileAndLink(code: string): string {
 		console.error(parser.errors);
 		throw new Error("Parser errors");
 	}
-	const compiler = new Compiler(ast, parser.globalScope);
+	const compiler = new Compiler(ast);
 	compiler.compile();
 	const linker = new Linker(compiler.contexts, compiler.constantPool);
 	const linkedProgram = linker.link();

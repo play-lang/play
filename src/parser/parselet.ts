@@ -2,6 +2,7 @@ import { Expression } from "../language/node";
 import { Precedence } from "../language/precedence";
 import { TokenLike } from "../language/token";
 import { TokenType } from "../language/token-type";
+import { ActionReferenceNode } from "./nodes/action-reference-node";
 import { AssignmentExpressionNode } from "./nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "./nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "./nodes/binary-logical-expression-node";
@@ -10,6 +11,7 @@ import { LiteralExpressionNode } from "./nodes/literal-expression-node";
 import { PostfixExpressionNode } from "./nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "./nodes/prefix-expression-node";
 import { TernaryConditionalNode } from "./nodes/ternary-conditional-node";
+import { VariableReferenceNode } from "./nodes/variable-reference-node";
 import { Parser } from "./parser";
 
 export interface PrefixParselet {
@@ -32,6 +34,17 @@ export class PrefixOperatorParselet implements PrefixParselet {
 export class LiteralParselet implements PrefixParselet {
 	public parse(parser: Parser, token: TokenLike): Expression {
 		return new LiteralExpressionNode(token);
+	}
+}
+
+export class IdParselet implements PrefixParselet {
+	public parse(parser: Parser, token: TokenLike): Expression {
+		const name = token.lexeme;
+		if (parser.symbolTable.idInScope(name)) {
+			return new VariableReferenceNode(name);
+		}
+		// Todo: Look up in scope identifiers, not just actions
+		return new ActionReferenceNode(name);
 	}
 }
 

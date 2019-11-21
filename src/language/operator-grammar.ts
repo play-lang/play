@@ -3,6 +3,7 @@ import {
 	BinaryLogicalOperatorParselet,
 	BinaryOperatorParselet,
 	GroupParselet,
+	IdParselet,
 	InfixParselet,
 	InvocationOperatorParselet,
 	LiteralParselet,
@@ -28,6 +29,8 @@ export const prefixParselets: Map<TokenType, PrefixParselet> = new Map<
 	[TokenType.Number, new LiteralParselet()],
 	[TokenType.String, new LiteralParselet()],
 	[TokenType.Boolean, new LiteralParselet()],
+	// Inside an expression, identifiers can represent function names or variables
+	[TokenType.Id, new IdParselet()],
 	// Prefix operators
 	[TokenType.Bang, new PrefixOperatorParselet(Precedence.UnaryPrefix)],
 	[TokenType.Plus, new PrefixOperatorParselet(Precedence.UnarySign)],

@@ -1,5 +1,6 @@
 import { prepareHint } from "./common/format-messages";
 import {
+	isDigit,
 	isValidIdChar,
 	isValidIdStart,
 	isWhitespace,
@@ -441,20 +442,8 @@ export class Lexer {
 
 	/** True if the specified character is a digit */
 	private isDigit(char: string): boolean {
-		// TODO: Digit table
-		switch (char) {
-			case "0":
-			case "1":
-			case "2":
-			case "3":
-			case "4":
-			case "5":
-			case "6":
-			case "7":
-			case "8":
-			case "9":
-				return true;
-		}
-		return false;
+		const cp = char.codePointAt(0);
+		if (!cp) return false;
+		return isDigit(cp);
 	}
 }

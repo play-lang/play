@@ -1,4 +1,5 @@
 import { describeErrorToken, prepareHint } from "../common/format-messages";
+import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { Expression, Statement } from "../language/node";
 import { infixParselets, prefixParselets } from "../language/operator-grammar";
 import SymbolTable from "../language/symbol-table";
@@ -13,15 +14,6 @@ import { ParseError } from "./parse-error";
 import { InfixParselet } from "./parselet";
 
 export class Parser {
-	/** List of errors encountered in the code */
-	public readonly errors: ParseError[] = [];
-
-	/** Table containing every file encountered */
-	public readonly fileTable: string[] = [];
-
-	/** Lexer used to provide tokens as needed */
-	public readonly lexer: Lexer;
-
 	/** Current token */
 	public get peek(): TokenLike {
 		return this._token;
@@ -40,6 +32,30 @@ export class Parser {
 	public get isAtEnd(): boolean {
 		return this.peek.type === TokenType.EndOfFile;
 	}
+
+	/** Global scope symbol table */
+	public get globalScope(): SymbolTable {
+		return this._symbolTables[0];
+	}
+
+	/** Active symbol table for the current scope */
+	public get symbolTable(): SymbolTable {
+		return this._symbolTables[this._symbolTables.length - 1];
+	}
+	/** List of errors encountered in the code */
+	public readonly errors: ParseError[] = [];
+
+	/** Table containing every file encountered */
+	public readonly fileTable: string[] = [];
+
+	/** Lexer used to provide tokens as needed */
+	public readonly lexer: Lexer;
+
+	/**
+	 * Context names mapped to action nodes
+	 * This allows us to look-up functions by name without having to walk the tree
+	 */
+	public readonly actionTable: Map<string, ActionDeclarationNode> = new Map();
 
 	/** True if the parser is in panic mode */
 	protected isPanicking: boolean = false;
@@ -63,22 +79,6 @@ export class Parser {
 	protected _symbolTables: SymbolTable[] = [];
 	/** Number of scopes encountered */
 	protected _scopes: number = 0;
-
-	/**
-	 * Context names mapped to action nodes
-	 * This allows us to look-up functions by name without having to walk the tree
-	 */
-	protected actionTable: Map<string, ActionDeclarationNode> = new Map();
-
-	/** Global scope symbol table */
-	public get globalScope(): SymbolTable {
-		return this._symbolTables[0];
-	}
-
-	/** Active symbol table for the current scope */
-	protected get symbolTable(): SymbolTable {
-		return this._symbolTables[this._symbolTables.length - 1];
-	}
 
 	constructor(
 		filename: string,
@@ -224,7 +224,7 @@ export class Parser {
 	///
 	///
 
-	public parse(): ProgramNode {
+	public parse(): AbstractSyntaxTree {
 		const statements: Statement[] = [];
 		while (!this.isAtEnd) {
 			try {
@@ -241,24 +241,21 @@ export class Parser {
 				this.synchronize();
 			}
 		}
-		return new ProgramNode(statements);
+		const root = new ProgramNode(statements);
+		return new AbstractSyntaxTree(root, this.symbolTable, this.actionTable);
 	}
 
 	public statement(): Statement {
 		// See what we're looking at to figure out what kind of statement
 		// production to make
-		if (this.peek.type === TokenType.Id) {
+		if (this.match(TokenType.Id)) {
 			// Looking at an identifier
-			if (this.symbolTable.idInScope(this.peek.lexeme)) {
-				// Identifier has been previously declared
-				// Since it's the first thing in the statement this indicates
-				// an expression production
-				return this.expression();
-			} else {
-				// An identifier that we have no knowledge of
-				// This indicates a declaration production (the start of a type
-				// annotation, technically)
+			if (this.peek.type === TokenType.Id) {
 				return this.variableDeclaration();
+			} else {
+				// Next thing isn't an identifier which means it can't be a variable
+				// declaration, so it must be an expression
+				return this.expression(0, this.previous);
 			}
 		} else if (
 			this.peek.type === TokenType.Num ||
@@ -386,7 +383,6 @@ export class Parser {
 	public actionDeclaration(): ActionDeclarationNode {
 		this.match(TokenType.Action);
 		const typeAnnotation = this.typeAnnotation();
-		// Todo: register action in global scope
 		const nameToken = this.consume(
 			TokenType.Id,
 			"Expected action name following declaration"
@@ -424,10 +420,17 @@ export class Parser {
 		return node;
 	}
 
-	public expression(precedence: number = 0): Expression {
+	/**
+	 *
+	 * @param precedence The minimum precedence required to parse the
+	 * next operator
+	 * @param token The first token (allows some methods to do some look-ahead
+	 * to see if an expression production is merited)
+	 */
+	public expression(precedence: number = 0, token?: TokenLike): Expression {
 		// return this.value();
 
-		let token = this.advance();
+		token = token || this.advance();
 		const prefix = prefixParselets.get(token.type);
 		if (!prefix) {
 			throw this.error(token, "Expected start of expression");
