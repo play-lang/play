@@ -43,6 +43,21 @@ export function describeAst(code: string): string {
 	return printer.print();
 }
 
+export function jsonAst(code: string): any {
+	const parser = new Parser("test.play", code);
+	const ast = parser.parse();
+	if (parser.errors.length > 0) {
+		console.error(parser.errors);
+		throw new Error("Parser errors");
+	}
+	try {
+		return JSON.parse(JSON.stringify(ast.root));
+	} catch (e) {
+		console.error("Couldn't stringify AST");
+		throw e;
+	}
+}
+
 /**
  * Compiles the specified code
  * @param code The code to compile
