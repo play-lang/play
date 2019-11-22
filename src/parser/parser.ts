@@ -248,27 +248,16 @@ export class Parser {
 	public statement(): Statement {
 		// See what we're looking at to figure out what kind of statement
 		// production to make
-		if (this.match(TokenType.Id)) {
-			// Looking at an identifier
-			if (this.peek.type === TokenType.Id) {
-				return this.variableDeclaration();
-			} else {
-				// Next thing isn't an identifier which means it can't be a variable
-				// declaration, so it must be an expression
-				return this.expression(0, this.previous);
-			}
-		} else if (
-			this.peek.type === TokenType.Num ||
-			this.peek.type === TokenType.Str ||
-			this.peek.type === TokenType.Bool
-		) {
-			// A token for a primitive type at the start of a statement
-			// indicates a variable declaration production
+		if (this.match(TokenType.Let, TokenType.Var)) {
 			return this.variableDeclaration();
-		} else if (this.peek.type === TokenType.BraceOpen) {
+		} else if (this.match(TokenType.Id)) {
+			// Next thing isn't an identifier which means it can't be a variable
+			// declaration, so it must be an expression
+			return this.expression(0, this.previous);
+		} else if (this.match(TokenType.BraceOpen)) {
 			// Match a block statement
 			return this.block();
-		} else if (this.peek.type === TokenType.Action) {
+		} else if (this.match(TokenType.Action)) {
 			// Function definition
 			return this.actionDeclaration();
 		} else {
@@ -282,7 +271,7 @@ export class Parser {
 	 * action block
 	 */
 	public block(isActionBlock: boolean = false): BlockStatementNode {
-		this.consume(TokenType.BraceOpen, "Expect opening brace for block");
+		// Brace open has already been matched for us
 		this.eatLines();
 		// Create a new symbol table scope and push it on the symbol table stack
 		const symbolTable = this.symbolTable.addScope();
@@ -315,6 +304,7 @@ export class Parser {
 	 * return it as an array of strings
 	 */
 	public typeAnnotation(): string[] {
+		// Colon has already been matched for us
 		const typeAnnotation: string[] = [];
 		if (
 			this.match(TokenType.Id, TokenType.Str, TokenType.Num, TokenType.Bool)
@@ -325,7 +315,8 @@ export class Parser {
 		}
 		while (
 			this.peek.type === TokenType.List ||
-			this.peek.type === TokenType.Map
+			this.peek.type === TokenType.Map ||
+			this.peek.type === TokenType.Set
 		) {
 			// Consume any following "list" or "map" collection type modifiers
 			typeAnnotation.push(this.advance().lexeme);
@@ -350,23 +341,29 @@ export class Parser {
 	 * deepest type in the expression (a num, str, or user-defined type)
 	 */
 	public variableDeclaration(): VariableDeclarationNode {
-		const typeAnnotation = this.typeAnnotation();
-		const nameToken = this.consume(
-			TokenType.Id,
-			"Expected variable name following declaration"
+		// We've already matched the name token if we make it here
+		const isImmutable = this.previous.type === TokenType.Let;
+		const nameToken = this.consume(TokenType.Id, "Expected variable name");
+		// Expect a colon for a type annotation -> let x: num = 10
+		this.consume(
+			TokenType.Colon,
+			"Expected colon for variable type annotation"
 		);
-		// Register the declared variable in the symbol table
-		this.symbolTable.register(nameToken, typeAnnotation);
+		// Type annotation identifiers follow the colon:
+		const typeAnnotation = this.typeAnnotation();
 		// Variable declarations may be followed by an equals sign to initialize
 		// the value, otherwise we initialize the zero-value for it
-		if (this.match(TokenType.Equal)) {
-			return new VariableDeclarationNode(
-				nameToken.lexeme,
-				typeAnnotation,
-				this.expression()
-			);
-		}
-		return new VariableDeclarationNode(nameToken.lexeme, typeAnnotation);
+		const node: VariableDeclarationNode = this.match(TokenType.Equal)
+			? new VariableDeclarationNode(
+					nameToken,
+					typeAnnotation,
+					isImmutable,
+					this.expression()
+			  )
+			: new VariableDeclarationNode(nameToken, typeAnnotation, isImmutable);
+		// Register the declared variable in the symbol table
+		this.symbolTable.register(node);
+		return node;
 	}
 
 	/**
@@ -381,8 +378,7 @@ export class Parser {
 	 * ```
 	 */
 	public actionDeclaration(): ActionDeclarationNode {
-		this.match(TokenType.Action);
-		const typeAnnotation = this.typeAnnotation();
+		// Action keyword has already been matched for us
 		const nameToken = this.consume(
 			TokenType.Id,
 			"Expected action name following declaration"
@@ -394,27 +390,46 @@ export class Parser {
 				"Cannot redeclare action with the name `" + name + "`"
 			);
 		}
-		// Create a node
-		const node = new ActionDeclarationNode(name, typeAnnotation);
+		const parameters: Map<string, string[]> = new Map();
+		let numParameters: number = 0;
 		this.match(TokenType.ParenOpen);
 		if (!this.isAtEnd && this.peek.type !== TokenType.ParenClose) {
 			do {
-				// Attempt to match one or more parameters
-				const paramType = this.typeAnnotation();
 				const paramToken = this.consume(
 					TokenType.Id,
-					"Expected parameter name following parameter type annotation"
+					"Expected parameter name"
 				);
+				this.consume(
+					TokenType.Colon,
+					"Expected colon for parameter type annotation"
+				);
+				// Attempt to match one or more parameters
+				const paramType = this.typeAnnotation();
 				// Store the parameter information in the node
-				node.parameters.set(paramToken.lexeme, paramType);
-				node.numParameters++;
+				parameters.set(paramToken.lexeme, paramType);
+				numParameters++;
 			} while (this.match(TokenType.Comma));
 		}
 		this.match(TokenType.ParenClose);
+		// Optionally match a type annotation following function
+		// parameter parenthesis -> action doSomething(a: num): str {}
+		//                                                       ^
+		const typeAnnotation = this.match(TokenType.Colon)
+			? this.typeAnnotation()
+			: [];
+		// Create a node
+		const node = new ActionDeclarationNode(
+			name,
+			typeAnnotation,
+			numParameters,
+			parameters
+		);
 		// Register the function name and the AST node that it points to
 		// This will make compilation of functions simpler since we can look up
 		// how many parameters and what kind a function takes when we call it
 		this.actionTable.set(name, node);
+		// Start parsing the action block
+		this.consume(TokenType.BraceOpen, "Expected opening brace of action block");
 		// Grab the block of statements inside the function curly braces
 		node.block = this.block(true);
 		return node;

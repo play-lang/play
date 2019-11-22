@@ -3,7 +3,7 @@ import { compile, run } from "../shared/test-utils";
 describe("compiler/vm", () => {
 	it("should not register duplicates in the constant pool", () => {
 		expect(
-			compile('str x = "x"\nstr y = "x"').startsWith(
+			compile('let x: str = "x"\nlet y: str = "x"').startsWith(
 				"0000\tString\tx\n\n0000\t            CONSTANT\t(0)\t= x\n"
 			)
 		).toBe(true);

@@ -17,12 +17,15 @@ export enum TokenType {
 	Bool,
 	Map,
 	List,
+	Set,
 
 	// Reserved statement words
 	If,
 	While,
 	For,
 	Do,
+	Let,
+	Var,
 
 	// Reserved declaration words
 	Model,
@@ -93,11 +96,14 @@ export const idTokenTypes: { [key: string]: TokenType } = {
 	while: TokenType.While,
 	for: TokenType.For,
 	do: TokenType.Do,
+	let: TokenType.Let,
+	var: TokenType.Var,
 	num: TokenType.Num,
 	str: TokenType.Str,
 	bool: TokenType.Bool,
 	map: TokenType.Map,
 	list: TokenType.List,
+	set: TokenType.Set,
 	model: TokenType.Model,
 	contract: TokenType.Contract,
 	insert: TokenType.Insert,

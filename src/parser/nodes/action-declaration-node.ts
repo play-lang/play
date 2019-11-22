@@ -10,14 +10,21 @@ export class ActionDeclarationNode extends Statement {
 	/** Statements inside the action */
 	public block: BlockStatementNode | undefined;
 	/** Number of parameters expected by this action */
-	public numParameters: number = 0;
+	public readonly numParameters: number = 0;
 	/** Parameter names mapped to parameter type annotations */
-	public parameters: Map<string, string[]> = new Map();
+	public readonly parameters: Map<string, string[]> = new Map();
 
-	constructor(name: string, typeAnnotation: string[]) {
+	constructor(
+		name: string,
+		typeAnnotation: string[],
+		numParameters: number,
+		parameters: Map<string, string[]>
+	) {
 		super();
 		this.name = name;
 		this.typeAnnotation = typeAnnotation;
+		this.numParameters = numParameters;
+		this.parameters = parameters;
 	}
 
 	public accept(visitor: Visitor): void {

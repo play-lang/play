@@ -1,5 +1,6 @@
 import SymbolTable from "../src/language/symbol-table";
 import { Token } from "../src/language/token";
+import { VariableDeclarationNode } from "../src/parser/nodes/variable-declaration-node";
 
 let pos: number = 0;
 const chars: string[] = ["a", "b", "c", "d", "e", "f", "g"];
@@ -24,9 +25,9 @@ describe("symbol table", () => {
 	});
 	it("should register ids", () => {
 		const t2 = fakeToken(); // b
-		globalScope.register(t1, ["num"]);
+		globalScope.register(new VariableDeclarationNode(t1, ["num"], false));
 		expect(globalScope.entries.has(t1.lexeme));
-		globalScope.register(t2, ["str"]);
+		globalScope.register(new VariableDeclarationNode(t2, ["str"], false));
 		expect(globalScope.entries.has(t2.lexeme));
 		expect(globalScope.description).toEqual(
 			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"]}'
@@ -40,8 +41,8 @@ describe("symbol table", () => {
 		s1 = globalScope.addScope();
 		const t3 = fakeToken(); // c
 		const t4 = fakeToken(); // d
-		s1.register(t3, ["num"]);
-		s1.register(t4, ["str"]);
+		s1.register(new VariableDeclarationNode(t3, ["num"], false));
+		s1.register(new VariableDeclarationNode(t4, ["str"], false));
 		expect(s1.idInScope("a")).toBe(true);
 		expect(s1.idInScope("b")).toBe(true);
 		expect(s1.idInScope("e")).toBe(false);
@@ -53,10 +54,11 @@ describe("symbol table", () => {
 			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"], "scopes": [{ "ids": ["Id(0, `c`, `num`)", "Id(1, `d`, `str`)"]}, { "ids": []}]}'
 		);
 		const t5 = fakeToken(); // e
-		s2.register(t5, ["num"]);
+		s2.register(new VariableDeclarationNode(t5, ["num"], false));
 	});
 	it("should perform lookups", () => {
-		expect(globalScope.lookup("a")).toEqual({
+		expect(JSON.parse(JSON.stringify(globalScope.lookup("a")))).toEqual({
+			isImmutable: false,
 			token: {
 				column: 0,
 				fileTableIndex: 0,
@@ -71,6 +73,8 @@ describe("symbol table", () => {
 		});
 	});
 	it("should prevent duplicate id's from being registered", () => {
-		expect(globalScope.register(t1, ["num"])).toBe(false);
+		expect(
+			globalScope.register(new VariableDeclarationNode(t1, ["num"], false))
+		).toBe(false);
 	});
 });
