@@ -1,18 +1,7 @@
 import { LinkedHashMap } from "../common/linked-hash-map";
 import { Context } from "./context";
-import { Describable, Token } from "./token";
-
-/** Represents an entry in a symbol table */
-export class IdentifierSymbol {
-	/** Token for the identifier (to keep track of where it was first declared) */
-	public token: Token;
-	/** Type annotation of the identifier */
-	public typeAnnotation: string[];
-	constructor(token: Token, typeAnnotation: string[]) {
-		this.token = token;
-		this.typeAnnotation = typeAnnotation;
-	}
-}
+import { IdentifierSymbol } from "./identifier-symbol";
+import { Describable } from "./token";
 
 export default class SymbolTable implements Describable {
 	/** Parent scope, if any */
@@ -54,10 +43,7 @@ export default class SymbolTable implements Describable {
 	 * @param id The identifier to check
 	 */
 	public idInScope(id: string): boolean {
-		if (
-			this.entries.get(id) instanceof IdentifierSymbol &&
-			this.entries.ordinal(id)! < this.available
-		) {
+		if (this.entries.has(id) && this.entries.ordinal(id)! < this.available) {
 			return true;
 		}
 		if (!this.enclosingScope) return false;
@@ -79,14 +65,14 @@ export default class SymbolTable implements Describable {
 	 * @param token The token containing the identifier to register
 	 * @param typeAnnotation The type annotation of the identifier
 	 */
-	public register(token: Token, typeAnnotation: string[]): boolean {
+	public register(variableDeclaration: IdentifierSymbol): boolean {
 		// Make sure identifier doesn't already exist in this exact scope
 		// Note that the identifier can exist in ancestor scopes because we allow
 		// variable shadowing to happen when a nested scope uses the same
 		// variable name as an outer scope
-		const key = token.lexeme;
+		const key = variableDeclaration.name;
 		if (this.entries.get(key)) return false;
-		this.entries.set(key, new IdentifierSymbol(token, typeAnnotation));
+		this.entries.set(key, variableDeclaration);
 		this.available++;
 		return true;
 	}
@@ -127,7 +113,7 @@ export default class SymbolTable implements Describable {
 				'"Id(' +
 				String(index) +
 				", `" +
-				entry.token.lexeme +
+				entry.name +
 				"`, `" +
 				entry.typeAnnotation.join(" ") +
 				'`)"' +
