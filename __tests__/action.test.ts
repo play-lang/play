@@ -2,8 +2,18 @@
 import { describeAst } from "../shared/test-utils";
 
 describe("action parsing", () => {
-	it("should call an action", () => {
+	it("should parse an action call and action body", () => {
 		const code = `action addNumbers() { return 2 + 3 }
+		addNumbers()`;
+		console.log(describeAst(code));
+	});
+	it("should parse an empty action body and call", () => {
+		const code = `action addNumbers() {}
+		addNumbers()`;
+		console.log(describeAst(code));
+	});
+	it("should parse an action with empty return and call", () => {
+		const code = `action addNumbers() {return}
 		addNumbers()`;
 		console.log(describeAst(code));
 	});

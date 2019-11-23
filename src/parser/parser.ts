@@ -94,6 +94,21 @@ export class Parser {
 		this._previous = this._token;
 	}
 
+	/**
+	 * Returns true if we're looking at the end of a statement
+	 * Things that end a statement are:
+	 *  - Reaching the end of the input
+	 *  - Looking at a new line
+	 *  - Looking at a closing brace
+	 */
+	public get isAtEndOfStatement(): boolean {
+		return (
+			this.isAtEnd ||
+			this.peek.type === TokenType.Line ||
+			this.peek.type === TokenType.BraceClose
+		);
+	}
+
 	/** Advances to the next token and returns the previous token */
 	public advance(): TokenLike {
 		this.skip();
@@ -443,10 +458,9 @@ export class Parser {
 		//
 		// If the end of the statement isn't found, assume there is a return value
 		// expression to parse
-		const expr: Expression | undefined =
-			!this.isAtEnd && this.peek.type !== TokenType.Line
-				? this.expression()
-				: undefined;
+		const expr: Expression | undefined = !this.isAtEndOfStatement
+			? this.expression()
+			: undefined;
 		return new ReturnStatementNode(expr);
 	}
 
