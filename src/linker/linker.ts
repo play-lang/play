@@ -1,7 +1,7 @@
 import { Context } from "../language/context";
-import { LinkedProgram } from "../language/linked-program";
 import { LoadedProgram } from "../language/loaded-program";
 import { RuntimeValue } from "../vm/runtime-value";
+import { LinkedProgram } from "./linked-program";
 
 // Multiple compiled "contexts" (one per function) need to be "linked"
 // together into one context and jumps spanning between contexts
@@ -13,6 +13,8 @@ export class Linker {
 	) {}
 
 	public link(): LinkedProgram {
+		// Map context names to their start instruction offset in the final
+		// linked code
 		const contextMap: Map<string, number> = new Map();
 		if (this.contexts.length < 1) {
 			throw new Error("Must have at least 1 context");
@@ -25,6 +27,7 @@ export class Linker {
 
 		return new LinkedProgram(
 			new LoadedProgram(this.constantPool, bytecode),
+			this.contexts,
 			contextMap
 		);
 	}
