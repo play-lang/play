@@ -25,8 +25,9 @@ import { RuntimeValue } from "../vm/runtime-value";
 export class Compiler extends Visitor {
 	/** Current bytecode context */
 	public get context(): Context {
-		return this.symbolTable.context!;
+		return this.contexts.get(this.symbolTable)!;
 	}
+
 	/** Ast root to compile */
 	public readonly ast: AbstractSyntaxTree;
 	/** Constant pool preceding the code */
@@ -36,7 +37,9 @@ export class Compiler extends Visitor {
 	 */
 	public readonly constants: Map<any, number> = new Map();
 	/** Contains the list of all compiled contexts after compilation */
-	public readonly contexts: Context[] = [];
+	public readonly allContexts: Context[] = [];
+	/** Maps symbol table instances to their respective bytecode context */
+	public readonly contexts: Map<SymbolTable, Context> = new Map();
 
 	/**
 	 * Context names mapped to action nodes
@@ -60,10 +63,9 @@ export class Compiler extends Visitor {
 		this.ast = ast;
 		this.symbolTable = ast.symbolTable;
 		this.globalScope = ast.symbolTable;
-		this.symbolTable.context = this.createContext(
-			"main",
-			this.constantPool,
-			this.constants
+		this.contexts.set(
+			this.symbolTable,
+			this.createContext("main", this.constantPool, this.constants)
 		);
 		this.actionTable = ast.actionTable;
 	}
@@ -325,10 +327,13 @@ export class Compiler extends Visitor {
 		this.childScopeIndices.push(0);
 		this.symbolTable = this.symbolTable.scopes[childScopeIndex];
 		this.symbolTable.available = 0;
-		this.symbolTable.context =
+		// Add a context entry in the map of symbol tables to contexts
+		this.contexts.set(
+			this.symbolTable,
 			contextName === ""
 				? context
-				: this.createContext(contextName, this.constantPool, this.constants);
+				: this.createContext(contextName, this.constantPool, this.constants)
+		);
 	}
 
 	private exitScope(): void {
@@ -350,7 +355,7 @@ export class Compiler extends Visitor {
 		constants: Map<any, number>
 	): Context {
 		const context = new Context(contextName, constantPool, constants);
-		this.contexts.push(context);
+		this.allContexts.push(context);
 		this.patcher.prepare(this.context);
 		return context;
 	}

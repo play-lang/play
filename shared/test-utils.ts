@@ -85,7 +85,7 @@ export function compileAndLink(code: string): string {
 	}
 	const compiler = new Compiler(ast);
 	compiler.compile();
-	const linker = new Linker(compiler.contexts, compiler.constantPool);
+	const linker = new Linker(compiler.allContexts, compiler.constantPool);
 	const linkedProgram = linker.link();
 	const disassembler = new Disassembler();
 	const deconstruction = disassembler.disassemble(linkedProgram.program);
