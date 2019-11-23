@@ -1,16 +1,19 @@
-import { JumpEntry, JumpType } from "../assembler/jump-entry";
 import { Context } from "../language/context";
-import { LinkedProgram } from "../linker/linked-program";
+import { JumpEntry, JumpType } from "./jump-entry";
 
 /**
  * When jumping from one compiled bytecode "context" to another
  * (calling other functions), we need to construct jumps between contexts that
  * haven't been linked together into one bytecode array.
  *
- * Behold: The assembler! It stores locations of jumps and "labels" across
+ * This is nothing like a real assembler. If anything, it's more like a linker
+ * Except, the play linker simply tapes things together. It doesn't
+ * resolve jumps like this does
+ *
+ * This stores locations of jumps and "labels" across
  * contexts and makes it easy to back-patch these jumps later on
  */
-export class Assembler {
+export class JumpPatcher {
 	constructor(
 		/** Map of jumps for patching later */
 		public readonly jumps: Map<Context, JumpEntry[]> = new Map()
@@ -69,24 +72,31 @@ export class Assembler {
 	}
 
 	/**
-	 * Patches the jumps registered for the specified context
+	 * Patches the jumps registered for the specified bytecode
+	 *
+	 * Bytecode should be the final output from the linker
 	 *
 	 * Only call this when all contexts have been compiled for proper jump
 	 * back-patching!
 	 *
-	 * @param linkedProgram The combined program from the linker
-	 * @param context The context to patch jumps in
+	 * @param bytecode All of the bytecode from all of the linked contexts
+	 * @param contextMap Context names mapped to their start offset in
+	 * the bytecode
+	 * @param contexts An array of all the contexts used to create the
+	 * linked bytecode
 	 */
-	public patch(linkedProgram: LinkedProgram): void {
-		const bytecode: number[] = linkedProgram.program.bytecode;
-		const contextMap: Map<string, number> = linkedProgram.contextMap;
-
+	public patch(
+		bytecode: number[],
+		contexts: Context[],
+		contextMap: Map<string, number>
+	): void {
 		// Go through each context used in the linked program and patch
 		// the jumps inside
-		for (const context of linkedProgram.contexts) {
+		for (const context of contexts) {
 			// Find the base offset of the context containing the jump
 			const contextOffset: number = contextMap.get(context.name)!;
-			const jumps: JumpEntry[] = this.jumps.get(context)!;
+			const jumps = this.jumps.get(context);
+			if (!jumps) continue;
 			for (const jump of jumps) {
 				const jumpPos: number = contextOffset + jump.offset + 1;
 				if (jump.type === JumpType.Contextual) {

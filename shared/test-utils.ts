@@ -84,8 +84,8 @@ export function compileAndLink(code: string): string {
 		throw new Error("Parser errors");
 	}
 	const compiler = new Compiler(ast);
-	compiler.compile();
-	const linker = new Linker(compiler.allContexts, compiler.constantPool);
+	const compiledProgram = compiler.compile();
+	const linker = new Linker(compiledProgram);
 	const linkedProgram = linker.link();
 	const disassembler = new Disassembler();
 	const deconstruction = disassembler.disassemble(linkedProgram.program);
