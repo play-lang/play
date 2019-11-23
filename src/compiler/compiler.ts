@@ -1,7 +1,7 @@
+import { Assembler } from "../assembler/assembler";
 import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { Context } from "../language/context";
 import { OpCode } from "../language/op-code";
-import { Patcher } from "../language/patcher";
 import SymbolTable from "../language/symbol-table";
 import { TokenType } from "../language/token-type";
 import { Visitor } from "../language/visitor";
@@ -56,7 +56,7 @@ export class Compiler extends Visitor {
 	/** Number of scopes deep we are--used as an index to childScopeIndices */
 	private scopeDepth: number = 0;
 	/** Registers labels and patches jumps between contexts */
-	private patcher: Patcher = new Patcher();
+	private assembler: Assembler = new Assembler();
 
 	constructor(ast: AbstractSyntaxTree) {
 		super();
@@ -356,7 +356,7 @@ export class Compiler extends Visitor {
 	): Context {
 		const context = new Context(contextName, constantPool, constants);
 		this.allContexts.push(context);
-		this.patcher.prepare(this.context);
+		this.assembler.prepare(this.context);
 		return context;
 	}
 }

@@ -1,4 +1,5 @@
-import { LoadedProgram } from "./loaded-program";
+import { Context } from "../language/context";
+import { LoadedProgram } from "../language/loaded-program";
 
 /**
  * Linker output creates a LinkedProgram, which is given to the Patcher
@@ -12,9 +13,11 @@ export class LinkedProgram {
 		 * the program
 		 */
 		public readonly program: LoadedProgram,
+		/** Array of all bytecode contexts in the linked program */
+		public readonly contexts: Context[],
 		/**
-		 * Maps context names from the contexts used to create the linked
-		 * program to their start offset number in the linked bytecode
+		 * Maps context names to their instruction start offset number in the
+		 * linked bytecode
 		 */
 		public readonly contextMap: Map<string, number>
 	) {}
