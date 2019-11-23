@@ -1,5 +1,4 @@
 import { LinkedHashMap } from "../common/linked-hash-map";
-import { Context } from "./context";
 import { IdentifierSymbol } from "./identifier-symbol";
 import { Describable } from "./token";
 
@@ -22,9 +21,6 @@ export default class SymbolTable implements Describable {
 	 * the identifier *after* the nested scope
 	 */
 	public available: number = 0;
-
-	/** Context associated with this scope */
-	public context: Context | undefined;
 
 	/**
 	 * Maps identifier and scope id's to their respective IdentifierSymbols and
@@ -87,7 +83,7 @@ export default class SymbolTable implements Describable {
 	}
 
 	/**
-	 * Add a new child scope, optionally creating a new compilation context
+	 * Add a new child scope
 	 * for it
 	 * @returns The new scope
 	 */

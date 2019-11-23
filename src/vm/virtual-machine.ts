@@ -1,5 +1,6 @@
 import { Context } from "../language/context";
 import { OpCode } from "../language/op-code";
+import { Frame } from "./frame";
 import { RuntimeError } from "./runtime-error";
 import { RuntimeType } from "./runtime-type";
 import { RuntimeValue } from "./runtime-value";
@@ -24,9 +25,13 @@ export class VirtualMachine {
 	public ip: number = 0;
 	/** Stack */
 	public readonly stack: RuntimeValue[] = [];
+	/** Stack frames */
+	public readonly frames: Frame[] = [];
 
 	constructor(context: Context) {
 		this.context = context;
+		// Add the main stack frame:
+		this.frames.push(new Frame(this.ip));
 	}
 
 	public run(): VMResult {
@@ -244,6 +249,10 @@ export class VirtualMachine {
 	/** Top value in the stack */
 	public get top(): RuntimeValue {
 		return this.stack[this.stack.length - 1];
+	}
+
+	public get frame(): Frame {
+		return this.frames[this.frames.length - 1];
 	}
 
 	/** Returns true if the specified runtime value evaluates to true */
