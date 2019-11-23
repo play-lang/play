@@ -9,6 +9,7 @@ import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
+import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
 import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
@@ -38,4 +39,5 @@ export abstract class Visitor {
 	public abstract visitAssignmentExpressionNode(
 		node: AssignmentExpressionNode
 	): void;
+	public abstract visitReturnStatementNode(node: ReturnStatementNode): void;
 }

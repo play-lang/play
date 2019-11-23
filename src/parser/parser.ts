@@ -9,6 +9,7 @@ import { Lexer } from "../lexer";
 import { ActionDeclarationNode } from "./nodes/action-declaration-node";
 import { BlockStatementNode } from "./nodes/block-statement-node";
 import { ProgramNode } from "./nodes/program-node";
+import { ReturnStatementNode } from "./nodes/return-statement-node";
 import { VariableDeclarationNode } from "./nodes/variable-declaration-node";
 import { ParseError } from "./parse-error";
 import { InfixParselet } from "./parselet";
@@ -260,6 +261,8 @@ export class Parser {
 		} else if (this.match(TokenType.Action)) {
 			// Function definition
 			return this.actionDeclaration();
+		} else if (this.match(TokenType.Return)) {
+			return this.returnStatement();
 		} else {
 			// An unrecognized statement must be an expression statement
 			return this.expression();
@@ -433,6 +436,18 @@ export class Parser {
 		// Grab the block of statements inside the function curly braces
 		node.block = this.block(true);
 		return node;
+	}
+
+	public returnStatement(): ReturnStatementNode {
+		// Return keyword has already been matched
+		//
+		// If the end of the statement isn't found, assume there is a return value
+		// expression to parse
+		const expr: Expression | undefined =
+			!this.isAtEnd && this.peek.type !== TokenType.Line
+				? this.expression()
+				: undefined;
+		return new ReturnStatementNode(expr);
 	}
 
 	/**

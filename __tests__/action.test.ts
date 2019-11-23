@@ -1,6 +1,13 @@
-import { compileAndLink, describeAst, jsonAst } from "../shared/test-utils";
+// import { compileAndLink, describeAst, jsonAst } from "../shared/test-utils";
+import { describeAst } from "../shared/test-utils";
 
 describe("action parsing", () => {
+	it("should call an action", () => {
+		const code = `action addNumbers() { return 2 + 3 }
+		addNumbers()`;
+		console.log(describeAst(code));
+	});
+	/*
 	it("should parse empty action", () => {
 		expect(describeAst("action compute(x: str, y: num): num { }")).toEqual(
 			"Program\n      └── Action num compute(str x, num y)\n"
@@ -132,4 +139,5 @@ describe("action parsing", () => {
 		console.log(describeAst(code));
 		console.log(compileAndLink(code));
 	});
+	*/
 });
