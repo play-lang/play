@@ -322,7 +322,11 @@ export class Compiler extends Visitor {
 	}
 
 	public patch(context: Context, jumpOffset: number, destOffset: number): void {
+		// This will actually get overwritten by the jump patcher when the linker
+		// runs if there is more than one context to compile
 		context.bytecode[jumpOffset + 1] = destOffset;
+		// Register the jump so that it can get patched later if necessary
+		this.jumpPatcher.registerJump(this.context, jumpOffset, destOffset);
 	}
 
 	/**
