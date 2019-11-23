@@ -1,4 +1,4 @@
-import { Assembler } from "../assembler/assembler";
+import { JumpPatcher } from "../jump-patcher/jump-patcher";
 import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { Context } from "../language/context";
 import { OpCode } from "../language/op-code";
@@ -21,6 +21,7 @@ import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-no
 import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
 import { RuntimeType } from "../vm/runtime-type";
 import { RuntimeValue } from "../vm/runtime-value";
+import { CompiledProgram } from "./compiled-program";
 
 export class Compiler extends Visitor {
 	/** Current bytecode context */
@@ -56,7 +57,7 @@ export class Compiler extends Visitor {
 	/** Number of scopes deep we are--used as an index to childScopeIndices */
 	private scopeDepth: number = 0;
 	/** Registers labels and patches jumps between contexts */
-	private assembler: Assembler = new Assembler();
+	private jumpPatcher: JumpPatcher = new JumpPatcher();
 
 	constructor(ast: AbstractSyntaxTree) {
 		super();
@@ -283,9 +284,18 @@ export class Compiler extends Visitor {
 
 	// MARK: Compiler Methods
 
-	public compile(): void {
+	/**
+	 * Compiles the program
+	 * @returns The compiled program, ready to be linked
+	 */
+	public compile(): CompiledProgram {
 		this.ast.root.accept(this);
 		this.emit(OpCode.Return);
+		return new CompiledProgram(
+			this.allContexts,
+			this.constantPool,
+			this.jumpPatcher
+		);
 	}
 
 	/**
@@ -356,7 +366,7 @@ export class Compiler extends Visitor {
 	): Context {
 		const context = new Context(contextName, constantPool, constants);
 		this.allContexts.push(context);
-		this.assembler.prepare(this.context);
+		this.jumpPatcher.prepare(this.context);
 		return context;
 	}
 }
