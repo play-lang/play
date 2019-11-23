@@ -26,6 +26,7 @@ export enum TokenType {
 	Do,
 	Let,
 	Var,
+	Return,
 
 	// Reserved declaration words
 	Model,
@@ -98,6 +99,7 @@ export const idTokenTypes: { [key: string]: TokenType } = {
 	do: TokenType.Do,
 	let: TokenType.Let,
 	var: TokenType.Var,
+	return: TokenType.Return,
 	num: TokenType.Num,
 	str: TokenType.Str,
 	bool: TokenType.Bool,

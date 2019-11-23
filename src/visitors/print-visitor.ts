@@ -12,6 +12,7 @@ import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
+import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
 import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
@@ -88,6 +89,12 @@ export class PrintVisitor extends Visitor implements Describable {
 			"(" +
 			params +
 			")\n";
+		this.indent += 1;
+		if (node.block) {
+			this.desc += this.spaces + "└── ";
+			node.block.accept(this);
+		}
+		this.indent -= 1;
 	}
 
 	public visitActionReferenceNode(node: ActionReferenceNode): void {
@@ -166,6 +173,16 @@ export class PrintVisitor extends Visitor implements Describable {
 		node.lhs.accept(this);
 		this.desc += this.spaces + "└── rhs: ";
 		node.rhs.accept(this);
+		this.indent -= 1;
+	}
+
+	public visitReturnStatementNode(node: ReturnStatementNode): void {
+		this.desc += "Return\n";
+		this.indent += 1;
+		if (node.expr) {
+			this.desc += this.spaces + "└── ";
+			node.expr.accept(this);
+		}
 		this.indent -= 1;
 	}
 
