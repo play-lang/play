@@ -17,9 +17,11 @@ export function run(code: string, verbose: boolean = false): any {
 	const printer = new PrintVisitor(ast.root);
 	if (verbose) console.log(printer.print());
 	const compiler = new Compiler(ast);
-	compiler.compile();
+	const compiledProgram = compiler.compile();
+	const linker = new Linker(compiledProgram);
+	const linkedProgram = linker.link();
 	const disassembler = new Disassembler();
-	const deconstruction = disassembler.disassemble(compiler.context);
+	const deconstruction = disassembler.disassemble(linkedProgram.program);
 	if (verbose) console.log(deconstruction);
 	if (verbose) console.log("Code:\t", code);
 	const vm = new VirtualMachine(compiler.context);
