@@ -267,8 +267,7 @@ export class Parser {
 		if (this.match(TokenType.Let, TokenType.Var)) {
 			return this.variableDeclaration();
 		} else if (this.match(TokenType.Id)) {
-			// Next thing isn't an identifier which means it can't be a variable
-			// declaration, so it must be an expression
+			// Non-reserved identifier indicates an expression every time
 			return this.expression(0, this.previous);
 		} else if (this.match(TokenType.BraceOpen)) {
 			// Match a block statement

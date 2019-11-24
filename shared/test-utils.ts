@@ -13,13 +13,13 @@ export function str(strings: TemplateStringsArray): string {
 	output += strings[values.length];
 
 	// Split on newlines.
-	const lines = output.split(/(?:\r\n|\n|\r)/);
-
-	// Rip out the leading whitespace.
-	return lines
+	const lines = output
+		.split(/(?:\r\n|\n|\r)/)
 		.map(line => {
 			return line.replace(/^\s+/gm, "");
 		})
-		.join(" ")
+		.join("\n")
 		.trim();
+
+	return lines;
 }
