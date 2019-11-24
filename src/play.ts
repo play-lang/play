@@ -7,6 +7,8 @@ import { Lexer } from "./lexer";
 import { LinkedProgram } from "./linker/linked-program";
 import { Linker } from "./linker/linker";
 import { Parser } from "./parser/parser";
+import { JSONVisitor } from "./visitors/json-visitor";
+import { PrintVisitor } from "./visitors/print-visitor";
 import { VirtualMachine } from "./vm/virtual-machine";
 import { VMResult } from "./vm/vm-result";
 
@@ -85,5 +87,30 @@ export class Play {
 		const loadedProgram = this.link(code).program;
 		const disassembler = new Disassembler(loadedProgram);
 		return disassembler.disassemble();
+	}
+
+	/**
+	 * Describes the abstract syntax tree for the specified code as
+	 * a human-friendly tree representation string for convenient
+	 * console output
+	 * @param code The code to describe
+	 */
+	public static describeAst(code: string): string {
+		const ast = Play.parse(code);
+		const printer = new PrintVisitor(ast);
+		return printer.print();
+	}
+
+	/**
+	 * Describes the abstract syntax tree for the specified code as a
+	 * machine-friendly JSON object representation for convenient automated
+	 * testing and analysis
+	 * @param code The code to describe
+	 * @returns The JSON object, stringified
+	 */
+	public static describeAstAsJSON(code: string): object {
+		const ast = Play.parse(code);
+		const printer = new JSONVisitor(ast);
+		return printer.json();
 	}
 }

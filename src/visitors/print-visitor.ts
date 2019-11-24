@@ -1,3 +1,4 @@
+import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { Describable } from "../language/token";
 import { TokenType } from "../language/token-type";
 import { Visitor } from "../language/visitor";
@@ -21,13 +22,14 @@ export class PrintVisitor extends Visitor implements Describable {
 	private indent: number = 0;
 	private desc: string = "";
 
-	constructor(public readonly ast: ProgramNode) {
+	constructor(public readonly ast: AbstractSyntaxTree) {
 		super();
 	}
 
 	public print(): string {
-		this.ast.accept(this);
-		return this.description;
+		this.desc = "";
+		this.ast.root.accept(this);
+		return this.desc;
 	}
 
 	public visitProgramNode(node: ProgramNode): void {
@@ -191,6 +193,6 @@ export class PrintVisitor extends Visitor implements Describable {
 	}
 
 	public get description(): string {
-		return this.desc;
+		return this.print();
 	}
 }
