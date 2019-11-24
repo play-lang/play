@@ -20,9 +20,17 @@ export class VirtualMachine {
 	public context: Context;
 	/**
 	 * Instruction pointer
-	 * Always points to the next instruction to be evaluated
+	 *
+	 * Always represents the index of the next instruction to be evaluated
 	 */
-	public ip: number = 0;
+	public get ip(): number {
+		return this.frame.ip;
+	}
+
+	public set ip(value: number) {
+		this.frame.ip = value;
+	}
+
 	/** Stack */
 	public readonly stack: RuntimeValue[] = [];
 	/** Stack frames */
@@ -31,7 +39,7 @@ export class VirtualMachine {
 	constructor(context: Context) {
 		this.context = context;
 		// Add the main stack frame:
-		this.frames.push(new Frame(this.ip));
+		this.frames.push(new Frame(0, 0));
 	}
 
 	public run(): VMResult {
@@ -192,6 +200,20 @@ export class VirtualMachine {
 						if (this.isTruthy(this.top)) this.ip = dest;
 						break;
 					}
+					case OpCode.Call: {
+						const numLocals = this.readCode();
+						const dest = this.pop();
+						if (dest.type !== RuntimeType.Function) {
+							throw new RuntimeError(
+								VMStatus.InvalidOperands,
+								"Attempted to invoke a non-function"
+							);
+						}
+						const ip = dest.value as number;
+						const basePointer = this.stack.length - 1 - numLocals;
+						this.frames.push(new Frame(ip, basePointer));
+						break;
+					}
 				}
 				// Return if we reached the end
 				if (this.ip >= this.context.bytecode.length) break;
@@ -266,6 +288,8 @@ export class VirtualMachine {
 				return value.value !== "";
 			case RuntimeType.Object:
 				return value !== Nil;
+			case RuntimeType.Function:
+				return Number.isInteger(value.value);
 		}
 	}
 }

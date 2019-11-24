@@ -72,4 +72,9 @@ export enum OpCode {
 	JumpFalse,
 	/** Jump if true */
 	JumpTrue,
+
+	// Function calls
+
+	/** Call a function */
+	Call,
 }
