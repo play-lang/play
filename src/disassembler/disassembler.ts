@@ -4,6 +4,17 @@ import { RuntimeType } from "../vm/runtime-type";
 import { RuntimeValue } from "../vm/runtime-value";
 
 export class Disassembler {
+	/** Formatted version of the instruction pointer */
+	private get ipn(): string {
+		return this.format(this.ip);
+	}
+	/** Formatted version of the data pointer */
+	private get dpn(): string {
+		return this.format(this.dp);
+	}
+
+	/** Program to disassemble */
+	public readonly program: LoadedProgram;
 	/** Pointer to the last found instruction */
 	private ip: number = 0;
 	/** Bytecode pointer */
@@ -11,17 +22,21 @@ export class Disassembler {
 	/** Data pointer */
 	private dp: number = 0;
 
+	constructor(program: LoadedProgram) {
+		this.program = program;
+	}
+
 	/** Disassemble the specified program */
-	public disassemble(program: LoadedProgram): string {
-		return (this.data(program) + this.instructions(program)).trim();
+	public disassemble(): string {
+		return (this.data() + this.instructions()).trim();
 	}
 
 	/** Disassemble data for the specified program */
-	public data(program: LoadedProgram): string {
+	public data(): string {
 		let str = "";
 		this.dp = 0;
-		while (this.dp < program.constantPool.length) {
-			const value = program.constantPool[this.dp];
+		while (this.dp < this.program.constantPool.length) {
+			const value = this.program.constantPool[this.dp];
 			str += this.dpn + "\t" + this.describe(value);
 			this.dp++;
 		}
@@ -29,16 +44,16 @@ export class Disassembler {
 	}
 
 	/** Disassemble instructions for the specified program */
-	private instructions(program: LoadedProgram): string {
+	private instructions(): string {
 		let str = "\n";
 		this.p = 0;
-		while (this.p < program.bytecode.length) {
+		while (this.p < this.program.bytecode.length) {
 			this.ip = this.p;
-			const instr = program.bytecode[this.p++];
+			const instr = this.program.bytecode[this.p++];
 			switch (instr) {
 				// 1 param instructions
 				case OpCode.Constant: {
-					const index = program.bytecode[this.p++];
+					const index = this.program.bytecode[this.p++];
 					str +=
 						this.ipn +
 						"\t" +
@@ -46,7 +61,7 @@ export class Disassembler {
 						"\t(" +
 						index +
 						")\t= " +
-						program.constantPool[index].value +
+						this.program.constantPool[index].value +
 						"\n";
 					break;
 				}
@@ -83,7 +98,7 @@ export class Disassembler {
 				case OpCode.Jump:
 				case OpCode.JumpFalse:
 				case OpCode.JumpTrue: {
-					const jumpTarget = program.bytecode[this.p++];
+					const jumpTarget = this.program.bytecode[this.p++];
 					str += this.ipn + "\t" + this.instr(instr) + "\t" + jumpTarget + "\n";
 				}
 			}
@@ -99,15 +114,6 @@ export class Disassembler {
 	/** Pad a number and split it */
 	private format(num: number): string {
 		return String(num).padStart(4, "0");
-	}
-
-	/** Formatted version of the instruction pointer */
-	private get ipn(): string {
-		return this.format(this.ip);
-	}
-	/** Formatted version of the data pointer */
-	private get dpn(): string {
-		return this.format(this.dp);
 	}
 
 	private instr(code: OpCode): string {

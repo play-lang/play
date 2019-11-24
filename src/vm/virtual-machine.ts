@@ -1,4 +1,4 @@
-import { Context } from "../language/context";
+import { LoadedProgram } from "../language/loaded-program";
 import { OpCode } from "../language/op-code";
 import { Frame } from "./frame";
 import { RuntimeError } from "./runtime-error";
@@ -17,7 +17,7 @@ const False: RuntimeValue = new RuntimeValue(RuntimeType.Boolean, false);
 /** Virtual machine that runs code */
 export class VirtualMachine {
 	/** Current bytecode context */
-	public context: Context;
+	public program: LoadedProgram;
 	/**
 	 * Instruction pointer
 	 *
@@ -31,13 +31,23 @@ export class VirtualMachine {
 		this.frame.ip = value;
 	}
 
+	/** Bytecode of the program */
+	public get bytecode(): number[] {
+		return this.program.bytecode;
+	}
+
+	/** Constant pool of the program */
+	public get constantPool(): RuntimeValue[] {
+		return this.program.constantPool;
+	}
+
 	/** Stack */
 	public readonly stack: RuntimeValue[] = [];
 	/** Stack frames */
 	public readonly frames: Frame[] = [];
 
-	constructor(context: Context) {
-		this.context = context;
+	constructor(program: LoadedProgram) {
+		this.program = program;
 		// Add the main stack frame:
 		this.frames.push(new Frame(0, 0));
 	}
@@ -206,7 +216,7 @@ export class VirtualMachine {
 						if (dest.type !== RuntimeType.Function) {
 							throw new RuntimeError(
 								VMStatus.InvalidOperands,
-								"Attempted to invoke a non-function"
+								"Attempted to invoke a non-action"
 							);
 						}
 						const ip = dest.value as number;
@@ -216,7 +226,7 @@ export class VirtualMachine {
 					}
 				}
 				// Return if we reached the end
-				if (this.ip >= this.context.bytecode.length) break;
+				if (this.ip >= this.bytecode.length) break;
 			}
 			return new VMResult(VMStatus.Success, this.top || Nil);
 		} catch (e) {
@@ -229,7 +239,7 @@ export class VirtualMachine {
 
 	/** Read the value at ip and increase ip by one */
 	public readCode(): number {
-		return this.context.bytecode[this.ip++];
+		return this.bytecode[this.ip++];
 	}
 
 	/**
@@ -238,7 +248,7 @@ export class VirtualMachine {
 	 */
 	public readData(): RuntimeValue {
 		const index = this.readCode();
-		const data = this.context.constantPool[index];
+		const data = this.constantPool[index];
 		return new RuntimeValue(data.type, data.value);
 	}
 
