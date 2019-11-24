@@ -134,11 +134,26 @@ export class Compiler extends Visitor {
 	}
 
 	public visitActionReferenceNode(node: ActionReferenceNode): void {
-		throw new Error("Not implemented");
+		// We can use the patcher to patch a push instruction, not just a jump!
+		// So that's what we'll do
+		const callOffset = this.emit(OpCode.Push, 0);
+		this.jumpPatcher.registerContextJump(
+			this.context,
+			callOffset,
+			node.actionName
+		);
 	}
 
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
-		throw new Error("Method not implemented.");
+		if (!(node.lhs instanceof ActionReferenceNode)) {
+			throw new Error("Can't invoke something that isn't an action");
+		}
+		node.lhs.accept(this);
+		// Arguments given to function go onto the stack
+		for (const arg of node.args) {
+			arg.accept(this);
+		}
+		this.emit(OpCode.Call, node.args.length);
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
