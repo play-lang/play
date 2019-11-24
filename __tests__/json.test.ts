@@ -6,6 +6,6 @@ describe("json tree printer", () => {
 		const code = str`let myNum: num = 10 + 20 + 30
 			myNum`;
 		const json = Play.describeAstAsJSON(code);
-		console.log(JSON.stringify(json));
+		console.log(JSON.stringify(json, null, 1));
 	});
 });
