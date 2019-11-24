@@ -6,4 +6,6 @@ export enum VMStatus {
 	UnknownFailure,
 	/** Attempted to pop a value from the stack when the stack was empty */
 	StackUnderflow,
+	/** Bad stack operand(s) */
+	InvalidOperands,
 }

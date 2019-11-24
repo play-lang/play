@@ -4,6 +4,8 @@
 export class Frame {
 	constructor(
 		/** Instruction pointer */
-		public readonly ip: number
+		public ip: number,
+		/** Bottom stack index for this frame */
+		public basePointer: number
 	) {}
 }
