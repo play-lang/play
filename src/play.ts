@@ -106,6 +106,9 @@ export class Play {
 	 * Describes the abstract syntax tree for the specified code as a
 	 * machine-friendly JSON object representation for convenient automated
 	 * testing and analysis
+	 *
+	 * This ensures the resulting object is a tree, rather than a graph with back
+	 * edges which could cause cycles
 	 * @param code The code to describe
 	 * @returns The JSON object, stringified
 	 */
