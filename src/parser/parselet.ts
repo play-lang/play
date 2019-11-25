@@ -27,7 +27,7 @@ export class PrefixOperatorParselet implements PrefixParselet {
 	constructor(public readonly precedence: number) {}
 	public parse(parser: Parser, token: TokenLike): Expression {
 		const operand: Expression = parser.expression(this.precedence);
-		return new PrefixExpressionNode(token.type, operand);
+		return new PrefixExpressionNode(token, operand);
 	}
 }
 
@@ -39,12 +39,11 @@ export class LiteralParselet implements PrefixParselet {
 
 export class IdParselet implements PrefixParselet {
 	public parse(parser: Parser, token: TokenLike): Expression {
-		const name = token.lexeme;
-		if (parser.symbolTable.idInScope(name)) {
-			return new VariableReferenceNode(name);
+		if (parser.symbolTable.idInScope(token.lexeme)) {
+			return new VariableReferenceNode(token);
 		}
 		// Todo: Look up in scope identifiers, not just actions
-		return new ActionReferenceNode(name);
+		return new ActionReferenceNode(token.pos, token.end, token.lexeme);
 	}
 }
 
@@ -120,7 +119,7 @@ export class BinaryLogicalOperatorParselet implements InfixParselet {
 
 export class PostfixOperatorParselet implements InfixParselet {
 	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
-		return new PostfixExpressionNode(token.type, lhs);
+		return new PostfixExpressionNode(token, lhs);
 	}
 	public get precedence(): number {
 		return Precedence.Primary;
@@ -130,6 +129,7 @@ export class PostfixOperatorParselet implements InfixParselet {
 export class InvocationOperatorParselet implements InfixParselet {
 	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
 		const args: Expression[] = [];
+		let end: number = token.end;
 		if (!parser.match(TokenType.ParenClose)) {
 			do {
 				args.push(parser.expression());
@@ -138,9 +138,10 @@ export class InvocationOperatorParselet implements InfixParselet {
 				TokenType.ParenClose,
 				"Expected closing parenthesis following action arguments"
 			);
+			end = parser.previous.end;
 		}
 
-		return new InvocationExpressionNode(lhs, args);
+		return new InvocationExpressionNode(lhs.start, end, lhs, args);
 	}
 	public get precedence(): number {
 		return Precedence.Primary;

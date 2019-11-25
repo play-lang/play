@@ -1,3 +1,5 @@
+import { Play } from "../src/play";
+
 /**
  * Template string tag to remove leading whitespace in lines when
  * template strings are represented in code with leading indentation
@@ -23,3 +25,9 @@ export function str(strings: TemplateStringsArray): string {
 
 	return lines;
 }
+
+/** Run some code and return the value at the top of the stack */
+export function run(code: string): any {
+	return Play.run(code).value.value;
+}
+

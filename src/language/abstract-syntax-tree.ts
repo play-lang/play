@@ -1,5 +1,5 @@
-import { ActionDeclarationNode } from "../parser/nodes/action-declaration-node";
 import { ProgramNode } from "../parser/nodes/program-node";
+import { ActionInfo } from "./action-info";
 import SymbolTable from "./symbol-table";
 
 /**
@@ -10,6 +10,6 @@ export class AbstractSyntaxTree {
 	constructor(
 		public readonly root: ProgramNode,
 		public readonly symbolTable: SymbolTable,
-		public readonly actionTable: Map<string, ActionDeclarationNode>
+		public readonly actionTable: Map<string, ActionInfo>
 	) {}
 }

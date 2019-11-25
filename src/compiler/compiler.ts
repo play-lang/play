@@ -1,5 +1,6 @@
 import { JumpPatcher } from "../jump-patcher/jump-patcher";
 import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
+import { ActionInfo } from "../language/action-info";
 import { Context } from "../language/context";
 import { OpCode } from "../language/op-code";
 import SymbolTable from "../language/symbol-table";
@@ -47,7 +48,7 @@ export class Compiler extends Visitor {
 	 * Context names mapped to action nodes
 	 * Should be provided from the parser
 	 */
-	public readonly actionTable: Map<string, ActionDeclarationNode>;
+	public readonly actionTable: Map<string, ActionInfo>;
 
 	/** Global scope */
 	private globalScope: SymbolTable;
@@ -127,7 +128,7 @@ export class Compiler extends Visitor {
 	public visitVariableReferenceNode(node: VariableReferenceNode): void {}
 
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
-		this.enterScope(node.name);
+		this.enterScope(node.info.name);
 		node.block!.accept(this);
 
 		this.exitScope();
@@ -136,7 +137,7 @@ export class Compiler extends Visitor {
 	public visitActionReferenceNode(node: ActionReferenceNode): void {
 		// We can use the patcher to patch a push instruction, not just a jump!
 		// So that's what we'll do
-		const callOffset = this.emit(OpCode.Push, 0);
+		const callOffset = this.emit(OpCode.Load, 0);
 		this.jumpPatcher.registerContextJump(
 			this.context,
 			callOffset,
@@ -191,17 +192,17 @@ export class Compiler extends Visitor {
 	public visitLiteralExpressionNode(node: LiteralExpressionNode): void {
 		let value: any;
 		let type: RuntimeType = RuntimeType.Object;
-		switch (node.type) {
+		switch (node.literalType) {
 			case TokenType.String:
-				value = node.token.lexeme;
+				value = node.literalValue;
 				type = RuntimeType.String;
 				break;
 			case TokenType.Boolean:
-				value = node.token.lexeme === "true" ? true : false;
+				value = node.literalValue === "true" ? true : false;
 				value ? this.emit(OpCode.True) : this.emit(OpCode.False);
 				return;
 			case TokenType.Number:
-				value = Number.parseFloat(node.token.lexeme);
+				value = Number.parseFloat(node.literalValue);
 				type = RuntimeType.Number;
 				break;
 			case TokenType.Nil:

@@ -77,17 +77,17 @@ export class PrintVisitor extends Visitor implements Describable {
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
 		let params = "";
 		let i = 0;
-		for (const [param, typeAnnotation] of node.parameters.entries()) {
+		for (const [param, typeAnnotation] of node.info.parameters.entries()) {
 			const type = typeAnnotation.join(" ");
 			params += type + " " + param;
-			if (i < node.parameters.size - 1) params += ", ";
+			if (i < node.info.parameters.size - 1) params += ", ";
 			i++;
 		}
 		this.desc +=
 			"Action " +
-			node.typeAnnotation.join(" ") +
+			node.info.typeAnnotation.join(" ") +
 			" " +
-			node.name +
+			node.info.name +
 			"(" +
 			params +
 			")\n";
@@ -131,7 +131,7 @@ export class PrintVisitor extends Visitor implements Describable {
 	}
 
 	public visitLiteralExpressionNode(node: LiteralExpressionNode): void {
-		this.desc += "Literal(`" + node.token.lexeme + "`)\n";
+		this.desc += "Literal(`" + node.literalValue + "`)\n";
 	}
 
 	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {

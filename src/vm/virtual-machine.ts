@@ -62,6 +62,10 @@ export class VirtualMachine {
 						const top = this.pop();
 						return new VMResult(VMStatus.Success, top);
 					}
+					case OpCode.Load: {
+						// Todo: Load an action onto the top of the stack
+						break;
+					}
 					case OpCode.Constant: {
 						// Read a data value from the data section and push it to the stack
 						this.push(this.readData());

@@ -1,5 +1,6 @@
 import { describeErrorToken, prepareHint } from "../common/format-messages";
 import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
+import { ActionInfo } from "../language/action-info";
 import { Expression, Statement } from "../language/node";
 import { infixParselets, prefixParselets } from "../language/operator-grammar";
 import SymbolTable from "../language/symbol-table";
@@ -56,7 +57,7 @@ export class Parser {
 	 * Context names mapped to action nodes
 	 * This allows us to look-up functions by name without having to walk the tree
 	 */
-	public readonly actionTable: Map<string, ActionDeclarationNode> = new Map();
+	public readonly actionTable: Map<string, ActionInfo> = new Map();
 
 	/** True if the parser is in panic mode */
 	protected isPanicking: boolean = false;
@@ -257,7 +258,13 @@ export class Parser {
 				this.synchronize();
 			}
 		}
-		const root = new ProgramNode(statements);
+		// Calculate start and end in the input string
+		const start = 0;
+		const end =
+			statements.length < 1
+				? this.previous.end
+				: statements[statements.length - 1].end;
+		const root = new ProgramNode(start, end, statements);
 		return new AbstractSyntaxTree(root, this.symbolTable, this.actionTable);
 	}
 
@@ -289,6 +296,7 @@ export class Parser {
 	 */
 	public block(isActionBlock: boolean = false): BlockStatementNode {
 		// Brace open has already been matched for us
+		const start = this.previous.pos;
 		this.eatLines();
 		// Create a new symbol table scope and push it on the symbol table stack
 		const symbolTable = this.symbolTable.addScope();
@@ -313,7 +321,12 @@ export class Parser {
 		this.consume(TokenType.BraceClose, "Expected closing brace for block");
 		// Pop the scope
 		this._symbolTables.pop();
-		return new BlockStatementNode(statements, isActionBlock);
+		// Calculate start and end in the input string
+		const end =
+			statements.length < 1
+				? this.previous.end
+				: statements[statements.length - 1].end;
+		return new BlockStatementNode(start, end, statements, isActionBlock);
 	}
 
 	/**
@@ -358,7 +371,8 @@ export class Parser {
 	 * deepest type in the expression (a num, str, or user-defined type)
 	 */
 	public variableDeclaration(): VariableDeclarationNode {
-		// We've already matched the name token if we make it here
+		// We've already matched the reserved word token if we make it here
+		const start = this.previous.pos;
 		const isImmutable = this.previous.type === TokenType.Let;
 		const nameToken = this.consume(TokenType.Id, "Expected variable name");
 		// Expect a colon for a type annotation -> let x: num = 10
@@ -370,14 +384,22 @@ export class Parser {
 		const typeAnnotation = this.typeAnnotation();
 		// Variable declarations may be followed by an equals sign to initialize
 		// the value, otherwise we initialize the zero-value for it
-		const node: VariableDeclarationNode = this.match(TokenType.Equal)
-			? new VariableDeclarationNode(
-					nameToken,
-					typeAnnotation,
-					isImmutable,
-					this.expression()
-			  )
-			: new VariableDeclarationNode(nameToken, typeAnnotation, isImmutable);
+		let expr: Expression | undefined;
+		let end = this.previous.end;
+		if (this.match(TokenType.Equal)) {
+			// Only parse an expression if the variable declaration has an equals
+			// sign following the type annotation
+			expr = this.expression();
+			end = expr.end;
+		}
+		const node: VariableDeclarationNode = new VariableDeclarationNode(
+			start,
+			end,
+			nameToken,
+			typeAnnotation,
+			isImmutable,
+			expr
+		);
 		// Register the declared variable in the symbol table
 		this.symbolTable.register(node);
 		return node;
@@ -396,6 +418,7 @@ export class Parser {
 	 */
 	public actionDeclaration(): ActionDeclarationNode {
 		// Action keyword has already been matched for us
+		const start = this.previous.pos;
 		const nameToken = this.consume(
 			TokenType.Id,
 			"Expected action name following declaration"
@@ -435,20 +458,21 @@ export class Parser {
 			? this.typeAnnotation()
 			: [];
 		// Create a node
-		const node = new ActionDeclarationNode(
+		const info = new ActionInfo(
 			name,
 			typeAnnotation,
 			numParameters,
 			parameters
 		);
-		// Register the function name and the AST node that it points to
+		// Register the function name and the action info that it points to
 		// This will make compilation of functions simpler since we can look up
 		// how many parameters and what kind a function takes when we call it
-		this.actionTable.set(name, node);
+		this.actionTable.set(name, info);
 		// Start parsing the action block
 		this.consume(TokenType.BraceOpen, "Expected opening brace of action block");
 		// Grab the block of statements inside the function curly braces
-		node.block = this.block(true);
+		const block = this.block(true);
+		const node = new ActionDeclarationNode(start, info, block);
 		return node;
 	}
 
@@ -460,7 +484,7 @@ export class Parser {
 		const expr: Expression | undefined = !this.isAtEndOfStatement
 			? this.expression()
 			: undefined;
-		return new ReturnStatementNode(expr);
+		return new ReturnStatementNode(this.previous, expr);
 	}
 
 	/**

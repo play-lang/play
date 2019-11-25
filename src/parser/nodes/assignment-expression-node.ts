@@ -8,7 +8,7 @@ export class AssignmentExpressionNode extends Expression {
 		public readonly lhs: Expression,
 		public readonly rhs: Expression
 	) {
-		super();
+		super(lhs.start, rhs.end);
 	}
 
 	public accept(visitor: Visitor): void {

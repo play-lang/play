@@ -4,15 +4,15 @@ import { TokenType } from "../../language/token-type";
 import { Visitor } from "../../language/visitor";
 
 export class LiteralExpressionNode extends Expression {
-	public readonly token: TokenLike;
-
-	public get type(): TokenType {
-		return this.token.type;
-	}
+	/** Literal type */
+	public readonly literalType: TokenType;
+	/** Literal value */
+	public readonly literalValue: string;
 
 	constructor(token: TokenLike) {
-		super();
-		this.token = token;
+		super(token.pos, token.end);
+		this.literalType = token.type;
+		this.literalValue = token.lexeme;
 	}
 
 	public accept(visitor: Visitor): void {

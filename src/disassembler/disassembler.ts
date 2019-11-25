@@ -71,6 +71,7 @@ export class Disassembler {
 					break;
 				// 0 param instructions
 				case OpCode.Return:
+				case OpCode.Load:
 				case OpCode.Pop:
 				case OpCode.Neg:
 				case OpCode.Inc:
