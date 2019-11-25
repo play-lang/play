@@ -11,6 +11,10 @@ export class VariableDeclarationNode extends Statement
 	}
 
 	constructor(
+		/** Start position in the code */
+		start: number,
+		/** End position in the code */
+		end: number,
 		/** Variable name token */
 		public readonly token: TokenLike,
 		/** Type of the variable */
@@ -20,7 +24,7 @@ export class VariableDeclarationNode extends Statement
 		/** Value of the variable */
 		public readonly expr?: Expression
 	) {
-		super();
+		super(start, end);
 	}
 
 	public accept(visitor: Visitor): void {

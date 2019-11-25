@@ -10,7 +10,7 @@ export class TernaryConditionalNode extends Expression {
 		/** Expression to evaluate if predicate is false */
 		public readonly alternate: Expression
 	) {
-		super();
+		super(predicate.start, alternate.end);
 	}
 
 	public accept(visitor: Visitor): void {

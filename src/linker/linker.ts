@@ -19,11 +19,13 @@ export class Linker {
 		}
 		let bytecode: number[] = [];
 		for (const context of contexts) {
-			contextMap.set(context.name, bytecode.length - 1);
+			// Todo: The context map might be setting the wrong bytecode offset
+			contextMap.set(context.name, bytecode.length);
 			bytecode = [...bytecode, ...context.bytecode];
 		}
 
-		// Patch jumps in the bytecode
+		// Update and resolve all the addresses now that the bytecode
+		// has been chained together
 		this.compiledProgram.jumpPatcher.patch(bytecode, contexts, contextMap);
 
 		return new LinkedProgram(

@@ -7,10 +7,14 @@ import { Visitor } from "../../language/visitor";
  */
 export class ActionReferenceNode extends Expression {
 	constructor(
+		/** Start position in the code */
+		start: number,
+		/** End position in the code */
+		end: number,
 		/** Name of the action (can be forward-declared, hence just a string) */
 		public readonly actionName: string
 	) {
-		super();
+		super(start, end);
 	}
 
 	public accept(visitor: Visitor): void {

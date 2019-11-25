@@ -51,6 +51,8 @@ export class JSONVisitor extends Visitor implements Describable {
 		const statements = this.clear();
 		this.stack.push({
 			type: "program",
+			start: node.start,
+			end: node.end,
 			statements,
 		});
 	}
@@ -61,6 +63,8 @@ export class JSONVisitor extends Visitor implements Describable {
 		const statements = this.clear();
 		this.stack.push({
 			type: "block",
+			start: node.start,
+			end: node.end,
 			isActionBlock: node.isActionBlock,
 			statements,
 		});
@@ -68,6 +72,8 @@ export class JSONVisitor extends Visitor implements Describable {
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
 		const obj = {
 			type: "var-decl",
+			start: node.start,
+			end: node.end,
 			name: node.name,
 			typeAnnotation: node.typeAnnotation,
 			isImmutable: node.isImmutable,
@@ -86,17 +92,21 @@ export class JSONVisitor extends Visitor implements Describable {
 	public visitVariableReferenceNode(node: VariableReferenceNode): void {
 		this.stack.push({
 			type: "variable-ref",
+			start: node.start,
+			end: node.end,
 			variableName: node.variableName,
 		});
 	}
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
 		node.block!.accept(this);
 		const block = this.stack.pop();
-		const parameters = Array.from(node.parameters.entries());
+		const parameters = Array.from(node.info.parameters.entries());
 		this.stack.push({
 			type: "action-decl",
-			typeAnnotation: node.typeAnnotation,
-			numParameters: node.numParameters,
+			start: node.start,
+			end: node.end,
+			typeAnnotation: node.info.typeAnnotation,
+			numParameters: node.info.numParameters,
 			parameters,
 			block,
 		});
@@ -104,6 +114,8 @@ export class JSONVisitor extends Visitor implements Describable {
 	public visitActionReferenceNode(node: ActionReferenceNode): void {
 		this.stack.push({
 			type: "action-ref",
+			start: node.start,
+			end: node.end,
 			actionName: node.actionName,
 		});
 	}
@@ -112,6 +124,8 @@ export class JSONVisitor extends Visitor implements Describable {
 		const rhs = this.stack.pop();
 		this.stack.push({
 			type: "prefix-expr",
+			start: node.start,
+			end: node.end,
 			rhs,
 		});
 	}
@@ -122,6 +136,8 @@ export class JSONVisitor extends Visitor implements Describable {
 		const lhs = this.stack.pop();
 		this.stack.push({
 			type: "binary-expr",
+			start: node.start,
+			end: node.end,
 			lhs,
 			rhs,
 		});
@@ -135,6 +151,8 @@ export class JSONVisitor extends Visitor implements Describable {
 		const lhs = this.stack.pop();
 		this.stack.push({
 			type: "binary-logical-expr",
+			start: node.start,
+			end: node.end,
 			lhs,
 			rhs,
 		});
@@ -144,6 +162,8 @@ export class JSONVisitor extends Visitor implements Describable {
 		const lhs = this.stack.pop();
 		this.stack.push({
 			type: "postfix-expr",
+			start: node.start,
+			end: node.end,
 			lhs,
 		});
 	}
@@ -152,6 +172,8 @@ export class JSONVisitor extends Visitor implements Describable {
 		const lhs = this.stack.pop();
 		this.stack.push({
 			type: "action-call",
+			start: node.start,
+			end: node.end,
 			actionName: node.actionName,
 			args: node.args,
 			lhs,
@@ -160,8 +182,10 @@ export class JSONVisitor extends Visitor implements Describable {
 	public visitLiteralExpressionNode(node: LiteralExpressionNode): void {
 		this.stack.push({
 			type: "literal",
-			literalType: TokenType[node.token.type],
-			lexeme: node.token.lexeme,
+			start: node.start,
+			end: node.end,
+			literalType: TokenType[node.literalType],
+			literalValue: node.literalValue,
 		});
 	}
 	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
@@ -173,6 +197,8 @@ export class JSONVisitor extends Visitor implements Describable {
 		const predicate = this.stack.pop();
 		this.stack.push({
 			type: "conditional-expr",
+			start: node.start,
+			end: node.end,
 			predicate,
 			consequent,
 			alternate,
@@ -185,6 +211,8 @@ export class JSONVisitor extends Visitor implements Describable {
 		const lhs = this.stack.pop();
 		this.stack.push({
 			type: "assignment",
+			start: node.start,
+			end: node.end,
 			assignmentType: TokenType[node.assignmentType],
 			lhs,
 			rhs,
@@ -196,12 +224,16 @@ export class JSONVisitor extends Visitor implements Describable {
 			const expr = this.stack.pop();
 			this.stack.push({
 				type: "return-value",
+				start: node.start,
+				end: node.end,
 				value: expr,
 			});
 			return;
 		}
 		this.stack.push({
 			type: "return",
+			start: node.start,
+			end: node.end,
 		});
 	}
 

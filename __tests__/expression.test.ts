@@ -1,9 +1,10 @@
-import { compile, run } from "../shared/test-utils";
+import { run } from "../shared/test-utils";
+import { Play } from "../src/play";
 
 describe("compiler/vm", () => {
 	it("should not register duplicates in the constant pool", () => {
 		expect(
-			compile('let x: str = "x"\nlet y: str = "x"').startsWith(
+			Play.disassemble('let x: str = "x"\nlet y: str = "x"').startsWith(
 				"0000\tString\tx\n\n0000\t            CONSTANT\t(0)\t= x\n"
 			)
 		).toBe(true);
@@ -15,7 +16,7 @@ describe("compiler/vm", () => {
 		expect(run("10 > 11")).toBe(false);
 	});
 	it("should compute ternary conditional operator", () => {
-		expect(run("true ? 2+3 : 4+5")).toBe(5);
+		expect(run("true ? 2+3 : 4+5")).toBe(5); // failing
 		expect(run("false ? 2+3 : 4+5")).toBe(9);
 		// Ensure that nested ternary operators evaluate correctly
 		//

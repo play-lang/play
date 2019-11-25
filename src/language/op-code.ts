@@ -3,10 +3,10 @@ export enum OpCode {
 
 	/** Return instruction */
 	Return = 1,
+	/** Load an action onto the stack */
+	Load,
 	/** Push constant from constant pool */
 	Constant,
-	/** Push a value to the top of the stack */
-	Push,
 	/** Discard the top of the stack */
 	Pop,
 	/** Get a value already in the stack */

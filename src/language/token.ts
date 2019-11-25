@@ -29,6 +29,13 @@ export interface TokenLike extends Describable {
 	/** Physical line number the start of the token was found on in the file */
 	readonly line: number;
 
+	/**
+	 * End position index into the source immediately after the token
+	 *
+	 * Represents the next index in the source that is not part of the token
+	 */
+	readonly end: number;
+
 	/** Column position on the line of the the start position of the token */
 	readonly column: number;
 
@@ -70,6 +77,12 @@ export class Token implements TokenLike, Position, Describable {
 		this.length = options.length;
 		this.lexeme = options.lexeme;
 	}
+
+	public get end(): number {
+		return this.pos + this.length;
+	}
+
+	// MARK: Describable
 
 	public get description(): string {
 		const type = TokenType[this.type];
