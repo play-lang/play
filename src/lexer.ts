@@ -30,12 +30,6 @@ export class Lexer {
 			: "";
 	}
 
-	/** Character after peek (second look ahead) */
-	public get peekNext(): string {
-		if (this.isAtEnd) return "";
-		return this.contents[this.head.pos + 1] || "";
-	}
-
 	/**
 	 * Current "value" of the lexer, as measured between the lexer's start
 	 * position and current position
@@ -125,10 +119,25 @@ export class Lexer {
 	}
 
 	/**
+	 * Returns true if the specified token is considered a trivial token
+	 * (whitespace, comments, etc)
+	 * @param token The token to analyze
+	 */
+	public isTrivia(token: TokenLike): boolean {
+		return (
+			token.type === TokenType.Whitespace ||
+			token.type === TokenType.Comment ||
+			token.type === TokenType.CommentBlock
+		);
+	}
+
+	/**
 	 * Scan the entire contents and generate a list of tokens
 	 */
 	public readAll(): TokenLike[] {
 		const tokens: TokenLike[] = [];
+
+		if (this.lookahead.type === TokenType.EndOfFile) return [this.token];
 
 		do {
 			tokens.push(this._token);
@@ -155,13 +164,9 @@ export class Lexer {
 
 	/** True if the specified character is whitespace */
 	public isWhitespace(char: string): boolean {
-		try {
-			const codePoint = char.codePointAt(0)!;
-			return isWhitespace(codePoint);
-		} catch (e) {
-			console.error(e);
-			return false;
-		}
+		if (!char) return false;
+		const codePoint = char.codePointAt(0)!;
+		return isWhitespace(codePoint);
 	}
 
 	/** True if the specified character is a new-line feed */
@@ -194,7 +199,7 @@ export class Lexer {
 	 * @param [hint] Short error description that does not reference the offending
 	 * character(s), i.e., "Invalid character" or "Unclosed string"
 	 */
-	protected error(hint: string = ""): ErrorToken {
+	protected error(hint: string): ErrorToken {
 		// Make sure hint ends in punctuation to aid in formatting later.
 		hint = prepareHint(hint);
 		return new ErrorToken({
@@ -206,7 +211,7 @@ export class Lexer {
 			line: this.tail.line,
 			column: this.tail.column,
 			type: TokenType.Error,
-			hints: new Set<string>(hint ? [hint] : []),
+			hints: new Set<string>([hint]),
 			fileTable: this.fileTable,
 		});
 	}
@@ -252,15 +257,10 @@ export class Lexer {
 		// Keep a list of all the consecutive trivia tokens we find
 		// We will give the next non-trivial token we find the list of all the
 		// trivia that precedes it.
-		while (
-			token.type === TokenType.Whitespace ||
-			token.type === TokenType.Comment ||
-			token.type === TokenType.CommentBlock
-		) {
+		while (this.isTrivia(token)) {
 			trivia.push(token);
 			this.tail = { ...this.head };
 			token = this.scanNextToken();
-			if (token.type === TokenType.EndOfFile) break;
 		}
 		token.trivia = trivia;
 		return token;
@@ -277,8 +277,8 @@ export class Lexer {
 		while (
 			this._token instanceof ErrorToken &&
 			this._lookahead instanceof ErrorToken &&
-			this._token.length === 1 &&
-			this._lookahead.length === 1 &&
+			// this._token.length === 1 &&
+			// this._lookahead.length === 1 &&
 			this._token.line === this._lookahead.line
 		) {
 			// Join these two tokens
@@ -328,7 +328,7 @@ export class Lexer {
 			return this.makeToken(TokenType.EndOfFile);
 		}
 
-		this._numTokens++;
+		++this._numTokens;
 
 		let char = this.advance();
 
@@ -375,20 +375,21 @@ export class Lexer {
 				this.advance();
 			}
 			return this.makeToken(TokenType.Comment);
-		} else if (this.match("*")) {
-			// Block comment
-			while (this.peek) {
-				if (this.peek === "*") {
-					this.match("*");
-					if (this.match("/")) {
-						return this.makeToken(TokenType.CommentBlock);
-					}
-				}
-				this.advance();
-			}
-			return this.error("Unclosed block comment");
 		}
-		return this.error("Unrecognized token");
+		// This function won't get called unless the look ahead was another
+		// slash or star, so we can safely do this:
+		this.match("*");
+		// Block comment
+		while (this.peek) {
+			if (this.peek === "*") {
+				this.match("*");
+				if (this.match("/")) {
+					return this.makeToken(TokenType.CommentBlock);
+				}
+			}
+			this.advance();
+		}
+		return this.error("Unclosed block comment");
 	}
 
 	private id(): TokenLike {
