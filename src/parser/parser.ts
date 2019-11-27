@@ -47,7 +47,7 @@ export class Parser {
 	/** List of errors encountered in the code */
 	public readonly errors: ParseError[] = [];
 
-	/** Table containing every file encountered */
+	/** Table containing every file encountered by the preprocessor */
 	public readonly fileTable: string[] = [];
 
 	/** Lexer used to provide tokens as needed */
@@ -61,17 +61,6 @@ export class Parser {
 
 	/** True if the parser is in panic mode */
 	protected isPanicking: boolean = false;
-	/**
-	 * Function to call when the contents of another file are needed
-	 *
-	 * Play supports "preprocessor"-like statements
-	 *
-	 * When an #insert clause is found indicating that the contents of
-	 * another file should be inserted at the specified place in the language
-	 * this function will be invoked to fetch the contents of the specified
-	 * file
-	 */
-	protected fileProvider: (path: string) => Promise<string>;
 
 	/** Current token */
 	protected _token: TokenLike;
@@ -82,13 +71,8 @@ export class Parser {
 	/** Number of scopes encountered */
 	protected _scopes: number = 0;
 
-	constructor(
-		filename: string,
-		contents: string,
-		fileProvider: (path: string) => Promise<string> = async () => ""
-	) {
-		this.fileTable.push(filename);
-		this.fileProvider = fileProvider;
+	constructor(contents: string) {
+		// Todo: Update for file table when preprocessor is ready
 		this.lexer = new Lexer(contents, 0);
 		this._symbolTables.push(new SymbolTable());
 		this._token = this.lexer.token;
