@@ -34,7 +34,7 @@ export class Play {
 	 * @returns The abstract syntax tree
 	 */
 	public static parse(code: string): AbstractSyntaxTree {
-		const parser = new Parser("code", code);
+		const parser = new Parser(code);
 		const ast = parser.parse();
 		if (parser.errors.length > 0) {
 			console.error(parser.errors);
