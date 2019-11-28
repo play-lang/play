@@ -1,10 +1,10 @@
-import { describeErrorToken, prepareHint } from "../common/format-messages";
 import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { ActionInfo } from "../language/action-info";
 import { Expression, Statement } from "../language/node";
 import { infixParselets, prefixParselets } from "../language/operator-grammar";
 import SymbolTable from "../language/symbol-table";
-import { ErrorToken, TokenLike } from "../language/token";
+import { TokenLike } from "../language/token";
+import { TokenParser } from "../language/token-parser";
 import { TokenType } from "../language/token-type";
 import { Lexer } from "../lexer";
 import { ActionDeclarationNode } from "./nodes/action-declaration-node";
@@ -12,29 +12,9 @@ import { BlockStatementNode } from "./nodes/block-statement-node";
 import { ProgramNode } from "./nodes/program-node";
 import { ReturnStatementNode } from "./nodes/return-statement-node";
 import { VariableDeclarationNode } from "./nodes/variable-declaration-node";
-import { ParseError } from "./parse-error";
 import { InfixParselet } from "./parselet";
 
-export class Parser {
-	/** Current token */
-	public get peek(): TokenLike {
-		return this._token;
-	}
-
-	/**
-	 * Last token matched
-	 *
-	 * If no tokens have been matched this is equal to the first token
-	 */
-	public get previous(): TokenLike {
-		return this._previous;
-	}
-
-	/** True if the parser has reached the end of a file */
-	public get isAtEnd(): boolean {
-		return this.peek.type === TokenType.EndOfFile;
-	}
-
+export class Parser extends TokenParser {
 	/** Global scope symbol table */
 	public get globalScope(): SymbolTable {
 		return this._symbolTables[0];
@@ -44,14 +24,6 @@ export class Parser {
 	public get symbolTable(): SymbolTable {
 		return this._symbolTables[this._symbolTables.length - 1];
 	}
-	/** List of errors encountered in the code */
-	public readonly errors: ParseError[] = [];
-
-	/** Table containing every file encountered by the preprocessor */
-	public readonly fileTable: string[] = [];
-
-	/** Lexer used to provide tokens as needed */
-	public readonly lexer: Lexer;
 
 	/**
 	 * Context names mapped to action nodes
@@ -59,13 +31,6 @@ export class Parser {
 	 */
 	public readonly actionTable: Map<string, ActionInfo> = new Map();
 
-	/** True if the parser is in panic mode */
-	protected isPanicking: boolean = false;
-
-	/** Current token */
-	protected _token: TokenLike;
-	/** Previous token */
-	protected _previous: TokenLike;
 	/** Symbol table pointer stack for tracking scopes */
 	protected _symbolTables: SymbolTable[] = [];
 	/** Number of scopes encountered */
@@ -73,148 +38,10 @@ export class Parser {
 
 	constructor(contents: string) {
 		// Todo: Update for file table when preprocessor is ready
-		this.lexer = new Lexer(contents, 0);
+		super(new Lexer(contents, 0));
 		this._symbolTables.push(new SymbolTable());
 		this._token = this.lexer.token;
 		this._previous = this._token;
-	}
-
-	/**
-	 * Returns true if we're looking at the end of a statement
-	 * Things that end a statement are:
-	 *  - Reaching the end of the input
-	 *  - Looking at a new line
-	 *  - Looking at a closing brace
-	 */
-	public get isAtEndOfStatement(): boolean {
-		return (
-			this.isAtEnd ||
-			this.peek.type === TokenType.Line ||
-			this.peek.type === TokenType.BraceClose
-		);
-	}
-
-	/** Advances to the next token and returns the previous token */
-	public advance(): TokenLike {
-		this.skip();
-		while (this._token.type === TokenType.LineContinuation) {
-			// Parsing methods shouldn't have to worry about line continuations
-			// so we skip them here
-			this.skip();
-			// Make sure that a newline token follows the line continuation token
-			// and gobble it up to prevent statements from getting confused
-			if (this.check(TokenType.Line)) {
-				this.skip();
-			} else {
-				this.error(this.peek, "Expected end of line after line continuation");
-			}
-		}
-		return this.previous;
-	}
-
-	/**
-	 * Returns true if the current token is the specified type of token
-	 * @param type Type of the token to match
-	 */
-	public check(type: TokenType): boolean {
-		return this.peek.type === type;
-	}
-
-	/**
-	 * Matches the specified token if present
-	 *
-	 * Otherwise, it registers and throws an error with the specified message
-	 *
-	 * @param type The type of token to match (or an array of token types that
-	 * are permissible to match)
-	 * @param hint The error message hint if the token couldn't be matched
-	 */
-	public consume(type: TokenType | TokenType[], hint: string): TokenLike {
-		if (Array.isArray(type)) {
-			for (const t of type) {
-				if (this.check(t)) {
-					return this.advance();
-				}
-			}
-		} else if (typeof type === "number") {
-			if (this.check(type)) return this.advance();
-		}
-		throw this.error(this.peek, hint);
-	}
-
-	/**
-	 * Registers an error
-	 * @param token The token where the error occurred
-	 * @param hint The error message hint
-	 */
-	public error(token: TokenLike, hint: string): ParseError {
-		hint = prepareHint(hint);
-		const message =
-			"Syntax error in " +
-			this.fileTable[token.fileTableIndex] +
-			" at " +
-			token.line +
-			":" +
-			token.column +
-			" (" +
-			token.pos +
-			")" +
-			" with text `" +
-			JSON.stringify(token.lexeme).slice(1, -1) +
-			"`. " +
-			prepareHint(hint);
-		const error = new ParseError(token, message);
-		if (!this.isPanicking) this.errors.push(error);
-		this.isPanicking = true;
-		return error;
-	}
-
-	/** Returns true if any of the specified token types were matched */
-	public match(...types: TokenType[]): boolean {
-		for (const type of types) {
-			if (this.check(type)) {
-				this.advance();
-				return true;
-			}
-		}
-		return false;
-	}
-
-	/**
-	 * Moves on to the next token no matter what (do not call directly,
-	 * only used by advance()
-	 */
-	public skip(): void {
-		this._previous = this._token;
-		this._token = this.lexer.read();
-	}
-
-	/**
-	 * Generates a friendly description for an error token
-	 * @param errorToken Token to examine
-	 */
-	public describeErrorToken(errorToken: ErrorToken): string {
-		return describeErrorToken(this.fileTable, errorToken);
-	}
-
-	/**
-	 * Synchronize the parser by exiting panic mode and skipping to the end of
-	 * the current statement
-	 */
-	public synchronize(): void {
-		this.isPanicking = false;
-		this.advance();
-
-		while (!this.isAtEnd) {
-			switch (this.peek.type) {
-				// List synchronization tokens here
-				case TokenType.Line:
-					this.advance(); // Consume the line
-					return;
-			}
-
-			this.advance();
-		}
 	}
 
 	///
