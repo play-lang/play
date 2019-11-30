@@ -34,6 +34,16 @@ describe("avl-tree", () => {
 		expect(tree.findLowerBound(50)).toBe(50);
 	});
 
+	it("should find lower bound with real data", () => {
+		const tree = new AvlTree<number, number>();
+		tree.insert(0, 1);
+		tree.insert(13, 2);
+		tree.insert(20, 3);
+		tree.insert(27, 4);
+		expect(tree.findLowerBound(0)).toBe(0);
+		expect(tree.findLowerBound(6)).toBe(0);
+	});
+
 	/** Tests created by AVL Tree author */
 	it("should return false if the tree is empty", () => {
 		const tree = new TestAvlTree();

@@ -214,6 +214,9 @@ export class AvlTree<K, V> {
 		let root: Node<K, V> | null = this._root;
 		let bound: K | undefined;
 		while (root) {
+			// -1 if a < b
+			// 0 if a === b
+			// 1 if a > b
 			const result = this._compare(key, root.key);
 			if (result === 0) {
 				return root.key;
@@ -224,7 +227,7 @@ export class AvlTree<K, V> {
 				root = root.right;
 			}
 		}
-		return bound || null;
+		return typeof bound === "undefined" ? null : bound;
 	}
 
 	/**
