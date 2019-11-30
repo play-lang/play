@@ -1,3 +1,4 @@
+import { AvlTree } from "./common/avl-tree";
 import { prepareHint } from "./common/format-messages";
 import {
 	isDigit,
@@ -6,7 +7,6 @@ import {
 	isWhitespace,
 } from "./language/character-mappings";
 import { lexerTrie } from "./language/lexer-trie";
-import { PreprocessedFile } from "./language/preprocessed-file";
 import { SourceFile } from "./language/source-file";
 import { stringEscapes } from "./language/string-escapes";
 import { ErrorToken, Position, Token, TokenLike } from "./language/token";
@@ -83,16 +83,16 @@ export class Lexer {
 	 * it against the range tree to see which file the lexer is currently scanning
 	 */
 	public get currentFile(): SourceFile {
-		if (!this.preprocessedFile) {
+		if (!this.ranges) {
 			return this.file;
 		}
-		const bound = this.preprocessedFile.ranges.findLowerBound(this.tail.pos);
+		const bound = this.ranges.findLowerBound(this.tail.pos);
 		if (bound === null) {
 			throw new Error(
 				"Cannot find range tree bound for index " + this.tail.pos
 			);
 		}
-		return this.preprocessedFile.ranges.get(bound)!;
+		return this.ranges.get(bound)!;
 	}
 
 	/** Current token */
@@ -121,14 +121,16 @@ export class Lexer {
 	/**
 	 * Create a lexer for a given file and its contents
 	 * @param contents Contents of the entire file as a string
-	 * @param [fileTableIndex] Index of the file being scanned in the file table
-	 * @param [fileTable] Reference to the file table being used
+	 * @param [file] Source file the lexer is scanning
+	 * @param [ranges] Range tree that maps text range positions to source files
+	 * If this parameter is given, the lexer assumes it is scanning a composite
+	 * file that represents multiple files chained together
 	 */
 	constructor(
 		/** Lexer contents to scan */
 		public readonly contents: string,
 		file?: SourceFile,
-		public readonly preprocessedFile?: PreprocessedFile
+		public readonly ranges?: AvlTree<number, SourceFile>
 	) {
 		this.file = file || new SourceFile("source");
 		// Read the first tokens
