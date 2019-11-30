@@ -11,6 +11,9 @@ export enum TokenType {
 	Comment,
 	CommentBlock,
 
+	// Preprocessor commands
+	Include,
+
 	// Reserved type names
 	Str,
 	Num,
@@ -92,6 +95,9 @@ export enum TokenType {
 
 /** Mapping of identifier lexemes to particular id token types */
 export const idTokenTypes: { [key: string]: TokenType } = {
+	// Preprocessor commands:
+	include: TokenType.Include,
+	// Play language:
 	action: TokenType.Action,
 	if: TokenType.If,
 	while: TokenType.While,

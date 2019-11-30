@@ -1,4 +1,5 @@
 import { describeErrorToken } from "../common/format-messages";
+import { SourceFile } from "./source-file";
 import { TokenType } from "./token-type";
 
 export interface Position {
@@ -13,12 +14,9 @@ export interface Describable {
 
 export interface TokenLike extends Describable {
 	/**
-	 * Filename index that the token originates from
-	 *
-	 * The lexer keeps an array of filenames when it combines files together for
-	 * preprocessing and this is an index into that array
+	 * File that the token originates from
 	 */
-	readonly fileTableIndex: number;
+	readonly file: SourceFile;
 
 	/** Token type (must be a number from an integer enum) */
 	readonly type: number;
@@ -59,7 +57,7 @@ export interface TokenLike extends Describable {
 }
 
 export class Token implements TokenLike, Position, Describable {
-	public readonly fileTableIndex: number;
+	public readonly file: SourceFile;
 	public readonly type: number;
 	public readonly pos: number;
 	public readonly line: number;
@@ -69,7 +67,7 @@ export class Token implements TokenLike, Position, Describable {
 	public trivia: TokenLike[] = [];
 
 	constructor(options: Omit<TokenLike, "description" | "trivia">) {
-		this.fileTableIndex = options.fileTableIndex;
+		this.file = options.file;
 		this.type = options.type;
 		this.pos = options.pos;
 		this.line = options.line;
@@ -96,24 +94,24 @@ export class ErrorToken extends Token {
 	public readonly hints: Set<string>;
 
 	/** Reference to the file table being used for this token */
-	public readonly fileTable: string[];
+	public readonly file: SourceFile;
 
 	constructor(
 		options: Omit<TokenLike, "description" | "trivia"> & {
 			hints: Set<string>;
-			fileTable: string[];
+			file: SourceFile;
 		}
 	) {
 		super(options);
 		this.hints = options.hints;
-		this.fileTable = options.fileTable;
+		this.file = options.file;
 	}
 
 	public get description(): string {
 		return (
 			this.constructor.name +
 			"(`" +
-			describeErrorToken(this.fileTable, this) +
+			describeErrorToken(this.file.name, this) +
 			"`)"
 		);
 	}
