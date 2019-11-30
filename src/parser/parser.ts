@@ -38,7 +38,7 @@ export class Parser extends TokenParser {
 
 	constructor(contents: string) {
 		// Todo: Update for file table when preprocessor is ready
-		super(new Lexer(contents, 0));
+		super(new Lexer(contents));
 		this._symbolTables.push(new SymbolTable());
 		this._token = this.lexer.token;
 		this._previous = this._token;
@@ -163,15 +163,6 @@ export class Parser extends TokenParser {
 			typeAnnotation.push(this.advance().lexeme);
 		}
 		return typeAnnotation;
-	}
-
-	/**
-	 * Utility parsing method to match any subsequent lines
-	 */
-	public eatLines(): void {
-		while (!this.isAtEnd && this.peek.type === TokenType.Line) {
-			this.match(TokenType.Line);
-		}
 	}
 
 	/**

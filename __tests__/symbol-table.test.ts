@@ -1,3 +1,4 @@
+import { SourceFile } from "../src/language/source-file";
 import SymbolTable from "../src/language/symbol-table";
 import { Token } from "../src/language/token";
 import { VariableDeclarationNode } from "../src/parser/nodes/variable-declaration-node";
@@ -7,7 +8,7 @@ let end: number = 1;
 const chars: string[] = ["a", "b", "c", "d", "e", "f", "g"];
 function fakeToken(): Token {
 	return new Token({
-		fileTableIndex: 0,
+		file: new SourceFile("test.play"),
 		type: 1,
 		pos,
 		end: end++,
@@ -65,7 +66,9 @@ describe("symbol table", () => {
 			start: 0,
 			token: {
 				column: 0,
-				fileTableIndex: 0,
+				file: {
+					path: "test.play",
+				},
 				length: 1,
 				lexeme: "a",
 				line: 0,

@@ -2,8 +2,7 @@ import { TokenType } from "../src/language/token-type";
 import { Lexer } from "../src/lexer";
 
 describe("lexer", () => {
-	const fileTable = ["test.play"];
-	const lexer = new Lexer("10 + 20 -123.4e-56", 0, fileTable);
+	const lexer = new Lexer("10 + 20 -123.4e-56");
 	it("should initialize sensibly", () => {
 		expect(lexer).toBeInstanceOf(Lexer);
 	});
@@ -41,8 +40,9 @@ describe("lexer", () => {
 		expect(lexer.warnings).toEqual([
 			{
 				column: 3,
-				fileTable: [],
-				fileTableIndex: 0,
+				file: {
+					path: "source",
+				},
 				hints: new Set(["Unknown escape sequence."]),
 				length: 1,
 				lexeme: '"',
@@ -123,14 +123,12 @@ describe("lexer", () => {
 	});
 	it("should handle incorrect numbers", () => {
 		const lexer = new Lexer(
-			"1. 1.2e- 1e23 1.2e34 123.456e789 123.456e-789 123.456E+789",
-			0,
-			fileTable
+			"1. 1.2e- 1e23 1.2e34 123.456e789 123.456e-789 123.456E+789"
 		);
 		const tokens = lexer.readAll().map(token => token.description);
 		expect(tokens).toEqual([
-			"ErrorToken(`Lexical error in test.play at 1:0 (0) with text `1.`. Decimal number is missing.`)",
-			"ErrorToken(`Lexical error in test.play at 1:3 (3) with text `1.2e-`. Exponent not followed by a number.`)",
+			"ErrorToken(`Lexical error in source at 1:0 (0) with text `1.`. Decimal number is missing.`)",
+			"ErrorToken(`Lexical error in source at 1:3 (3) with text `1.2e-`. Exponent not followed by a number.`)",
 			"Number(`1e23`)",
 			"Number(`1.2e34`)",
 			"Number(`123.456e789`)",
@@ -192,5 +190,8 @@ describe("lexer", () => {
 			"Number(`3`)",
 			"EndOfFile(``)",
 		]);
+	});
+	it("should resolve file table correctly for tokens", () => {
+		// const lexer = new Lexer("file1 file1 file2 file2 file3 file3");
 	});
 });

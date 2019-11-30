@@ -19,12 +19,12 @@ export function prepareHint(hint: string): string {
  * @param errorToken Token to examine
  */
 export function describeErrorToken(
-	fileTable: string[],
+	filename: string,
 	errorToken: ErrorToken
 ): string {
 	return (
 		"Lexical error in " +
-		fileTable[errorToken.fileTableIndex] +
+		filename +
 		" at " +
 		errorToken.line +
 		":" +

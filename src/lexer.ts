@@ -6,6 +6,8 @@ import {
 	isWhitespace,
 } from "./language/character-mappings";
 import { lexerTrie } from "./language/lexer-trie";
+import { PreprocessedFile } from "./language/preprocessed-file";
+import { SourceFile } from "./language/source-file";
 import { stringEscapes } from "./language/string-escapes";
 import { ErrorToken, Position, Token, TokenLike } from "./language/token";
 import { idTokenTypes, TokenType } from "./language/token-type";
@@ -17,6 +19,10 @@ export class Lexer {
 	 * The contents of this are reset after each scan()
 	 */
 	public warnings: ErrorToken[] = [];
+	/**
+	 * File that the lexer is scanning
+	 */
+	public readonly file: SourceFile;
 
 	/** True if the source has reached the end */
 	public get isAtEnd(): boolean {
@@ -66,14 +72,34 @@ export class Lexer {
 		return this._numTokens;
 	}
 
+	/**
+	 * Current file based on the lexer's position
+	 *
+	 * Normally, this is the file given to the lexer, but if a preprocessed
+	 * file is provided to the lexer representing a composite file from the
+	 * preprocessor output then the ranges will be examined...
+	 *
+	 * Ranges are resolved by examining the lexer's current position and matching
+	 * it against the range tree to see which file the lexer is currently scanning
+	 */
+	public get currentFile(): SourceFile {
+		if (!this.preprocessedFile) {
+			return this.file;
+		}
+		const bound = this.preprocessedFile.ranges.findLowerBound(this.tail.pos);
+		if (bound === null) {
+			throw new Error(
+				"Cannot look up file in file table at index " + this.tail.pos
+			);
+		}
+		return this.preprocessedFile.fileTable[bound];
+	}
+
 	/** Current token */
 	protected _token: TokenLike;
 
 	/** Look-ahead token */
 	protected _lookahead: TokenLike;
-
-	/** Reference to a file table used by a parser */
-	protected fileTable: string[];
 
 	/** Head position of the lexer (start of token) */
 	protected head: Position = {
@@ -89,12 +115,6 @@ export class Lexer {
 		column: 0,
 	};
 
-	/** Index of the file this lexer is scanning */
-	protected fileTableIndex: number;
-
-	/** Contents of the file we are scanning */
-	protected readonly contents: string;
-
 	/** Number of tokens read */
 	protected _numTokens: number = 0;
 
@@ -105,14 +125,12 @@ export class Lexer {
 	 * @param [fileTable] Reference to the file table being used
 	 */
 	constructor(
-		contents: string,
-		fileTableIndex: number = 0,
-		fileTable: string[] = []
+		/** Lexer contents to scan */
+		public readonly contents: string,
+		file?: SourceFile,
+		public readonly preprocessedFile?: PreprocessedFile
 	) {
-		this.contents = contents;
-		this.fileTable = fileTable;
-		this.fileTableIndex = fileTableIndex;
-
+		this.file = file || new SourceFile("source");
 		// Read the first tokens
 		this._token = this.scan();
 		this._lookahead = this.scan();
@@ -203,7 +221,6 @@ export class Lexer {
 		// Make sure hint ends in punctuation to aid in formatting later.
 		hint = prepareHint(hint);
 		return new ErrorToken({
-			fileTableIndex: this.fileTableIndex,
 			lexeme: this.lexeme,
 			length: this.length,
 			pos: this.tail.pos,
@@ -212,7 +229,7 @@ export class Lexer {
 			column: this.tail.column,
 			type: TokenType.Error,
 			hints: new Set<string>([hint]),
-			fileTable: this.fileTable,
+			file: this.currentFile,
 		});
 	}
 
@@ -225,7 +242,6 @@ export class Lexer {
 		hint = prepareHint(hint);
 		this.warnings.push(
 			new ErrorToken({
-				fileTableIndex: this.fileTableIndex,
 				lexeme: this.peek,
 				length: 1,
 				pos: this.head.pos,
@@ -234,7 +250,7 @@ export class Lexer {
 				column: this.head.column,
 				type: TokenType.Error,
 				hints: new Set<string>([hint]),
-				fileTable: this.fileTable,
+				file: this.currentFile,
 			})
 		);
 	}
@@ -297,7 +313,6 @@ export class Lexer {
 		first.hints.forEach(hint => combinedHints.add(hint));
 		second.hints.forEach(hint => combinedHints.add(hint));
 		return new ErrorToken({
-			fileTableIndex: this.fileTableIndex,
 			pos: first.pos,
 			end: second.end,
 			line: first.line,
@@ -306,13 +321,13 @@ export class Lexer {
 			length: first.length + second.length,
 			type: Number.NaN,
 			hints: combinedHints,
-			fileTable: this.fileTable,
+			file: first.file,
 		});
 	}
 
 	protected makeToken(type: number, lexeme: string = ""): TokenLike {
 		return new Token({
-			fileTableIndex: this.fileTableIndex,
+			file: this.currentFile,
 			lexeme: lexeme || this.lexeme,
 			length: this.length,
 			pos: this.tail.pos,

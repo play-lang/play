@@ -1,19 +1,28 @@
-import { TextRange } from "../language/text-range";
+import { AvlTree } from "../common/avl-tree";
+import { SourceFile } from "../language/source-file";
 import { TokenParser } from "../language/token-parser";
 import { TokenType } from "../language/token-type";
 import { Lexer } from "../lexer";
 
 /** Represents a preprocessor that chains files together */
-export class Preprocessor extends TokenParser {
+export class Preprocessor {
 	/**
-	 * Maps file table index numbers to text ranges representing their position
-	 * in the final combined preprocessor output string
-	 *
-	 * This will allow the lexer to determine which file a token started in
+	 * Maps string start position indices (from the combined string of all
+	 * the imported files) to file table indices representing the start of a
+	 * file in the combined string
 	 */
-	public readonly ranges: Map<number, TextRange> = new Map();
+	public readonly ranges: AvlTree<number, SourceFile> = new AvlTree<
+		number,
+		SourceFile
+	>();
 	/** Set of fully qualified file paths encountered */
 	public readonly fileSet: Set<string> = new Set();
+	/** Table containing every file encountered by the preprocessor */
+	public readonly fileTable: SourceFile[] = [];
+	/** Token parser stack used for pre-processing */
+	public readonly parsers: TokenParser[] = [];
+	/** Combined output string */
+	public contents: string = "";
 
 	constructor(
 		/** File to start preprocessing with */
@@ -42,17 +51,14 @@ export class Preprocessor extends TokenParser {
 		 * another file should be inserted, this function will be invoked to fetch the contents of the specified file
 		 */
 		public readonly fileProvider: (path: string) => Promise<string>
-	) {
-		// Give it a dummy lexer for now
-		super(new Lexer("", 0));
-	}
+	) {}
 
 	/**
 	 * Add a file's to the file table
 	 * @param filename The filename to add (the path to the file, relative
 	 * or absolute)
 	 */
-	public async addFile(filename: string): Promise<number> {
+	public async addFile(filename: string): Promise<SourceFile> {
 		const absolutePath = await this.filePathResolver(filename);
 		if (!absolutePath) {
 			throw new Error(
@@ -63,9 +69,10 @@ export class Preprocessor extends TokenParser {
 					"`"
 			);
 		}
-		this.fileTable.push(absolutePath);
+		const file = new SourceFile(absolutePath);
+		this.fileTable.push(file);
 		// Return the index to the new file in the file table
-		return this.fileTable.length - 1;
+		return file;
 	}
 
 	/**
@@ -73,6 +80,7 @@ export class Preprocessor extends TokenParser {
 	 */
 	public async preprocess(): Promise<string> {
 		// Do the pre-processing
+		this.contents = "";
 		return await this._preprocess(this.startingFilename);
 	}
 
@@ -84,17 +92,39 @@ export class Preprocessor extends TokenParser {
 	private async _preprocess(filename: string): Promise<string> {
 		// Get the file's contents
 		const file = await this.addFile(filename);
-		const contents = await this.getFileContents(this.fileTable[file]);
-		// Todo: While there are #include statements at the top of the file,
+		const contents = await this.getFileContents(file.path);
+		// Add a blank line just in case to prevent grammar from breaking
+		if (this.contents.length > 0) {
+			this.contents += "\n";
+		}
+		// Record where this file starts in the combined contents buffer
+		this.ranges.insert(contents.length - 1, file);
+		// Add this file's contents to the combined contents
+		this.contents += contents;
+
+		const lexer = new Lexer(contents, file);
+		const parser = new TokenParser(lexer, this.fileTable);
+
+		// While there are #include statements at the top of the file,
 		// preprocess the heck out of it
-		//
-		// Make sure to only include a file once
-		const lexer = new Lexer(contents, 0);
-		let token = lexer.read();
-		while (token.type === TokenType.PoundSign) {
-			token = lexer.read();
-			if (token.type !== TokenType.String) {
-				throw new Error("Invalid preprocessor statement");
+		while (parser.match(TokenType.PoundSign)) {
+			const command = parser.consume(
+				TokenType.Include,
+				"Expected preprocessor command"
+			);
+			if (command.type === TokenType.Include) {
+				// #include "filename.play" <-- Found include preprocessor command
+				const filenameToken = parser.consume(
+					TokenType.String,
+					"Include filename expected"
+				);
+				const filename = filenameToken.lexeme;
+				if (!filename) {
+					throw parser.error(filenameToken, "Must provide a valid filename");
+				}
+				parser.eatLines();
+				// Recursively include files
+				this._preprocess(filename);
 			}
 		}
 		return contents;

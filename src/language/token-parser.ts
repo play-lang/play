@@ -1,6 +1,7 @@
 import { prepareHint } from "../common/format-messages";
 import { Lexer } from "../lexer";
 import { ParseError } from "../parser/parse-error";
+import { SourceFile } from "./source-file";
 import { TokenLike } from "./token";
 import { TokenType } from "./token-type";
 
@@ -43,14 +44,11 @@ export class TokenParser {
 		);
 	}
 
-	/** Table containing every file encountered by the preprocessor */
-	public readonly fileTable: string[] = [];
-
 	/** List of errors encountered in the code */
 	public readonly errors: ParseError[] = [];
 
 	/** True if the parser is in panic mode */
-	protected isPanicking: boolean = false;
+	public isPanicking: boolean = false;
 
 	/** Current token */
 	protected _token: TokenLike;
@@ -60,7 +58,9 @@ export class TokenParser {
 
 	constructor(
 		/** Lexer used to provide tokens as needed */
-		public lexer: Lexer
+		public readonly lexer: Lexer,
+		/** Table containing every file encountered by the preprocessor */
+		public readonly fileTable: SourceFile[] = []
 	) {
 		this._token = this.lexer.token;
 		this._previous = this._token;
@@ -123,7 +123,7 @@ export class TokenParser {
 		hint = prepareHint(hint);
 		const message =
 			"Syntax error in " +
-			this.fileTable[token.fileTableIndex] +
+			token.file +
 			" at " +
 			token.line +
 			":" +
@@ -159,6 +159,15 @@ export class TokenParser {
 	public skip(): void {
 		this._previous = this._token;
 		this._token = this.lexer.read();
+	}
+
+	/**
+	 * Utility parsing method to match any subsequent lines
+	 */
+	public eatLines(): void {
+		while (!this.isAtEnd && this.peek.type === TokenType.Line) {
+			this.match(TokenType.Line);
+		}
 	}
 
 	/**
