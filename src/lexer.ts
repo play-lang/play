@@ -89,10 +89,10 @@ export class Lexer {
 		const bound = this.preprocessedFile.ranges.findLowerBound(this.tail.pos);
 		if (bound === null) {
 			throw new Error(
-				"Cannot look up file in file table at index " + this.tail.pos
+				"Cannot find range tree bound for index " + this.tail.pos
 			);
 		}
-		return this.preprocessedFile.fileTable[bound];
+		return this.preprocessedFile.ranges.get(bound)!;
 	}
 
 	/** Current token */

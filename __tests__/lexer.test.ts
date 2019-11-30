@@ -1,3 +1,6 @@
+import { AvlTree } from "../src/common/avl-tree";
+import { PreprocessedFile } from "../src/language/preprocessed-file";
+import { SourceFile } from "../src/language/source-file";
 import { TokenType } from "../src/language/token-type";
 import { Lexer } from "../src/lexer";
 
@@ -191,7 +194,39 @@ describe("lexer", () => {
 			"EndOfFile(``)",
 		]);
 	});
+});
+
+describe("lexer file table", () => {
 	it("should resolve file table correctly for tokens", () => {
-		// const lexer = new Lexer("file1 file1 file2 file2 file3 file3");
+		const a = new SourceFile("a");
+		const b = new SourceFile("b");
+		const c = new SourceFile("c");
+		const d = new SourceFile("d");
+		const ranges = new AvlTree<number, SourceFile>();
+		ranges.insert(0, a);
+		ranges.insert(13, b);
+		ranges.insert(20, c);
+		ranges.insert(27, d);
+		const ppFile = new PreprocessedFile([a, b, c, d], ranges);
+		const lexer = new Lexer(
+			"a_file a_file b_file c_file d_file d_file",
+			new SourceFile("test.play"),
+			ppFile
+		);
+		const tokens = lexer.readAll().map(token => token.file.path);
+		// One extra token for the end-of-file token
+		expect(tokens).toEqual(["a", "a", "b", "c", "d", "d", "d"]);
+	});
+
+	it("should throw error on faulty lower bound in range tree", () => {
+		const ranges = new AvlTree<number, SourceFile>();
+		const ppFile = new PreprocessedFile([], ranges);
+		expect(() => {
+			new Lexer(
+				"a_file a_file b_file c_file d_file d_file",
+				new SourceFile("test.play"),
+				ppFile
+			);
+		}).toThrow();
 	});
 });
