@@ -1,5 +1,4 @@
 import { AvlTree } from "../src/common/avl-tree";
-import { PreprocessedFile } from "../src/language/preprocessed-file";
 import { SourceFile } from "../src/language/source-file";
 import { TokenType } from "../src/language/token-type";
 import { Lexer } from "../src/lexer";
@@ -207,11 +206,10 @@ describe("lexer file table", () => {
 		ranges.insert(13, b);
 		ranges.insert(20, c);
 		ranges.insert(27, d);
-		const ppFile = new PreprocessedFile([a, b, c, d], ranges);
 		const lexer = new Lexer(
 			"a_file a_file b_file c_file d_file d_file",
 			new SourceFile("test.play"),
-			ppFile
+			ranges
 		);
 		const tokens = lexer.readAll().map(token => token.file.path);
 		// One extra token for the end-of-file token
@@ -220,12 +218,11 @@ describe("lexer file table", () => {
 
 	it("should throw error on faulty lower bound in range tree", () => {
 		const ranges = new AvlTree<number, SourceFile>();
-		const ppFile = new PreprocessedFile([], ranges);
 		expect(() => {
 			new Lexer(
 				"a_file a_file b_file c_file d_file d_file",
 				new SourceFile("test.play"),
-				ppFile
+				ranges
 			);
 		}).toThrow();
 	});
