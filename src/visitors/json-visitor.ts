@@ -14,6 +14,7 @@ import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
+import { ReturnValueStatementNode } from "../parser/nodes/return-value-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
 import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
@@ -219,22 +220,22 @@ export class JSONVisitor extends Visitor implements Describable {
 		});
 	}
 	public visitReturnStatementNode(node: ReturnStatementNode): void {
-		if (node.expr) {
-			node.expr.accept(this);
-			const expr = this.stack.pop();
-			this.stack.push({
-				type: "return-value",
-				start: node.start,
-				end: node.end,
-				value: expr,
-			});
-			return;
-		}
 		this.stack.push({
 			type: "return",
 			start: node.start,
 			end: node.end,
 		});
+	}
+	public visitReturnValueStatementNode(node: ReturnValueStatementNode): void {
+		node.expr.accept(this);
+		const expr = this.stack.pop();
+		this.stack.push({
+			type: "return-value",
+			start: node.start,
+			end: node.end,
+			value: expr,
+		});
+		return;
 	}
 
 	// MARK: Private Methods

@@ -72,6 +72,7 @@ export class Disassembler {
 					break;
 				// Instructions with no parameter
 				case OpCode.Return:
+				case OpCode.ReturnValue:
 				case OpCode.Pop:
 				case OpCode.Neg:
 				case OpCode.Inc:
@@ -108,7 +109,9 @@ export class Disassembler {
 				}
 				default: {
 					throw new Error(
-						"Unrecognized instruction code " + instr + " " + OpCode[instr]
+						"Unrecognized instruction code: " +
+							instr +
+							(OpCode[instr] ? " (could be " + OpCode[instr] + ")" : "")
 					);
 				}
 			}

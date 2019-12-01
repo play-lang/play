@@ -3,7 +3,12 @@ export enum OpCode {
 
 	/** Return instruction */
 	Return = 1,
-	/** Load an action onto the stack */
+	/** Return a value from a function or the main loop */
+	ReturnValue,
+	/**
+	 * Push a function call bytecode address offset onto the stack for
+	 * later consumption with CALL
+	 */
 	Load,
 	/** Push constant from constant pool */
 	Constant,

@@ -58,12 +58,23 @@ export class VirtualMachine {
 				const instruction = this.readCode();
 				switch (instruction) {
 					case OpCode.Return: {
-						// Return from the current procedure or main section
-						const top = this.pop();
-						return new VMResult(VMStatus.Success, top);
+						if (this.frames.length === 1) {
+							return this.finish();
+						} else {
+							this.frames.pop();
+						}
+						break;
+					}
+					case OpCode.ReturnValue: {
+						if (this.frames.length === 1) {
+							return this.finish();
+						} else {
+							this.frames.pop();
+						}
+						break;
 					}
 					case OpCode.Load: {
-						// Todo: Load an action onto the top of the stack
+						this.push(new RuntimeValue(RuntimeType.Number, this.readCode()));
 						break;
 					}
 					case OpCode.Constant: {
@@ -217,10 +228,10 @@ export class VirtualMachine {
 					case OpCode.Call: {
 						const numLocals = this.readCode();
 						const dest = this.pop();
-						if (dest.type !== RuntimeType.Function) {
+						if (dest.type !== RuntimeType.Number) {
 							throw new RuntimeError(
 								VMStatus.InvalidOperands,
-								"Attempted to invoke a non-action"
+								"Invalid invocation destination"
 							);
 						}
 						const ip = dest.value as number;
@@ -305,5 +316,11 @@ export class VirtualMachine {
 			case RuntimeType.Function:
 				return Number.isInteger(value.value);
 		}
+	}
+
+	public finish(): VMResult {
+		// End the program, return whatever is on top of the stack
+		const top = this.pop();
+		return new VMResult(VMStatus.Success, top);
 	}
 }
