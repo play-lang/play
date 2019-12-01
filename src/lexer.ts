@@ -327,10 +327,10 @@ export class Lexer {
 		});
 	}
 
-	protected makeToken(type: number, lexeme: string = ""): TokenLike {
+	protected makeToken(type: number, lexeme?: string): TokenLike {
 		return new Token({
 			file: this.currentFile,
-			lexeme: lexeme || this.lexeme,
+			lexeme: typeof lexeme === "undefined" ? this.lexeme : lexeme,
 			length: this.length,
 			pos: this.tail.pos,
 			end: this.tail.pos + this.length,

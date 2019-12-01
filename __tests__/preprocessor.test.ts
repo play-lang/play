@@ -61,5 +61,52 @@ describe("preprocessor", () => {
 		await pp.preprocess();
 		expect(testRanges(pp.ranges, fileContents, filenames)).toBe("");
 	});
-	it("should only include files once", async () => {});
+	it("should only include files once", async () => {
+		const fileContents: { [key: string]: string } = {
+			a: str`
+				#include "b"
+			`,
+			b: "file b",
+			c: "file c",
+		};
+		const testFileContents = str`
+			#include "a"
+			#include "b"
+			#include "c"
+		`;
+		// Files should be included in the following order:
+		const filenames = ["b", "a", "c"];
+		const fileProvider = createFileProvider(
+			"test.play",
+			testFileContents,
+			fileContents
+		);
+		const pp = new Preprocessor("test.play", filePathResolver, fileProvider);
+		await pp.preprocess();
+		expect(testRanges(pp.ranges, fileContents, filenames)).toBe("");
+	});
+	it("should throw errors when it can't resolve a filename", async () => {
+		const pp = new Preprocessor(
+			"test.play",
+			async (path: string) => "",
+			async (path: string) => ""
+		);
+		expect(pp.addFile("does-not-exist.play")).rejects.toThrow();
+	});
+	it("should return nothing if it can't find file contents", async () => {
+		const pp = new Preprocessor(
+			"test.play",
+			async (path: string) => path,
+			async (path: string) => ""
+		);
+		expect(await pp.preprocess()).toBe("");
+	});
+	it("throws an error when a blank filename is included", async () => {
+		const pp = new Preprocessor(
+			"test.play",
+			async (path: string) => path,
+			async (path: string) => (path === "test.play" ? '#include ""' : "")
+		);
+		expect(pp.preprocess()).rejects.toThrow();
+	});
 });
