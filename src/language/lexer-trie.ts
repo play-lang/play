@@ -27,6 +27,10 @@ interface Trie {
 }
 
 export const lexerTrie: Trie = {
+	"#": {
+		// Preprocessor statement
+		type: TokenType.PoundSign,
+	},
 	"=": {
 		type: TokenType.Equal,
 		next: {

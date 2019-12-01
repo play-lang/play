@@ -92,19 +92,16 @@ export class Preprocessor {
 	private async _preprocess(filename: string): Promise<string> {
 		// Get the file's contents
 		const file = await this.addFile(filename);
-		const contents = await this.getFileContents(file.path);
+		let contents = await this.getFileContents(file.path);
 		// Add a blank line just in case to prevent grammar from breaking
-		if (this.contents.length > 0) {
-			this.contents += "\n";
-		}
+		contents += contents.length > 0 ? "\n" : "";
 		// Record where this file starts in the combined contents buffer
 		this.ranges.insert(contents.length - 1, file);
-		// Add this file's contents to the combined contents
-		this.contents += contents;
 
 		const lexer = new Lexer(contents, file);
 		const parser = new TokenParser(lexer, this.fileTable);
-
+		// Eat up any lines at the beginning of the file
+		parser.eatLines();
 		// While there are #include statements at the top of the file,
 		// preprocess the heck out of it
 		while (parser.match(TokenType.PoundSign)) {
@@ -122,12 +119,16 @@ export class Preprocessor {
 				if (!filename) {
 					throw parser.error(filenameToken, "Must provide a valid filename");
 				}
-				parser.eatLines();
 				// Recursively include files
-				this._preprocess(filename);
+				await this._preprocess(filename);
+				parser.eatLines();
 			}
 		}
-		return contents;
+
+		// Add this file's contents to the combined contents
+		this.contents += contents;
+
+		return this.contents;
 	}
 
 	private async getFileContents(filename: string): Promise<string> {
