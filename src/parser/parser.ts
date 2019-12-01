@@ -275,6 +275,13 @@ export class Parser extends TokenParser {
 		this.consume(TokenType.BraceOpen, "Expected opening brace of action block");
 		// Grab the block of statements inside the function curly braces
 		const block = this.block(true);
+		const lastStatement = block.statements[block.statements.length - 1];
+		if (
+			!(lastStatement instanceof ReturnStatementNode) &&
+			!(lastStatement instanceof ReturnValueStatementNode)
+		) {
+			block.statements.push(new ReturnStatementNode());
+		}
 		const node = new ActionDeclarationNode(start, info, block);
 		return node;
 	}
