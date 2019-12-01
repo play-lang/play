@@ -91,11 +91,7 @@ export class Preprocessor {
 		// Get the file's contents
 		const file = await this.addFile(filename);
 		let contents: string = "";
-		try {
-			contents = await this.getFileContents(file.path);
-		} catch {
-			return "";
-		}
+		contents = await this.getFileContents(file.path);
 
 		// No point in including a blank file
 		if (contents.length === 0 || this.fileSet.has(file.path)) return "";
