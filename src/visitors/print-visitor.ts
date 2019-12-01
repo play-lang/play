@@ -14,6 +14,7 @@ import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
+import { ReturnValueStatementNode } from "../parser/nodes/return-value-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
 import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
@@ -180,11 +181,13 @@ export class PrintVisitor extends Visitor implements Describable {
 
 	public visitReturnStatementNode(node: ReturnStatementNode): void {
 		this.desc += "Return\n";
+	}
+
+	public visitReturnValueStatementNode(node: ReturnValueStatementNode): void {
+		this.desc += "ReturnValue\n";
 		this.indent += 1;
-		if (node.expr) {
-			this.desc += this.spaces + "└── ";
-			node.expr.accept(this);
-		}
+		this.desc += this.spaces + "└── ";
+		node.expr.accept(this);
 		this.indent -= 1;
 	}
 

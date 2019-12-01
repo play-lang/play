@@ -4,45 +4,56 @@ describe("simple function call", () => {
 	// it("should parse an action", () => {
 	// 	const code = str`
 	// 		action myAction(): str {
-	// 			3 + 4
+	// 			return
+	// 			return 3 + 4
 	// 		}
 	// 	`;
 	// 	const result = Play.describeAstAsJSON(code);
 	// 	expect(result).toEqual({
 	// 		type: "program",
 	// 		start: 0,
-	// 		end: 30,
+	// 		end: 44,
 	// 		statements: [
 	// 			{
 	// 				type: "action-decl",
 	// 				start: 0,
-	// 				end: 30,
+	// 				end: 44,
 	// 				typeAnnotation: ["str"],
 	// 				numParameters: 0,
 	// 				parameters: [],
 	// 				block: {
 	// 					type: "block",
 	// 					start: 23,
-	// 					end: 30,
+	// 					end: 44,
 	// 					isActionBlock: true,
 	// 					statements: [
 	// 						{
-	// 							type: "binary-expr",
+	// 							type: "return",
 	// 							start: 25,
-	// 							end: 30,
-	// 							lhs: {
-	// 								type: "literal",
-	// 								start: 25,
-	// 								end: 26,
-	// 								literalType: "Number",
-	// 								literalValue: "3",
-	// 							},
-	// 							rhs: {
-	// 								type: "literal",
-	// 								start: 29,
-	// 								end: 30,
-	// 								literalType: "Number",
-	// 								literalValue: "4",
+	// 							end: 31,
+	// 						},
+	// 						{
+	// 							type: "return-value",
+	// 							start: 43,
+	// 							end: 44,
+	// 							value: {
+	// 								type: "binary-expr",
+	// 								start: 39,
+	// 								end: 44,
+	// 								lhs: {
+	// 									type: "literal",
+	// 									start: 39,
+	// 									end: 40,
+	// 									literalType: "Number",
+	// 									literalValue: "3",
+	// 								},
+	// 								rhs: {
+	// 									type: "literal",
+	// 									start: 43,
+	// 									end: 44,
+	// 									literalType: "Number",
+	// 									literalValue: "4",
+	// 								},
 	// 							},
 	// 						},
 	// 					],
@@ -54,9 +65,13 @@ describe("simple function call", () => {
 
 	it("should generate the right bytecode", () => {
 		const code = str`
-		myAction()
-		action myAction(): str {
-			3 + 4
+		first()
+		second()
+		action first(): num {
+			return 3 + 4
+		}
+		action second(): num {
+			return 5 + 6
 		}
 	`;
 		// const compiledProgram = Play.link(code);

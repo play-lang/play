@@ -11,6 +11,7 @@ import { ActionDeclarationNode } from "./nodes/action-declaration-node";
 import { BlockStatementNode } from "./nodes/block-statement-node";
 import { ProgramNode } from "./nodes/program-node";
 import { ReturnStatementNode } from "./nodes/return-statement-node";
+import { ReturnValueStatementNode } from "./nodes/return-value-statement-node";
 import { VariableDeclarationNode } from "./nodes/variable-declaration-node";
 import { InfixParselet } from "./parselet";
 
@@ -286,7 +287,10 @@ export class Parser extends TokenParser {
 		const expr: Expression | undefined = !this.isAtEndOfStatement
 			? this.expression()
 			: undefined;
-		return new ReturnStatementNode(this.previous, expr);
+		if (expr) {
+			return new ReturnValueStatementNode(this.previous, expr);
+		}
+		return new ReturnStatementNode(this.previous);
 	}
 
 	/**

@@ -18,6 +18,7 @@ import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
+import { ReturnValueStatementNode } from "../parser/nodes/return-value-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
 import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
@@ -130,7 +131,11 @@ export class Compiler extends Visitor {
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
 		this.enterScope(node.info.name);
 		node.block!.accept(this);
-
+		if (this.checkLastEmit(OpCode.Return)) {
+			// If the last emitted instruction wasn't a return code, we need to
+			// emit one for them
+			this.emit(OpCode.Return);
+		}
 		this.exitScope();
 	}
 
@@ -295,7 +300,13 @@ export class Compiler extends Visitor {
 	}
 
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {}
-	public visitReturnStatementNode(node: ReturnStatementNode): void {}
+	public visitReturnStatementNode(node: ReturnStatementNode): void {
+		this.emit(OpCode.Return);
+	}
+	public visitReturnValueStatementNode(node: ReturnValueStatementNode): void {
+		node.expr.accept(this);
+		this.emit(OpCode.ReturnValue);
+	}
 
 	// MARK: Compiler Methods
 
@@ -311,6 +322,18 @@ export class Compiler extends Visitor {
 			this.constantPool,
 			this.jumpPatcher
 		);
+	}
+
+	/**
+	 * Checks to see if the last emitted bytecode in the current context is the
+	 * specified opcode
+	 * @param opcode The opcode to check
+	 */
+	public checkLastEmit(opcode: number): boolean {
+		if (this.context.bytecode[this.context.bytecode.length - 1] === opcode) {
+			return true;
+		}
+		return false;
 	}
 
 	/**
