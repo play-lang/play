@@ -17,8 +17,6 @@ export class Preprocessor {
 	>();
 	/** Set of fully qualified file paths encountered */
 	public readonly fileSet: Set<string> = new Set();
-	/** Table containing every file encountered by the preprocessor */
-	public readonly fileTable: SourceFile[] = [];
 	/** Token parser stack used for pre-processing */
 	public readonly parsers: TokenParser[] = [];
 	/** Combined output string */
@@ -70,7 +68,6 @@ export class Preprocessor {
 			);
 		}
 		const file = new SourceFile(absolutePath);
-		this.fileTable.push(file);
 		// Return the index to the new file in the file table
 		return file;
 	}
@@ -81,6 +78,7 @@ export class Preprocessor {
 	public async preprocess(): Promise<string> {
 		// Do the pre-processing
 		this.contents = "";
+		this.fileSet.clear();
 		return await this._preprocess(this.startingFilename);
 	}
 
@@ -93,13 +91,15 @@ export class Preprocessor {
 		// Get the file's contents
 		const file = await this.addFile(filename);
 		let contents = await this.getFileContents(file.path);
+		// No point in including a blank file
+		if (contents.length === 0 || this.fileSet.has(file.path)) return "";
+		// Mark the file as having been visited
+		this.fileSet.add(file.path);
 		// Add a blank line just in case to prevent grammar from breaking
-		contents += contents.length > 0 ? "\n" : "";
-		// Record where this file starts in the combined contents buffer
-		this.ranges.insert(contents.length - 1, file);
+		contents += "\n";
 
 		const lexer = new Lexer(contents, file);
-		const parser = new TokenParser(lexer, this.fileTable);
+		const parser = new TokenParser(lexer);
 		// Eat up any lines at the beginning of the file
 		parser.eatLines();
 		// While there are #include statements at the top of the file,
@@ -124,6 +124,10 @@ export class Preprocessor {
 				parser.eatLines();
 			}
 		}
+
+		// Record where this file starts in the combined contents buffer BEFORE
+		// we add our contents to the combined buffer
+		this.ranges.insert(this.contents.length, file);
 
 		// Add this file's contents to the combined contents
 		this.contents += contents;

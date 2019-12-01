@@ -1,7 +1,6 @@
 import { prepareHint } from "../common/format-messages";
 import { Lexer } from "../lexer";
 import { ParseError } from "../parser/parse-error";
-import { SourceFile } from "./source-file";
 import { TokenLike } from "./token";
 import { TokenType } from "./token-type";
 
@@ -58,9 +57,7 @@ export class TokenParser {
 
 	constructor(
 		/** Lexer used to provide tokens as needed */
-		public readonly lexer: Lexer,
-		/** Table containing every file encountered by the preprocessor */
-		public readonly fileTable: SourceFile[] = []
+		public readonly lexer: Lexer
 	) {
 		this._token = this.lexer.token;
 		this._previous = this._token;
