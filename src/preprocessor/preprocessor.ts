@@ -90,7 +90,13 @@ export class Preprocessor {
 	private async _preprocess(filename: string): Promise<string> {
 		// Get the file's contents
 		const file = await this.addFile(filename);
-		let contents = await this.getFileContents(file.path);
+		let contents: string = "";
+		try {
+			contents = await this.getFileContents(file.path);
+		} catch {
+			return "";
+		}
+
 		// No point in including a blank file
 		if (contents.length === 0 || this.fileSet.has(file.path)) return "";
 		// Mark the file as having been visited

@@ -65,3 +65,22 @@ export function testRanges(
 	}
 	return ""; // success
 }
+
+/**
+ * Creates a test file provider
+ * @param testFileName Name of the test file (preprocessor entry file)
+ * @param testFileContents Test file contents (preprocessor entry file contents)
+ * @param fileContents Table of included file contents
+ */
+export function createFileProvider(
+	testFileName: string,
+	testFileContents: string,
+	fileContents: { [key: string]: string }
+): (path: string) => Promise<string> {
+	return async (path: string): Promise<string> => {
+		if (path === "test.play") {
+			return testFileContents;
+		}
+		return fileContents[path];
+	};
+}

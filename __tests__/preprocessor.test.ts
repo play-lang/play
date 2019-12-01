@@ -1,4 +1,4 @@
-import { str, testRanges } from "../shared/test-utils";
+import { createFileProvider, str, testRanges } from "../shared/test-utils";
 import { Preprocessor } from "../src/preprocessor/preprocessor";
 
 const filePathResolver = async (path: string): Promise<string> => {
@@ -15,11 +15,11 @@ describe("preprocessor", () => {
 	});
 	it("should combine files with empty file in the middle", async () => {
 		const fileContents: { [key: string]: string } = {
-			a: "text1 text2 text3 text4",
-			b: "text5 text6",
+			a: "file a",
+			b: "file b",
 			c: "",
-			d: "text 7",
-			e: "text 8",
+			d: "file d",
+			e: "file e",
 		};
 		const testFileContents = str`
 			#include "a"
@@ -29,17 +29,37 @@ describe("preprocessor", () => {
 			#include "e"
 		`;
 		const filenames = ["a", "b", "c", "d", "e"];
-		const fileProvider = async (path: string): Promise<string> => {
-			if (path === "test.play") {
-				return testFileContents;
-			}
-			return fileContents[path];
-		};
+		const fileProvider = createFileProvider(
+			"test.play",
+			testFileContents,
+			fileContents
+		);
 		const pp = new Preprocessor("test.play", filePathResolver, fileProvider);
 		await pp.preprocess();
-		const ranges = pp.ranges;
-		expect(testRanges(ranges, fileContents, filenames)).toBe("");
+		expect(testRanges(pp.ranges, fileContents, filenames)).toBe("");
 	});
-	it("should combine recursively", () => {});
-	it("should only include files once", () => {});
+	it("should combine recursively", async () => {
+		const fileContents: { [key: string]: string } = {
+			a: str`
+				#include "b"
+			`,
+			b: "file b",
+			c: "file c",
+		};
+		const testFileContents = str`
+			#include "a"
+			#include "c"
+		`;
+		// Files should be included in the following order:
+		const filenames = ["b", "a", "c"];
+		const fileProvider = createFileProvider(
+			"test.play",
+			testFileContents,
+			fileContents
+		);
+		const pp = new Preprocessor("test.play", filePathResolver, fileProvider);
+		await pp.preprocess();
+		expect(testRanges(pp.ranges, fileContents, filenames)).toBe("");
+	});
+	it("should only include files once", async () => {});
 });
