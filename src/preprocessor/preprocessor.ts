@@ -107,24 +107,21 @@ export class Preprocessor {
 		// While there are #include statements at the top of the file,
 		// preprocess the heck out of it
 		while (parser.match(TokenType.PoundSign)) {
-			const command = parser.consume(
-				TokenType.Include,
-				"Expected preprocessor command"
+			parser.consume(TokenType.Include, "Expected preprocessor command");
+			// We only support an #include preprocessor command currently
+			// #include "filename.play" <-- Found include preprocessor command
+			const filenameToken = parser.consume(
+				TokenType.String,
+				"Include filename expected"
 			);
-			if (command.type === TokenType.Include) {
-				// #include "filename.play" <-- Found include preprocessor command
-				const filenameToken = parser.consume(
-					TokenType.String,
-					"Include filename expected"
-				);
-				const filename = filenameToken.lexeme;
-				if (!filename) {
-					throw parser.error(filenameToken, "Must provide a valid filename");
-				}
-				// Recursively include files
-				await this._preprocess(filename);
-				parser.eatLines();
+			const filename = filenameToken.lexeme;
+			if (!filename) {
+				throw parser.error(filenameToken, "Must provide a valid filename");
 			}
+			// Recursively include files
+			await this._preprocess(filename);
+			parser.eatLines();
+			// ---------------------------------------------------------------------
 		}
 
 		// Record where this file starts in the combined contents buffer BEFORE
