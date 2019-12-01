@@ -131,9 +131,11 @@ export class Compiler extends Visitor {
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
 		this.enterScope(node.info.name);
 		node.block!.accept(this);
-		if (this.checkLastEmit(OpCode.Return)) {
-			// If the last emitted instruction wasn't a return code, we need to
-			// emit one for them
+		if (
+			!this.checkLastEmit(OpCode.Return) &&
+			!this.checkLastEmit(OpCode.ReturnValue)
+		) {
+			// Emit an extra return instruction just in case
 			this.emit(OpCode.Return);
 		}
 		this.exitScope();

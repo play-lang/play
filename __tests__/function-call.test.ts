@@ -65,18 +65,23 @@ describe("simple function call", () => {
 
 	it("should generate the right bytecode", () => {
 		const code = str`
-		first()
-		second()
-		action first(): num {
-			return 3 + 4
-		}
-		action second(): num {
-			return 5 + 6
-		}
-	`;
-		// const compiledProgram = Play.link(code);
+			first()
+			return
+			third()
+			action first(): num {
+				return second()
+			}
+			action second(): num {
+				return 5 + 6
+			}
+			action third(): num {
+				return 1
+			}
+		`;
 		const desc = Play.disassemble(code);
-		// const bytecode = compiledProgram.program.bytecode;
 		console.log(desc);
+		const result = Play.run(code);
+		console.log(result);
+		// const bytecode = compiledProgram.program.bytecode;
 	});
 });
