@@ -137,12 +137,8 @@ export class Compiler extends Visitor {
 	public visitActionReferenceNode(node: ActionReferenceNode): void {
 		// We can use the patcher to patch a push instruction, not just a jump!
 		// So that's what we'll do
-		const callOffset = this.emit(OpCode.Load, 0);
-		this.jumpPatcher.registerContextJump(
-			this.context,
-			callOffset,
-			node.actionName
-		);
+		const offset = this.emit(OpCode.Load, -1) - 1;
+		this.jumpPatcher.registerContextJump(this.context, offset, node.actionName);
 	}
 
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {

@@ -51,7 +51,7 @@ export class Disassembler {
 			this.ip = this.p;
 			const instr = this.program.bytecode[this.p++];
 			switch (instr) {
-				// 1 param instructions
+				// Special case - look up constant in data pool and show it
 				case OpCode.Constant: {
 					const index = this.program.bytecode[this.p++];
 					str +=
@@ -65,13 +65,13 @@ export class Disassembler {
 						"\n";
 					break;
 				}
+				// Local variable special cases
 				case OpCode.Get:
 				case OpCode.Set:
 					// Todo: Describe locals
 					break;
-				// 0 param instructions
+				// Instructions with no parameter
 				case OpCode.Return:
-				case OpCode.Load:
 				case OpCode.Pop:
 				case OpCode.Neg:
 				case OpCode.Inc:
@@ -96,11 +96,20 @@ export class Disassembler {
 				case OpCode.False:
 					str += this.ipn + "\t" + this.instr(instr) + "\n";
 					break;
+				// Instructions that take a single parameter
+				case OpCode.Load:
+				case OpCode.Call:
 				case OpCode.Jump:
 				case OpCode.JumpFalse:
 				case OpCode.JumpTrue: {
-					const jumpTarget = this.program.bytecode[this.p++];
-					str += this.ipn + "\t" + this.instr(instr) + "\t" + jumpTarget + "\n";
+					const arg = this.program.bytecode[this.p++];
+					str += this.ipn + "\t" + this.instr(instr) + "\t" + arg + "\n";
+					break;
+				}
+				default: {
+					throw new Error(
+						"Unrecognized instruction code " + instr + " " + OpCode[instr]
+					);
 				}
 			}
 		}
