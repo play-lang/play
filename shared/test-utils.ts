@@ -30,4 +30,3 @@ export function str(strings: TemplateStringsArray): string {
 export function run(code: string): any {
 	return Play.run(code).value.value;
 }
-
