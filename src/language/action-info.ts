@@ -7,9 +7,9 @@ export class ActionInfo {
 		public readonly name: string,
 		/** Type of the action */
 		public readonly typeAnnotation: string[],
-		/** Number of parameters expected by this action */
-		public readonly numParameters: number,
+		/** Parameter names list */
+		public readonly parameters: string[],
 		/** Parameter names mapped to parameter type annotations */
-		public readonly parameters: Map<string, string[]>
+		public readonly parameterTypes: Map<string, string[]>
 	) {}
 }

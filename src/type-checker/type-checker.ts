@@ -11,6 +11,7 @@ import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
+import { ReturnValueStatementNode } from "../parser/nodes/return-value-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
 import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
@@ -33,4 +34,5 @@ export class TypeChecker extends Visitor {
 	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {}
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {}
 	public visitReturnStatementNode(node: ReturnStatementNode): void {}
+	public visitReturnValueStatementNode(node: ReturnValueStatementNode): void {}
 }

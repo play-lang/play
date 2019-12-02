@@ -53,9 +53,11 @@ export class VirtualMachine {
 	}
 
 	public run(): VMResult {
+		const log: string[] = [];
 		try {
 			while (true) {
 				const instruction = this.readCode();
+				log.push(OpCode[instruction]);
 				switch (instruction) {
 					case OpCode.Return: {
 						if (this.frames.length === 1) {
@@ -87,10 +89,12 @@ export class VirtualMachine {
 						break;
 					}
 					case OpCode.Get: {
+						// Get a local variable
 						this.push(this.readStack());
 						break;
 					}
 					case OpCode.Set: {
+						// Set a local variable
 						const index = this.readCode();
 						this.stack[index] = this.top;
 						break;

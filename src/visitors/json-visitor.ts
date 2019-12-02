@@ -101,14 +101,14 @@ export class JSONVisitor extends Visitor implements Describable {
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
 		node.block!.accept(this);
 		const block = this.stack.pop();
-		const parameters = Array.from(node.info.parameters.entries());
+		const parameterTypes = Array.from(node.info.parameterTypes.entries());
 		this.stack.push({
 			type: "action-decl",
 			start: node.start,
 			end: node.end,
 			typeAnnotation: node.info.typeAnnotation,
-			numParameters: node.info.numParameters,
-			parameters,
+			parameterTypes,
+			parameters: [...node.info.parameters],
 			block,
 		});
 	}
