@@ -1,5 +1,5 @@
 import { prepareHint } from "../common/format-messages";
-import { Lexer } from "../lexer";
+import { Lexer } from "../lexer/lexer";
 import { ParseError } from "../parser/parse-error";
 import { TokenLike } from "./token";
 import { TokenType } from "./token-type";

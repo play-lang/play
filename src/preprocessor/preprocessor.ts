@@ -2,7 +2,7 @@ import { AvlTree } from "../common/avl-tree";
 import { SourceFile } from "../language/source-file";
 import { TokenParser } from "../language/token-parser";
 import { TokenType } from "../language/token-type";
-import { Lexer } from "../lexer";
+import { Lexer } from "../lexer/lexer";
 
 /** Represents a preprocessor that chains files together */
 export class Preprocessor {

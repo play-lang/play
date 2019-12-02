@@ -3,7 +3,7 @@ import { Compiler } from "./compiler/compiler";
 import { Disassembler } from "./disassembler/disassembler";
 import { AbstractSyntaxTree } from "./language/abstract-syntax-tree";
 import { TokenLike } from "./language/token";
-import { Lexer } from "./lexer";
+import { Lexer } from "./lexer/lexer";
 import { LinkedProgram } from "./linker/linked-program";
 import { Linker } from "./linker/linker";
 import { Parser } from "./parser/parser";
