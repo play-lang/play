@@ -82,7 +82,8 @@ export default class SymbolTable implements Describable {
 	}
 
 	/**
-	 * Searches the receiver's symbol table for an identifier string
+	 * Searches the symbol table for an identifier string but does NOT search
+	 * any ancestor symbol tables
 	 * @param id The identifier to look up
 	 * @returns The corresponding identifier entry if the identifier was found
 	 */
@@ -98,7 +99,8 @@ export default class SymbolTable implements Describable {
 		if (this.entries.has(id) && this.entries.ordinal(id)! < this.available) {
 			let scope = this.enclosingScope;
 			let stackPos = 0;
-			while (scope) {
+			while (scope && !scope.isGlobalScope) {
+				// While there's a scope above us that ISN'T the global scope...
 				stackPos += scope.available;
 				scope = scope.enclosingScope;
 			}
