@@ -88,20 +88,36 @@ describe("simple function call", () => {
 	// 	// const bytecode = compiledProgram.program.bytecode;
 	// });
 
-	it("should handle local variables", () => {
+	// it("should handle local variables", () => {
+	// 	const code = str`
+	// 		first(1, 2)
+	// 		action first(a: num, b: num): num {
+	// 			return second(a, b)
+	// 		}
+	// 		action second(a: num, b: num): num {
+	// 			return a + b
+	// 		}
+	// 	`;
+	// 	const desc = Play.disassemble(code);
+	// 	console.log(desc);
+	// 	const result = Play.run(code);
+	// 	expect(result.value.value).toBe(3);
+	// 	console.log(result);
+	// });
+
+	it("should handle local variables with recursion", () => {
 		const code = str`
-			first(1, 2)
-			action first(a: num, b: num): num {
-				return second(a, b)
-			}
-			action second(a: num, b: num): num {
-				return a + b
+			first(0)
+			action first(a: num): num {
+				let b: num = 10
+				let c: num = a > 0 ? a : first(a + b)
+				return c
 			}
 		`;
 		const desc = Play.disassemble(code);
 		console.log(desc);
 		const result = Play.run(code);
-		expect(result.value.value).toBe(3);
+		expect(result.value.value).toBe(10);
 		console.log(result);
 	});
 });
