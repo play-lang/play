@@ -8,4 +8,6 @@ export enum VMStatus {
 	StackUnderflow,
 	/** Bad stack operand(s) */
 	InvalidOperands,
+	/** Invalid instruction (from bad bytecode) */
+	InvalidInstruction,
 }
