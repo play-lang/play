@@ -92,12 +92,16 @@ describe("simple function call", () => {
 		const code = str`
 			first(1, 2)
 			action first(a: num, b: num): num {
+				return second(a, b)
+			}
+			action second(a: num, b: num): num {
 				return a + b
 			}
 		`;
 		const desc = Play.disassemble(code);
 		console.log(desc);
 		const result = Play.run(code);
+		expect(result.value.value).toBe(3);
 		console.log(result);
 	});
 });
