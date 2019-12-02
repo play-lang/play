@@ -60,7 +60,7 @@ export class Compiler extends Visitor {
 	/** Number of scopes deep we are--used as an index to childScopeIndices */
 	private scopeDepth: number = 0;
 	/** Registers labels and patches jumps between contexts */
-	private jumpPatcher: JumpPatcher = new JumpPatcher();
+	private patcher: JumpPatcher = new JumpPatcher();
 
 	constructor(ast: AbstractSyntaxTree) {
 		super();
@@ -123,13 +123,18 @@ export class Compiler extends Visitor {
 		node.expr.accept(this);
 		// Mark the next variable as available in the symbol table
 		this.symbolTable.available++;
-		// TODO: Push local value to stack inside whatever block
 	}
 
-	public visitVariableReferenceNode(node: VariableReferenceNode): void {}
+	public visitVariableReferenceNode(node: VariableReferenceNode): void {
+		if (!this.symbolTable.idInScope(node.variableName)) {
+			throw new Error("Invalid variable name `" + node.variableName + "`");
+		}
+		this.emit(OpCode.Get, this.symbolTable.stackPos(node.variableName)!);
+	}
 
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
 		this.enterScope(node.info.name);
+		this.symbolTable.available += node.info.parameters.length;
 		node.block!.accept(this);
 		if (
 			!this.checkLastEmit(OpCode.Return) &&
@@ -142,21 +147,22 @@ export class Compiler extends Visitor {
 	}
 
 	public visitActionReferenceNode(node: ActionReferenceNode): void {
-		// We can use the patcher to patch a push instruction, not just a jump!
-		// So that's what we'll do
+		// Register a function load address to be patched later
 		const offset = this.emit(OpCode.Load, -1) - 1;
-		this.jumpPatcher.registerContextJump(this.context, offset, node.actionName);
+		this.patcher.registerContextJump(this.context, offset, node.actionName);
 	}
 
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
 		if (!(node.lhs instanceof ActionReferenceNode)) {
 			throw new Error("Can't invoke something that isn't an action");
 		}
-		node.lhs.accept(this);
 		// Arguments given to function go onto the stack
 		for (const arg of node.args) {
 			arg.accept(this);
 		}
+		// Load the function to the stack after loading the arguments
+		node.lhs.accept(this);
+		// Emit the call argument to invoke the function
 		this.emit(OpCode.Call, node.args.length);
 	}
 
@@ -322,7 +328,7 @@ export class Compiler extends Visitor {
 		return new CompiledProgram(
 			this.allContexts,
 			this.constantPool,
-			this.jumpPatcher
+			this.patcher
 		);
 	}
 
@@ -366,7 +372,7 @@ export class Compiler extends Visitor {
 		// runs if there is more than one context to compile
 		context.bytecode[jumpOffset + 1] = destOffset;
 		// Register the jump so that it can get patched later if necessary
-		this.jumpPatcher.registerJump(this.context, jumpOffset, destOffset);
+		this.patcher.registerJump(this.context, jumpOffset, destOffset);
 	}
 
 	/**
@@ -410,7 +416,7 @@ export class Compiler extends Visitor {
 	): Context {
 		const context = new Context(contextName, constantPool, constants);
 		this.allContexts.push(context);
-		this.jumpPatcher.prepare(this.context);
+		this.patcher.prepare(this.context);
 		return context;
 	}
 }

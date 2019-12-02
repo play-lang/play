@@ -83,6 +83,25 @@ export default class SymbolTable implements Describable {
 	}
 
 	/**
+	 * Returns the stack position of the specified local variable for this scope
+	 * @param id The variable name to look up
+	 */
+	public stackPos(id: string): number | undefined {
+		if (this.entries.has(id) && this.entries.ordinal(id)! < this.available) {
+			let scope = this.enclosingScope;
+			let stackPos = 0;
+			while (scope) {
+				stackPos += scope.available;
+				scope = scope.enclosingScope;
+			}
+			return this.entries.ordinal(id)! + stackPos;
+		}
+		if (!this.enclosingScope) return;
+		// Tail recursion lookup
+		return this.enclosingScope.stackPos(id);
+	}
+
+	/**
 	 * Add a new child scope
 	 * for it
 	 * @returns The new scope

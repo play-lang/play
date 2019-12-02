@@ -78,10 +78,10 @@ export class PrintVisitor extends Visitor implements Describable {
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
 		let params = "";
 		let i = 0;
-		for (const [param, typeAnnotation] of node.info.parameters.entries()) {
+		for (const [param, typeAnnotation] of node.info.parameterTypes.entries()) {
 			const type = typeAnnotation.join(" ");
 			params += type + " " + param;
-			if (i < node.info.parameters.size - 1) params += ", ";
+			if (i < node.info.parameterTypes.size - 1) params += ", ";
 			i++;
 		}
 		this.desc +=

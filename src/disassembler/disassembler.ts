@@ -65,11 +65,6 @@ export class Disassembler {
 						"\n";
 					break;
 				}
-				// Local variable special cases
-				case OpCode.Get:
-				case OpCode.Set:
-					// Todo: Describe locals
-					break;
 				// Instructions with no parameter
 				case OpCode.Return:
 				case OpCode.ReturnValue:
@@ -98,6 +93,8 @@ export class Disassembler {
 					str += this.ipn + "\t" + this.instr(instr) + "\n";
 					break;
 				// Instructions that take a single parameter
+				case OpCode.Get:
+				case OpCode.Set:
 				case OpCode.Load:
 				case OpCode.Call:
 				case OpCode.Jump:

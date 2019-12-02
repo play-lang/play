@@ -19,7 +19,6 @@ describe("simple function call", () => {
 	// 				start: 0,
 	// 				end: 44,
 	// 				typeAnnotation: ["str"],
-	// 				numParameters: 0,
 	// 				parameters: [],
 	// 				block: {
 	// 					type: "block",
@@ -63,25 +62,42 @@ describe("simple function call", () => {
 	// 	});
 	// });
 
-	it("should generate the right bytecode", () => {
+	// it("should generate the right bytecode", () => {
+	// 	const code = str`
+
+	// 		first()
+
+	// 		third()
+
+	// 		action first(): num {
+	// 			return second()
+	// 		}
+
+	// 		action second(): num {
+	// 			return 5 + 6
+	// 		}
+
+	// 		action third(): num {
+	// 			return 1
+	// 		}
+	// 	`;
+	// 	const desc = Play.disassemble(code);
+	// 	console.log(desc);
+	// 	const result = Play.run(code);
+	// 	console.log(result);
+	// 	// const bytecode = compiledProgram.program.bytecode;
+	// });
+
+	it("should handle local variables", () => {
 		const code = str`
-			first()
-			return
-			third()
-			action first(): num {
-				return second()
-			}
-			action second(): num {
-				return 5 + 6
-			}
-			action third(): num {
-				return 1
+			first(1, 2)
+			action first(a: num, b: num): num {
+				return a + b
 			}
 		`;
 		const desc = Play.disassemble(code);
 		console.log(desc);
 		const result = Play.run(code);
 		console.log(result);
-		// const bytecode = compiledProgram.program.bytecode;
 	});
 });

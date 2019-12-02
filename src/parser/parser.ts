@@ -110,9 +110,11 @@ export class Parser extends TokenParser {
 		// Brace open has already been matched for us
 		const start = this.previous.pos;
 		this.eatLines();
-		// Create a new symbol table scope and push it on the symbol table stack
-		const symbolTable = this.symbolTable.addScope();
-		this._symbolTables.push(symbolTable);
+		if (!isActionBlock) {
+			// Create a new symbol table scope and push it on the symbol table stack
+			// (Only if we're not an action block -- it brings its own symbol table)
+			this._symbolTables.push(this.symbolTable.addScope());
+		}
 		const statements: Statement[] = [];
 		while (!this.isAtEnd && this.peek.type !== TokenType.BraceClose) {
 			statements.push(this.statement());
@@ -132,7 +134,7 @@ export class Parser extends TokenParser {
 		this.eatLines();
 		this.consume(TokenType.BraceClose, "Expected closing brace for block");
 		// Pop the scope
-		this._symbolTables.pop();
+		if (!isActionBlock) this._symbolTables.pop();
 		// Calculate start and end in the input string
 		const end =
 			statements.length < 1
@@ -233,8 +235,9 @@ export class Parser extends TokenParser {
 				"Cannot redeclare action with the name `" + name + "`"
 			);
 		}
-		const parameters: Map<string, string[]> = new Map();
-		let numParameters: number = 0;
+		const parameterTypes: Map<string, string[]> = new Map();
+		const parameters: string[] = [];
+		const paramTokens: TokenLike[] = [];
 		this.match(TokenType.ParenOpen);
 		if (!this.isAtEnd && this.peek.type !== TokenType.ParenClose) {
 			do {
@@ -242,6 +245,7 @@ export class Parser extends TokenParser {
 					TokenType.Id,
 					"Expected parameter name"
 				);
+				paramTokens.push(paramToken);
 				this.consume(
 					TokenType.Colon,
 					"Expected colon for parameter type annotation"
@@ -249,8 +253,8 @@ export class Parser extends TokenParser {
 				// Attempt to match one or more parameters
 				const paramType = this.typeAnnotation();
 				// Store the parameter information in the node
-				parameters.set(paramToken.lexeme, paramType);
-				numParameters++;
+				parameterTypes.set(paramToken.lexeme, paramType);
+				parameters.push(paramToken.lexeme);
 			} while (this.match(TokenType.Comma));
 		}
 		this.match(TokenType.ParenClose);
@@ -264,8 +268,8 @@ export class Parser extends TokenParser {
 		const info = new ActionInfo(
 			name,
 			typeAnnotation,
-			numParameters,
-			parameters
+			parameters,
+			parameterTypes
 		);
 		// Register the function name and the action info that it points to
 		// This will make compilation of functions simpler since we can look up
@@ -273,8 +277,25 @@ export class Parser extends TokenParser {
 		this.actionTable.set(name, info);
 		// Start parsing the action block
 		this.consume(TokenType.BraceOpen, "Expected opening brace of action block");
+
+		// Create a scope for this action
+		this._symbolTables.push(this.symbolTable.addScope());
+
+		let i = 0;
+		for (const param of parameters) {
+			// Register each parameter in the action's symbol table
+			this.symbolTable.register({
+				name: param,
+				token: paramTokens[i],
+				typeAnnotation: parameterTypes.get(param)!,
+				isImmutable: false,
+			});
+			i++;
+		}
+
 		// Grab the block of statements inside the function curly braces
 		const block = this.block(true);
+
 		const lastStatement = block.statements[block.statements.length - 1];
 		if (
 			!(lastStatement instanceof ReturnStatementNode) &&
@@ -282,6 +303,10 @@ export class Parser extends TokenParser {
 		) {
 			block.statements.push(new ReturnStatementNode());
 		}
+
+		// Pop the scope for this action
+		this._symbolTables.pop();
+
 		const node = new ActionDeclarationNode(start, info, block);
 		return node;
 	}
