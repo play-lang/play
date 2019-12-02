@@ -11,7 +11,6 @@ import { ActionDeclarationNode } from "./nodes/action-declaration-node";
 import { BlockStatementNode } from "./nodes/block-statement-node";
 import { ProgramNode } from "./nodes/program-node";
 import { ReturnStatementNode } from "./nodes/return-statement-node";
-import { ReturnValueStatementNode } from "./nodes/return-value-statement-node";
 import { VariableDeclarationNode } from "./nodes/variable-declaration-node";
 import { InfixParselet } from "./parselet";
 
@@ -206,7 +205,12 @@ export class Parser extends TokenParser {
 			expr
 		);
 		// Register the declared variable in the symbol table
-		this.symbolTable.register(node);
+		this.symbolTable.register({
+			token: nameToken,
+			name: nameToken.lexeme,
+			typeAnnotation,
+			isImmutable,
+		});
 		return node;
 	}
 
@@ -229,6 +233,7 @@ export class Parser extends TokenParser {
 			);
 		}
 		// Action keyword has already been matched for us
+		const startToken = this.previous;
 		const start = this.previous.pos;
 		const nameToken = this.consume(
 			TokenType.Id,
@@ -303,11 +308,8 @@ export class Parser extends TokenParser {
 		const block = this.block(true);
 
 		const lastStatement = block.statements[block.statements.length - 1];
-		if (
-			!(lastStatement instanceof ReturnStatementNode) &&
-			!(lastStatement instanceof ReturnValueStatementNode)
-		) {
-			block.statements.push(new ReturnStatementNode());
+		if (!(lastStatement instanceof ReturnStatementNode)) {
+			block.statements.push(new ReturnStatementNode(startToken));
 		}
 
 		// Pop the scope for this action
@@ -325,10 +327,7 @@ export class Parser extends TokenParser {
 		const expr: Expression | undefined = !this.isAtEndOfStatement
 			? this.expression()
 			: undefined;
-		if (expr) {
-			return new ReturnValueStatementNode(this.previous, expr);
-		}
-		return new ReturnStatementNode(this.previous);
+		return new ReturnStatementNode(this.previous, expr);
 	}
 
 	/**

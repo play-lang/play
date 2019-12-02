@@ -11,6 +11,8 @@ export class Linker {
 	public link(): LinkedProgram {
 		const contexts = this.compiledProgram.contexts;
 		const constantPool = this.compiledProgram.constantPool;
+		// "Globals" are just locals in the "main" scope
+		const numLocals = this.compiledProgram.numGlobals;
 		// Map context names to their start instruction offset in the final
 		// linked code
 		const contextMap: Map<string, number> = new Map();
@@ -29,7 +31,7 @@ export class Linker {
 		this.compiledProgram.jumpPatcher.patch(bytecode, contexts, contextMap);
 
 		return new LinkedProgram(
-			new LoadedProgram(constantPool, bytecode),
+			new LoadedProgram(constantPool, bytecode, numLocals),
 			contexts,
 			contextMap
 		);

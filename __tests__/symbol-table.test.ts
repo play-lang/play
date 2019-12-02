@@ -37,8 +37,8 @@ describe("symbol table", () => {
 		);
 	});
 	it("should recognize ids in immediate scope", () => {
-		expect(globalScope.idInScope("a")).toEqual(true);
-		expect(globalScope.idInScope("b")).toEqual(true);
+		expect(globalScope.idInScope("a")).toBeTruthy();
+		expect(globalScope.idInScope("b")).toBeTruthy();
 	});
 	it("should recognize ids in enclosing scopes", () => {
 		s1 = globalScope.addScope();
@@ -46,9 +46,9 @@ describe("symbol table", () => {
 		const t4 = fakeToken(); // d
 		s1.register(new VariableDeclarationNode(0, 0, t3, ["num"], false));
 		s1.register(new VariableDeclarationNode(0, 0, t4, ["str"], false));
-		expect(s1.idInScope("a")).toBe(true);
-		expect(s1.idInScope("b")).toBe(true);
-		expect(s1.idInScope("e")).toBe(false);
+		expect(s1.idInScope("a")).toBeTruthy();
+		expect(s1.idInScope("b")).toBeTruthy();
+		expect(s1.idInScope("e")).toBeFalsy();
 		expect(globalScope.description).toEqual(
 			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"], "scopes": [{ "ids": ["Id(0, `c`, `num`)", "Id(1, `d`, `str`)"]}]}'
 		);

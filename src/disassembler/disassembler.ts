@@ -67,7 +67,6 @@ export class Disassembler {
 				}
 				// Instructions with no parameter
 				case OpCode.Return:
-				case OpCode.ReturnValue:
 				case OpCode.Pop:
 				case OpCode.Neg:
 				case OpCode.Inc:
@@ -93,6 +92,7 @@ export class Disassembler {
 					str += this.ipn + "\t" + this.instr(instr) + "\n";
 					break;
 				// Instructions that take a single parameter
+				case OpCode.Drop:
 				case OpCode.Get:
 				case OpCode.Set:
 				case OpCode.GetGlobal:

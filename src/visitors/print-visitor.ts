@@ -8,13 +8,13 @@ import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
+import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
 import { InvocationExpressionNode } from "../parser/nodes/invocation-operator-parselet";
 import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
-import { ReturnValueStatementNode } from "../parser/nodes/return-value-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
 import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
@@ -181,15 +181,23 @@ export class PrintVisitor extends Visitor implements Describable {
 
 	public visitReturnStatementNode(node: ReturnStatementNode): void {
 		this.desc += "Return\n";
+		if (node.expr) {
+			this.indent += 1;
+			this.desc += this.spaces + "└── ";
+			node.expr.accept(this);
+			this.indent -= 1;
+		}
 	}
 
-	public visitReturnValueStatementNode(node: ReturnValueStatementNode): void {
-		this.desc += "ReturnValue\n";
+	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
+		this.desc += "ExpressionStatement\n";
 		this.indent += 1;
 		this.desc += this.spaces + "└── ";
 		node.expr.accept(this);
 		this.indent -= 1;
 	}
+
+	// MARK: Utility Methods
 
 	private get spaces(): string {
 		return "  ".repeat(this.indent * 3);

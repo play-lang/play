@@ -8,6 +8,8 @@ export class CompiledProgram {
 		public readonly contexts: Context[],
 		/** List of constants used in the program */
 		public readonly constantPool: RuntimeValue[],
+		/** Number of globals to clean up when program is finished */
+		public readonly numGlobals: number,
 		/** Jump patcher containing registered jump destinations */
 		public readonly jumpPatcher: JumpPatcher
 	) {}

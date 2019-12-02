@@ -8,13 +8,13 @@ import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
+import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
 import { InvocationExpressionNode } from "../parser/nodes/invocation-operator-parselet";
 import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
-import { ReturnValueStatementNode } from "../parser/nodes/return-value-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
 import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
@@ -219,23 +219,35 @@ export class JSONVisitor extends Visitor implements Describable {
 			rhs,
 		});
 	}
+
 	public visitReturnStatementNode(node: ReturnStatementNode): void {
-		this.stack.push({
-			type: "return",
-			start: node.start,
-			end: node.end,
-		});
+		if (node.expr) {
+			node.expr.accept(this);
+			const expr = this.stack.pop();
+			this.stack.push({
+				type: "return-value",
+				start: node.start,
+				end: node.end,
+				value: expr,
+			});
+		} else {
+			this.stack.push({
+				type: "return",
+				start: node.start,
+				end: node.end,
+			});
+		}
 	}
-	public visitReturnValueStatementNode(node: ReturnValueStatementNode): void {
+
+	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
 		node.expr.accept(this);
 		const expr = this.stack.pop();
 		this.stack.push({
-			type: "return-value",
+			type: "expression-statement",
 			start: node.start,
 			end: node.end,
-			value: expr,
+			expr,
 		});
-		return;
 	}
 
 	// MARK: Private Methods
