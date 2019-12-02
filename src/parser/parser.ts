@@ -9,6 +9,7 @@ import { TokenType } from "../language/token-type";
 import { Lexer } from "../lexer";
 import { ActionDeclarationNode } from "./nodes/action-declaration-node";
 import { BlockStatementNode } from "./nodes/block-statement-node";
+import { ExpressionStatementNode } from "./nodes/expression-statement-node";
 import { ProgramNode } from "./nodes/program-node";
 import { ReturnStatementNode } from "./nodes/return-statement-node";
 import { VariableDeclarationNode } from "./nodes/variable-declaration-node";
@@ -97,7 +98,7 @@ export class Parser extends TokenParser {
 			return this.returnStatement();
 		} else {
 			// An unrecognized statement must be an expression statement
-			return this.expression();
+			return this.expressionStatement();
 		}
 	}
 
@@ -328,6 +329,11 @@ export class Parser extends TokenParser {
 			? this.expression()
 			: undefined;
 		return new ReturnStatementNode(this.previous, expr);
+	}
+
+	public expressionStatement(): ExpressionStatementNode {
+		// Parse an unused expression as a single line statement
+		return new ExpressionStatementNode(this.peek, this.expression());
 	}
 
 	/**
