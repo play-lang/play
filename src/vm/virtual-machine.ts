@@ -53,11 +53,15 @@ export class VirtualMachine {
 	}
 
 	public run(): VMResult {
-		const log: string[] = [];
 		try {
 			while (true) {
 				const instruction = this.readCode();
-				log.push(OpCode[instruction]);
+				if (!(instruction in OpCode)) {
+					throw new RuntimeError(
+						VMStatus.InvalidInstruction,
+						"Invalid instruction encountered: " + instruction
+					);
+				}
 				switch (instruction) {
 					case OpCode.Return: {
 						if (this.frames.length === 1) {
@@ -97,6 +101,12 @@ export class VirtualMachine {
 						// Set a local variable
 						const index = this.readCode();
 						this.stack[index] = this.top;
+						break;
+					}
+					case OpCode.GetGlobal: {
+						break;
+					}
+					case OpCode.SetGlobal: {
 						break;
 					}
 					case OpCode.Neg: {

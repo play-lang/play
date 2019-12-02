@@ -95,6 +95,8 @@ export class Disassembler {
 				// Instructions that take a single parameter
 				case OpCode.Get:
 				case OpCode.Set:
+				case OpCode.GetGlobal:
+				case OpCode.SetGlobal:
 				case OpCode.Load:
 				case OpCode.Call:
 				case OpCode.Jump:

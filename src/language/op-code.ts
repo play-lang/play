@@ -18,6 +18,10 @@ export enum OpCode {
 	Get,
 	/** Set a value already in the stack */
 	Set,
+	/** Push a copy of a global value already on the stack */
+	GetGlobal,
+	/** Set a global value already on the stack */
+	SetGlobal,
 
 	// Arithmetic
 
