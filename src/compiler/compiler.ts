@@ -306,7 +306,7 @@ export class Compiler extends Visitor {
 	// Compiler ternary operator: true ? a : b
 	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
 		node.predicate.accept(this);
-		const falseJump = this.jumpIfFalse();
+		const falseJump = this.jumpIfFalseAndPop();
 		node.consequent.accept(this);
 		const jump = this.jump();
 		this.patch(this.context, falseJump, this.context.bytecode.length);
@@ -393,6 +393,14 @@ export class Compiler extends Visitor {
 
 	public jumpIfTrue(): number {
 		return this.emit(OpCode.JumpTrue, 0) - 1;
+	}
+
+	public jumpIfFalseAndPop(): number {
+		return this.emit(OpCode.JumpFalsePop, 0) - 1;
+	}
+
+	public jumpIfTrueAndPop(): number {
+		return this.emit(OpCode.JumpTruePop, 0) - 1;
 	}
 
 	public patch(context: Context, jumpOffset: number, destOffset: number): void {
