@@ -4,6 +4,7 @@
 	"description": "A simple, strongly typed language",
 	"main": "./src/index.ts",
 	"scripts": {
+		"unused": "npx ts-prune",
 		"lint": "tslint 'src/**/*.{ts,tsx}' --fix",
 		"coverage": "jest --passWithNoTests --config=jest.config.js --collectCoverage --verbose",
 		"test": "jest --passWithNoTests --config=jest.config.js --verbose",
@@ -23,6 +24,7 @@
 		"jest": "^24.9.0",
 		"prettier": "^1.19.1",
 		"ts-jest": "^24.2.0",
+		"ts-prune": "^0.3.0",
 		"tslint": "^5.20.1",
 		"tslint-config-prettier": "^1.18.0",
 		"tslint-plugin-prettier": "^2.0.1",
