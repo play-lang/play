@@ -44,4 +44,7 @@ describe("compiler/vm", () => {
 		expect(run("return false or true")).toBe(true);
 		expect(run("return false or 0")).toBe(0);
 	});
+	it("should successfully run blank code", () => {
+		expect(run("")).toBe(0);
+	});
 });
