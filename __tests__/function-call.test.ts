@@ -149,5 +149,15 @@ describe("simple function call", () => {
 			const result = Play.run(code);
 			expect(result.value.value).toBe(null);
 		});
+		it("should handle recursion", () => {
+			const code = str`
+				return fib(12)
+				action fib(n: num): num {
+					return n <= 1 ? n : fib(n - 1) + fib(n - 2)
+				}
+			`;
+			const result = Play.run(code);
+			expect(result.value.value).toBe(144);
+		});
 	});
 });

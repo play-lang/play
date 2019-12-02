@@ -101,7 +101,9 @@ export class Disassembler {
 				case OpCode.Call:
 				case OpCode.Jump:
 				case OpCode.JumpFalse:
-				case OpCode.JumpTrue: {
+				case OpCode.JumpTrue:
+				case OpCode.JumpTruePop:
+				case OpCode.JumpFalsePop: {
 					const arg = this.program.bytecode[this.p++];
 					str += this.ipn + "\t" + this.instr(instr) + "\t" + arg + "\n";
 					break;

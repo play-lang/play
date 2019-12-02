@@ -79,11 +79,14 @@ export enum OpCode {
 
 	/** Unconditional jump */
 	Jump,
-	/** Jump if false */
+	/** Jump if top is falsy */
 	JumpFalse,
-	/** Jump if true */
+	/** Jump if top is truthy */
 	JumpTrue,
-
+	/** Jump if false (and pop stack) */
+	JumpFalsePop,
+	/** Jump if true (and pop stack) */
+	JumpTruePop,
 	// Function calls
 
 	/** Call a function */
