@@ -129,7 +129,12 @@ export class Compiler extends Visitor {
 		if (!this.symbolTable.idInScope(node.variableName)) {
 			throw new Error("Invalid variable name `" + node.variableName + "`");
 		}
-		this.emit(OpCode.Get, this.symbolTable.stackPos(node.variableName)!);
+		// Emit the proper instruction to push a copy of the variable's value
+		// lower in the stack to the top of the stack
+		this.emit(
+			this.symbolTable.isGlobalScope ? OpCode.GetGlobal : OpCode.Get,
+			this.symbolTable.stackPos(node.variableName)!
+		);
 	}
 
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
