@@ -6,7 +6,7 @@ import SymbolTable from "../language/symbol-table";
 import { TokenLike } from "../language/token";
 import { TokenParser } from "../language/token-parser";
 import { TokenType } from "../language/token-type";
-import { Lexer } from "../lexer";
+import { Lexer } from "../lexer/lexer";
 import { ActionDeclarationNode } from "./nodes/action-declaration-node";
 import { BlockStatementNode } from "./nodes/block-statement-node";
 import { ExpressionStatementNode } from "./nodes/expression-statement-node";
