@@ -19,9 +19,10 @@ export class Context extends LoadedProgram {
 	constructor(
 		name: string,
 		constantPool: RuntimeValue[],
-		constants: Map<any, number>
+		constants: Map<any, number>,
+		numLocals: number
 	) {
-		super(constantPool, []);
+		super(constantPool, [], numLocals);
 		this.name = name;
 		this.constants = constants;
 	}

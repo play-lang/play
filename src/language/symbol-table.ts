@@ -36,6 +36,11 @@ export default class SymbolTable implements Describable {
 		return !this.enclosingScope;
 	}
 
+	/** Number of entries in this scope */
+	public get totalEntries(): number {
+		return this.entries.size;
+	}
+
 	constructor(enclosingScope?: SymbolTable) {
 		this.enclosingScope = enclosingScope;
 	}
@@ -46,11 +51,11 @@ export default class SymbolTable implements Describable {
 	 *
 	 * @param id The identifier to check
 	 */
-	public idInScope(id: string): boolean {
+	public idInScope(id: string): SymbolTable | undefined {
 		if (this.entries.has(id) && this.entries.ordinal(id)! < this.available) {
-			return true;
+			return this;
 		}
-		if (!this.enclosingScope) return false;
+		if (!this.enclosingScope) return;
 		// Tail recursion lookup
 		return this.enclosingScope.idInScope(id);
 	}

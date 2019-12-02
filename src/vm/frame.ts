@@ -6,6 +6,8 @@ export class Frame {
 		/** Instruction pointer */
 		public ip: number,
 		/** Bottom stack index for this frame */
-		public basePointer: number
+		public basePointer: number,
+		/** Number of locals to drop from stack when finished */
+		public numLocals: number
 	) {}
 }

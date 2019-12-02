@@ -12,13 +12,13 @@ import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
+import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
 import { InvocationExpressionNode } from "../parser/nodes/invocation-operator-parselet";
 import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
-import { ReturnValueStatementNode } from "../parser/nodes/return-value-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
 import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
@@ -69,7 +69,12 @@ export class Compiler extends Visitor {
 		this.globalScope = ast.symbolTable;
 		this.contexts.set(
 			this.symbolTable,
-			this.createContext("main", this.constantPool, this.constants)
+			this.createContext(
+				"main",
+				this.constantPool,
+				this.constants,
+				this.symbolTable.totalEntries
+			)
 		);
 		this.actionTable = ast.actionTable;
 	}
@@ -126,13 +131,14 @@ export class Compiler extends Visitor {
 	}
 
 	public visitVariableReferenceNode(node: VariableReferenceNode): void {
-		if (!this.symbolTable.idInScope(node.variableName)) {
+		const scope = this.symbolTable.idInScope(node.variableName);
+		if (!scope) {
 			throw new Error("Invalid variable name `" + node.variableName + "`");
 		}
 		// Emit the proper instruction to push a copy of the variable's value
 		// lower in the stack to the top of the stack
 		this.emit(
-			this.symbolTable.isGlobalScope ? OpCode.GetGlobal : OpCode.Get,
+			scope.isGlobalScope ? OpCode.GetGlobal : OpCode.Get,
 			this.symbolTable.stackPos(node.variableName)!
 		);
 	}
@@ -141,11 +147,7 @@ export class Compiler extends Visitor {
 		this.enterScope(node.info.name);
 		this.symbolTable.available += node.info.parameters.length;
 		node.block!.accept(this);
-		if (
-			!this.checkLastEmit(OpCode.Return) &&
-			!this.checkLastEmit(OpCode.ReturnValue)
-		) {
-			// Emit an extra return instruction just in case
+		if (!this.checkLastEmit(OpCode.Return)) {
 			this.emit(OpCode.Return);
 		}
 		this.exitScope();
@@ -314,11 +316,21 @@ export class Compiler extends Visitor {
 
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {}
 	public visitReturnStatementNode(node: ReturnStatementNode): void {
+		if (!node.expr) {
+			this.emit(OpCode.Nil);
+		} else {
+			node.expr.accept(this);
+		}
 		this.emit(OpCode.Return);
 	}
-	public visitReturnValueStatementNode(node: ReturnValueStatementNode): void {
+
+	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
+		// An expression statement is an unused expression, so we pop it off when
+		// we are finished with it. All expressions are guaranteed to push their
+		// result to the stack, so this is safe
+		// Even functions without a return value still return nil
 		node.expr.accept(this);
-		this.emit(OpCode.ReturnValue);
+		this.emit(OpCode.Pop);
 	}
 
 	// MARK: Compiler Methods
@@ -329,10 +341,11 @@ export class Compiler extends Visitor {
 	 */
 	public compile(): CompiledProgram {
 		this.ast.root.accept(this);
-		this.emit(OpCode.Return);
+		if (!this.checkLastEmit(OpCode.Return)) this.emit(OpCode.Return);
 		return new CompiledProgram(
 			this.allContexts,
 			this.constantPool,
+			this.symbolTable.totalEntries,
 			this.patcher
 		);
 	}
@@ -352,12 +365,22 @@ export class Compiler extends Visitor {
 	/**
 	 * Emit a bytecode opcode and an optional parameter,
 	 * returning the index of the last emitted byte
+	 *
+	 * Optionally specify which context to emit an instruction to
+	 * @param opcode The instruction to emit
+	 * @param param A numeric parameter, if any, to emit for the instruction
+	 * @param context A context, if any, to emit to. Defaults to the current
+	 * context of the compiler based on scope
 	 */
-	public emit(opcode: number, param?: number): number {
+	public emit(
+		opcode: number,
+		param?: number,
+		context: Context = this.context
+	): number {
 		typeof param !== "undefined"
-			? this.context.bytecode.push(opcode, param)
-			: this.context.bytecode.push(opcode);
-		return this.context.bytecode.length - 1;
+			? context.bytecode.push(opcode, param)
+			: context.bytecode.push(opcode);
+		return context.bytecode.length - 1;
 	}
 
 	public jump(): number {
@@ -397,14 +420,26 @@ export class Compiler extends Visitor {
 			this.symbolTable,
 			contextName === ""
 				? context
-				: this.createContext(contextName, this.constantPool, this.constants)
+				: this.createContext(
+						contextName,
+						this.constantPool,
+						this.constants,
+						this.symbolTable.totalEntries
+				  )
 		);
 	}
 
-	private exitScope(): void {
+	/**
+	 * Exits the current scope
+	 * @returns The last scope
+	 */
+	private exitScope(): SymbolTable {
+		// Go back up the scope chain
 		this.scopeDepth--;
 		this.childScopeIndices.pop();
+		const symbolTable = this.symbolTable;
 		this.symbolTable = this.symbolTable.enclosingScope || this.globalScope;
+		return symbolTable;
 	}
 
 	/**
@@ -417,9 +452,15 @@ export class Compiler extends Visitor {
 	private createContext(
 		contextName: string,
 		constantPool: RuntimeValue[],
-		constants: Map<any, number>
+		constants: Map<any, number>,
+		numLocals: number
 	): Context {
-		const context = new Context(contextName, constantPool, constants);
+		const context = new Context(
+			contextName,
+			constantPool,
+			constants,
+			numLocals
+		);
 		this.allContexts.push(context);
 		this.patcher.prepare(this.context);
 		return context;

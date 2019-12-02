@@ -1,8 +1,8 @@
-import { Expression, Statement } from "../../language/node";
+import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
 import { Visitor } from "../../language/visitor";
 
-export class ReturnValueStatementNode extends Statement {
+export class ExpressionStatementNode extends Expression {
 	constructor(
 		token: TokenLike,
 		/** Return value, if any */
@@ -12,6 +12,6 @@ export class ReturnValueStatementNode extends Statement {
 	}
 
 	public accept(visitor: Visitor): void {
-		visitor.visitReturnValueStatementNode(this);
+		visitor.visitExpressionStatementNode(this);
 	}
 }

@@ -49,7 +49,7 @@ export class VirtualMachine {
 	constructor(program: LoadedProgram) {
 		this.program = program;
 		// Add the main stack frame:
-		this.frames.push(new Frame(0, 0));
+		this.frames.push(new Frame(0, 0, program.numGlobals));
 	}
 
 	public run(): VMResult {
@@ -64,17 +64,25 @@ export class VirtualMachine {
 				}
 				switch (instruction) {
 					case OpCode.Return: {
-						if (this.frames.length === 1) {
-							return this.finish();
-						} else {
-							this.frames.pop();
+						// Grab the return value so that we can clean up the locals
+						// below it
+						const returnValue = this.pop();
+						if (this.frame.numLocals > 0) {
+							// Clean up locals (or globals) created for this call frame
+							this.drop(this.frame.numLocals);
 						}
-						break;
-					}
-					case OpCode.ReturnValue: {
 						if (this.frames.length === 1) {
-							return this.finish();
+							if (this.stack.length > 0) {
+								throw new RuntimeError(
+									VMStatus.UnknownFailure,
+									"Internal error: Execution completed but stack still has values"
+								);
+							}
+							return new VMResult(VMStatus.Success, returnValue);
 						} else {
+							// Push the return value back on to the stack
+							this.stack.push(returnValue);
+							// Pop the call frame and resume execution at the previous ip
 							this.frames.pop();
 						}
 						break;
@@ -90,6 +98,12 @@ export class VirtualMachine {
 					}
 					case OpCode.Pop: {
 						this.pop();
+						break;
+					}
+					case OpCode.Drop: {
+						// Drop the specified number of items from the top of the stack
+						// (hopefully more efficient than repeated popping)
+						this.drop(this.readCode());
 						break;
 					}
 					case OpCode.Get: {
@@ -254,8 +268,8 @@ export class VirtualMachine {
 							);
 						}
 						const ip = dest.value as number;
-						const basePointer = this.stack.length - 1 - numLocals;
-						this.frames.push(new Frame(ip, basePointer));
+						const basePointer = this.stack.length - numLocals;
+						this.frames.push(new Frame(ip, basePointer, numLocals));
 						break;
 					}
 				}
@@ -299,13 +313,32 @@ export class VirtualMachine {
 		return new RuntimeValue(rv.type, rv.value);
 	}
 
-	/** Pop an item, or die */
+	/** Pop an item from the stack and return it if possible */
 	public pop(): RuntimeValue {
 		const top = this.stack.pop();
 		if (!top) {
 			throw new RuntimeError(VMStatus.StackUnderflow, "Stack underflow");
 		}
 		return top;
+	}
+
+	/**
+	 * Pop the specified number of items off the stack and discard them
+	 * @param numItems The number of items to pop
+	 */
+	public drop(numItems: number): void {
+		if (this.stack.length < numItems) {
+			throw new RuntimeError(
+				VMStatus.StackUnderflow,
+				"Stack only has " +
+					this.stack.length +
+					" items; cannot drop " +
+					numItems +
+					" from the stack"
+			);
+		}
+		// Remove the specified number of items from the top of the stack
+		this.stack.splice(-numItems, numItems);
 	}
 
 	/** Push a value to the stack */
@@ -336,11 +369,5 @@ export class VirtualMachine {
 			case RuntimeType.Function:
 				return Number.isInteger(value.value);
 		}
-	}
-
-	public finish(): VMResult {
-		// End the program, return whatever is on top of the stack
-		const top = this.pop();
-		return new VMResult(VMStatus.Success, top);
 	}
 }

@@ -3,8 +3,6 @@ export enum OpCode {
 
 	/** Return instruction */
 	Return = 1,
-	/** Return a value from a function or the main loop */
-	ReturnValue,
 	/**
 	 * Push a function call bytecode address offset onto the stack for
 	 * later consumption with CALL
@@ -14,6 +12,8 @@ export enum OpCode {
 	Constant,
 	/** Discard the top of the stack */
 	Pop,
+	/** Discard N items from the top of the stack */
+	Drop,
 	/** Get a value already in the stack */
 	Get,
 	/** Set a value already in the stack */
