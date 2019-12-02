@@ -66,7 +66,7 @@ export class VirtualMachine {
 					case OpCode.Return: {
 						// Grab the return value so that we can clean up the locals
 						// below it
-						const returnValue = this.pop();
+						const returnValue = this.stack.length > 0 ? this.pop() : Zero;
 						if (this.frame.numLocals > 0) {
 							// Clean up locals (or globals) created for this call frame
 							this.drop(this.frame.numLocals);
