@@ -28,6 +28,14 @@ export default class SymbolTable implements Describable {
 	 */
 	public entries: LinkedHashMap<string, IdentifierSymbol> = new LinkedHashMap();
 
+	/**
+	 * True if this symbol table is the global symbol table containing
+	 * all other symbol tables
+	 */
+	public get isGlobalScope(): boolean {
+		return !this.enclosingScope;
+	}
+
 	constructor(enclosingScope?: SymbolTable) {
 		this.enclosingScope = enclosingScope;
 	}

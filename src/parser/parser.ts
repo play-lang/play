@@ -222,6 +222,12 @@ export class Parser extends TokenParser {
 	 * ```
 	 */
 	public actionDeclaration(): ActionDeclarationNode {
+		if (!this.symbolTable.isGlobalScope) {
+			throw this.error(
+				this.previous,
+				"Actions can only be declared in global scope"
+			);
+		}
 		// Action keyword has already been matched for us
 		const start = this.previous.pos;
 		const nameToken = this.consume(

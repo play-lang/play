@@ -178,6 +178,8 @@ export class TokenParser {
 		while (!this.isAtEnd) {
 			switch (this.peek.type) {
 				// List synchronization tokens here
+				case TokenType.BraceOpen:
+				case TokenType.BraceClose:
 				case TokenType.Line:
 					this.advance(); // Consume the line
 					return;
