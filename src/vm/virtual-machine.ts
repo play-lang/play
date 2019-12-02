@@ -94,19 +94,24 @@ export class VirtualMachine {
 					}
 					case OpCode.Get: {
 						// Get a local variable
-						this.push(this.readStack());
+						const index = this.readCode() + this.frame.basePointer;
+						this.push(this.readStack(index));
 						break;
 					}
 					case OpCode.Set: {
 						// Set a local variable
-						const index = this.readCode();
+						const index = this.readCode() + this.frame.basePointer;
 						this.stack[index] = this.top;
 						break;
 					}
 					case OpCode.GetGlobal: {
+						// Get a global variable
+						this.push(this.readStack());
 						break;
 					}
 					case OpCode.SetGlobal: {
+						const index = this.readCode();
+						this.stack[index] = this.top;
 						break;
 					}
 					case OpCode.Neg: {
@@ -283,13 +288,14 @@ export class VirtualMachine {
 
 	/**
 	 * Read a value from the stack using the next number in the code as an
-	 * index into the stack
+	 * index into the stack (or the supplied number)
 	 *
-	 * Typically used for reading local variables
+	 * Typically used for reading variables on the stack
+	 * @param index The index to read in the stack, if any
 	 */
-	public readStack(): RuntimeValue {
-		const index = this.readCode();
-		const rv = this.stack[index];
+	public readStack(index?: number): RuntimeValue {
+		const i = typeof index === "undefined" ? this.readCode() : index;
+		const rv = this.stack[i];
 		return new RuntimeValue(rv.type, rv.value);
 	}
 
