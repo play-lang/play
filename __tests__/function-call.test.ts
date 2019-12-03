@@ -83,6 +83,19 @@ describe("simple function call", () => {
 			const result = Play.run(code);
 			expect(result.value.value).toBe(3);
 		});
+		it("should allow function calls out of order from declaration", () => {
+			const code = str`
+				action first(a: num, b: num): num {
+					return a + b
+				}
+				second(1, 2)
+				action second(a: num, b: num): num {
+					return first(a, b)
+				}
+			`;
+			const result = Play.run(code);
+			expect(result.value.value).toBe(3);
+		});
 		it("should mix local and global variables", () => {
 			const code = str`
 				let a: num = 10
