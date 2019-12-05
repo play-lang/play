@@ -44,7 +44,8 @@ export async function run(code: string): Promise<any> {
 		}
 	);
 	const finalCode = await pp.preprocess();
-	return Play.run(finalCode).value.value;
+	const result = Play.run(finalCode);
+	return result.value.value;
 }
 
 /** Run the specified file */
