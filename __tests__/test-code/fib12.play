@@ -1,0 +1,3 @@
+#include "fib.play"
+
+return fib(12)
