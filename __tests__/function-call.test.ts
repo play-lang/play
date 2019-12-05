@@ -1,4 +1,4 @@
-import { runFile, str } from "../shared/test-utils";
+import { disassembleFile, runFile, str } from "../shared/test-utils";
 import { Play } from "../src/play";
 
 describe("simple function call", () => {
@@ -118,7 +118,6 @@ describe("simple function call", () => {
 		});
 		it("should handle recursive fibonacci", async () => {
 			const result = await runFile("fib12.play");
-			// const result = Play.run(code);
 			expect(result).toBe(144);
 		});
 	});

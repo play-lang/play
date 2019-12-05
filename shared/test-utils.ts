@@ -50,11 +50,21 @@ export async function run(code: string): Promise<any> {
 
 /** Run the specified file */
 export async function runFile(path: string): Promise<any> {
+	const finalCode = await preprocessFile(path);
+	const result = Play.run(finalCode);
+	return result.value.value;
+}
+
+export async function disassembleFile(path: string): Promise<string> {
+	const finalCode = await preprocessFile(path);
+	return Play.disassemble(finalCode);
+}
+
+export async function preprocessFile(path: string): Promise<string> {
 	const fileProvider = createFileProvider();
 	const pp = new Preprocessor(path, async (path: string) => path, fileProvider);
 	const finalCode = await pp.preprocess();
-	const result = Play.run(finalCode);
-	return result.value.value;
+	return finalCode;
 }
 
 /**
