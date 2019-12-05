@@ -5,7 +5,7 @@ describe("compiler/vm", () => {
 	it("should not register duplicates in the constant pool", () => {
 		expect(
 			Play.disassemble('let x: str = "x"\nlet y: str = "x"').startsWith(
-				"0000\tString\tx\n\n0000\t            CONSTANT\t(0)\t= x\n"
+				"0000\tString\tx\n\n0000\t  X          CONSTANT\t(0)\t= x\n"
 			)
 		).toBe(true);
 	});
