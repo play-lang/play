@@ -1,4 +1,4 @@
-import { createFileProvider, str, testRanges } from "../shared/test-utils";
+import { createFakeFileProvider, str, testRanges } from "../shared/test-utils";
 import { Preprocessor } from "../src/preprocessor/preprocessor";
 
 const filePathResolver = async (path: string): Promise<string> => {
@@ -29,7 +29,7 @@ describe("preprocessor", () => {
 			#include "e"
 		`;
 		const filenames = ["a", "b", "c", "d", "e"];
-		const fileProvider = createFileProvider(
+		const fileProvider = createFakeFileProvider(
 			"test.play",
 			testFileContents,
 			fileContents
@@ -52,7 +52,7 @@ describe("preprocessor", () => {
 		`;
 		// Files should be included in the following order:
 		const filenames = ["b", "a", "c"];
-		const fileProvider = createFileProvider(
+		const fileProvider = createFakeFileProvider(
 			"test.play",
 			testFileContents,
 			fileContents
@@ -76,7 +76,7 @@ describe("preprocessor", () => {
 		`;
 		// Files should be included in the following order:
 		const filenames = ["b", "a", "c"];
-		const fileProvider = createFileProvider(
+		const fileProvider = createFakeFileProvider(
 			"test.play",
 			testFileContents,
 			fileContents
