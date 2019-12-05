@@ -1,7 +1,9 @@
+import { promises as fs } from "fs";
+import * as path from "path";
 import { AvlTree } from "../src/common/avl-tree";
 import { SourceFile } from "../src/language/source-file";
 import { Play } from "../src/play";
-
+import { Preprocessor } from "../src/preprocessor/preprocessor";
 /**
  * Template string tag to remove leading whitespace in lines when
  * template strings are represented in code with leading indentation
@@ -29,8 +31,29 @@ export function str(strings: TemplateStringsArray): string {
 }
 
 /** Run some code and return the value at the top of the stack */
-export function run(code: string): any {
-	return Play.run(code).value.value;
+export async function run(code: string): Promise<any> {
+	const fileProvider = createFileProvider();
+	const pp = new Preprocessor(
+		"test.play",
+		async (path: string) => path,
+		async (path: string) => {
+			if (path === "test.play") {
+				return code;
+			}
+			return await fileProvider(path);
+		}
+	);
+	const finalCode = await pp.preprocess();
+	return Play.run(finalCode).value.value;
+}
+
+/** Run the specified file */
+export async function runFile(path: string): Promise<any> {
+	const fileProvider = createFileProvider();
+	const pp = new Preprocessor(path, async (path: string) => path, fileProvider);
+	const finalCode = await pp.preprocess();
+	const result = Play.run(finalCode);
+	return result.value.value;
 }
 
 /**
@@ -72,7 +95,7 @@ export function testRanges(
  * @param testFileContents Test file contents (preprocessor entry file contents)
  * @param fileContents Table of included file contents
  */
-export function createFileProvider(
+export function createFakeFileProvider(
 	testFileName: string,
 	testFileContents: string,
 	fileContents: { [key: string]: string }
@@ -83,4 +106,21 @@ export function createFileProvider(
 		}
 		return fileContents[path];
 	};
+}
+
+/**
+ * Create a file provider that loads file from the system in the test
+ * code folder
+ */
+export function createFileProvider(): (path: string) => Promise<string> {
+	return async (p: string): Promise<string> => {
+		const filePath = path.join("test-code", p);
+		return await readFile(filePath);
+	};
+}
+
+/** Read a file from the file system, folder */
+export async function readFile(filename: string): Promise<string> {
+	const filePath = path.join(process.cwd(), "__tests__", filename);
+	return (await fs.readFile(filePath, { encoding: "utf-8" })) as string;
 }
