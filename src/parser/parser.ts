@@ -54,10 +54,24 @@ export class Parser extends TokenParser {
 	///
 
 	public parse(): AbstractSyntaxTree {
+		this.eatLines();
 		const statements: Statement[] = [];
 		while (!this.isAtEnd) {
 			try {
 				this.eatLines();
+				while (this.match(TokenType.PoundSign)) {
+					// Gobble up any preprocessor statements
+					this.consume(
+						TokenType.Include,
+						"Include preprocessor command expected"
+					);
+					this.consume(TokenType.String, "Include filename expected");
+					this.consume(
+						[TokenType.Line, TokenType.EndOfFile],
+						"Expected end of preprocessor statement"
+					);
+					this.eatLines();
+				}
 				// A program consists of a series of statements
 				statements.push(this.statement());
 				// Expect a new line or eof token after each statement
@@ -65,7 +79,7 @@ export class Parser extends TokenParser {
 					[TokenType.Line, TokenType.EndOfFile],
 					"Expected end of statement"
 				);
-				this.eatLines();
+				// this.eatLines();
 			} catch (e) {
 				this.synchronize();
 			}
