@@ -1,4 +1,4 @@
-import { str } from "../shared/test-utils";
+import { runFile, str } from "../shared/test-utils";
 import { Play } from "../src/play";
 
 describe("simple function call", () => {
@@ -116,15 +116,10 @@ describe("simple function call", () => {
 			const result = Play.run(code);
 			expect(result.value.value).toBe(null);
 		});
-		it("should handle recursive fibonacci", () => {
-			const code = str`
-				action fib(n: num): num {
-					return n <= 1 ? n : fib(n - 1) + fib(n - 2)
-				}
-				return fib(12)
-			`;
-			const result = Play.run(code);
-			expect(result.value.value).toBe(144);
+		it("should handle recursive fibonacci", async () => {
+			const result = await runFile("fib12.play");
+			// const result = Play.run(code);
+			expect(result).toBe(144);
 		});
 	});
 });
