@@ -78,7 +78,15 @@ The compiler, upon successful compilation, creates an object that contains a lis
 
 ## Linker
 
-(Address Resolver / Patcher)
+The linker is responsible for taking the compiled bytecode contexts from the compiler and chaining them together to create one long single sequence of bytecode that represents the user program.
+
+To properly sequence the code together, the linker must resolve bytecode addresses in the contexts that refer to bytecode later in its own context or in other contexts. The linker is provided this information by the output of the compiler which includes the address resolver containing the table of addresses referred to by the bytecode in the contexts.
+
+While linking the context bytecode arrays together, the linker constructs a *context map* which maps the name of the context to the numeric offset in the final bytecode where the context's bytecode first starts.
+
+Once all the bytecode has been linked together into one array of bytecode, the context map is given to the address resolver so that it can resolve the addresses in the final bytecode.
+
+The linker, if successful, produces an object containing the list of contexts, the context map, and a loaded program object which itself consists of a constant pool, the combined bytecode, and the number of variables in the main scope.
 
 ## Disassembler
 
