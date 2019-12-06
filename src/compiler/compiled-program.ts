@@ -1,4 +1,4 @@
-import { BytecodeAddressResolver } from "../jump-patcher/address-resolver";
+import { BytecodeAddressResolver } from "../language/bytecode-address-resolver";
 import { Context } from "../language/context";
 import { RuntimeValue } from "../vm/runtime-value";
 

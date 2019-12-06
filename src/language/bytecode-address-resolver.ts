@@ -1,8 +1,8 @@
-import { Context } from "../language/context";
 import {
 	BytecodeAddressEntry,
 	BytecodeAddressType,
 } from "./bytecode-address-entry";
+import { Context } from "./context";
 
 /**
  * When jumping from one compiled bytecode "context" to another
