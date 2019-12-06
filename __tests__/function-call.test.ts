@@ -1,4 +1,4 @@
-import { disassembleFile, runFile, str } from "../shared/test-utils";
+import { runFile, str } from "../shared/test-utils";
 import { Play } from "../src/play";
 
 describe("simple function call", () => {
