@@ -3,8 +3,9 @@ import { Play } from "../src/play";
 
 describe("compiler/vm", () => {
 	it("should not register duplicates in the constant pool", () => {
+		const dis = Play.disassemble('let x: str = "x"\nlet y: str = "x"');
 		expect(
-			Play.disassemble('let x: str = "x"\nlet y: str = "x"').startsWith(
+			dis.startsWith(
 				"0000\tString\tx\n\n0000\t            CONSTANT\t(0)\t= x\n"
 			)
 		).toBe(true);

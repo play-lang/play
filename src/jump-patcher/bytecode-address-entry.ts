@@ -1,10 +1,11 @@
 /**
- * Represents the type of jump inside a context
+ * Represents a bytecode address inside a context
  *
- * Jumps can either be by offset number (jump to specified code) or
- * jumps can go to the start of other contexts (contextual jumps)
+ * Addresses can either reference an offset number (to refer to
+ * a specific piece of code in a given context)  or reference the
+ * start of other contexts (contextual addresses)
  */
-export enum JumpType {
+export enum BytecodeAddressType {
 	Offset = 1,
 	Contextual,
 }
@@ -13,11 +14,11 @@ export enum JumpType {
  * Represents a jump that must be patched at link time once all the contexts
  * are chained together into one big bytecode array
  */
-export interface JumpEntry {
+export interface BytecodeAddressEntry {
 	/** Instruction offset of the jump to patch in its context */
 	offset: number;
 	/** The type of jump (jump to a context, or jump by offset number) */
-	type: JumpType;
+	type: BytecodeAddressType;
 	/**
 	 * Jump destination
 	 *
