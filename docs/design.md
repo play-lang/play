@@ -18,6 +18,8 @@ Play doesn't directly interpret source code. Instead, it compiles to its own kin
 
 By using bytecode instead of direct interpretation, Play benefits from increased performance via optimization and lower memory usage, as well as allowing "binary" executable to be shared without revealing the original source code.
 
+Play uses a stack-based virtual machine to execute the compiled bytecode.
+
 Those embedding Play into their project can allow unknown compiled code to run without requiring the developers to share their original code.
 
 ### Components
@@ -67,6 +69,12 @@ The host of the language is responsible for giving the preprocessor the appropri
 The preprocessor utilizes an AVL Tree (a type of balanced binary tree) for tracking where each file starts in the final combined output string. Each file's start position in the string is saved as a key in the AVL Tree and mapped to the source file it represents. This allows the lexer to figure out which file a token originated in while scanning the combined string in O(log(N)) time.
 
 ## Compiler
+
+The compiler is responsible for walking the abstract syntax tree produced by the parser and producing the bytecode that runs the program. It is implemented as a single pass compiler that produces bytecode for a stack-based virtual machine.
+
+The compiler actually produces multiple *contexts* which hold bytecode and a single, shared *constant pool* which contains the literal values referenced in the bytecode contexts. A context is produced for each action that is compiled as well as the main scope (which consists of the code outside any actions).
+
+The compiler, upon successful compilation, creates an object that contains a list of compiled contexts, a constant pool, the number of globals in the main scope, and an address resolver which contains information about bytecode addresses inside the compiled bytecode contexts that need to be "patched" or "resolved" by the linker after all the bytecode in the contexts has been chained together into one single array of bytecode.
 
 ## Linker
 

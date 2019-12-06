@@ -1,4 +1,4 @@
-import { JumpPatcher } from "../jump-patcher/jump-patcher";
+import { BytecodeAddressResolver } from "../jump-patcher/address-resolver";
 import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { ActionInfo } from "../language/action-info";
 import { Context } from "../language/context";
@@ -60,7 +60,7 @@ export class Compiler extends Visitor {
 	/** Number of scopes deep we are--used as an index to childScopeIndices */
 	private scopeDepth: number = 0;
 	/** Registers labels and patches jumps between contexts */
-	private patcher: JumpPatcher = new JumpPatcher();
+	private patcher: BytecodeAddressResolver = new BytecodeAddressResolver();
 
 	constructor(ast: AbstractSyntaxTree) {
 		super();
@@ -156,7 +156,7 @@ export class Compiler extends Visitor {
 	public visitActionReferenceNode(node: ActionReferenceNode): void {
 		// Register a function load address to be patched later
 		const offset = this.emit(OpCode.Load, -1) - 1;
-		this.patcher.registerContextJump(this.context, offset, node.actionName);
+		this.patcher.registerContextAddress(this.context, offset, node.actionName);
 	}
 
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
@@ -408,7 +408,7 @@ export class Compiler extends Visitor {
 		// runs if there is more than one context to compile
 		context.bytecode[jumpOffset + 1] = destOffset;
 		// Register the jump so that it can get patched later if necessary
-		this.patcher.registerJump(this.context, jumpOffset, destOffset);
+		this.patcher.registerAddress(this.context, jumpOffset, destOffset);
 	}
 
 	/**

@@ -28,7 +28,11 @@ export class Linker {
 
 		// Update and resolve all the addresses now that the bytecode
 		// has been chained together
-		this.compiledProgram.jumpPatcher.patch(bytecode, contexts, contextMap);
+		this.compiledProgram.addressResolver.resolve(
+			bytecode,
+			contexts,
+			contextMap
+		);
 
 		return new LinkedProgram(
 			new LoadedProgram(constantPool, bytecode, numLocals),

@@ -1,4 +1,4 @@
-import { JumpPatcher } from "../jump-patcher/jump-patcher";
+import { BytecodeAddressResolver } from "../jump-patcher/address-resolver";
 import { Context } from "../language/context";
 import { RuntimeValue } from "../vm/runtime-value";
 
@@ -11,6 +11,6 @@ export class CompiledProgram {
 		/** Number of globals to clean up when program is finished */
 		public readonly numGlobals: number,
 		/** Jump patcher containing registered jump destinations */
-		public readonly jumpPatcher: JumpPatcher
+		public readonly addressResolver: BytecodeAddressResolver
 	) {}
 }
