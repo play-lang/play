@@ -1,6 +1,6 @@
-import { BytecodeAddressResolver } from "../jump-patcher/address-resolver";
 import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { ActionInfo } from "../language/action-info";
+import { BytecodeAddressResolver } from "../language/bytecode-address-resolver";
 import { Context } from "../language/context";
 import { OpCode } from "../language/op-code";
 import SymbolTable from "../language/symbol-table";
