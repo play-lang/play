@@ -12,4 +12,8 @@ export class AbstractSyntaxTree {
 		public readonly symbolTable: SymbolTable,
 		public readonly actionTable: Map<string, ActionInfo>
 	) {}
+
+	public get json(): string {
+		return JSON.stringify(this.root, null, "  ");
+	}
 }

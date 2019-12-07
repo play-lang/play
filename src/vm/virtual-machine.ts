@@ -67,10 +67,11 @@ export class VirtualMachine {
 						// Grab the return value so that we can clean up the locals
 						// below it
 						const returnValue = this.stack.length > 0 ? this.pop() : Zero;
-						if (this.frame.numLocals > 0) {
-							// Clean up locals (or globals) created for this call frame
-							this.drop(this.frame.numLocals);
-						}
+						// if (this.frame.numLocals > 0) {
+						// Clean up locals (or globals) created for this call frame
+						// this.drop(this.frame.numLocals);
+						this.dropTo(this.frame.basePointer);
+						// }
 						if (this.frames.length === 1) {
 							if (this.stack.length > 0) {
 								throw new RuntimeError(
@@ -348,6 +349,22 @@ export class VirtualMachine {
 			);
 		}
 		// Remove the specified number of items from the top of the stack
+		this.stack.splice(-numItems, numItems);
+	}
+
+	/** Drops the stack back down to the specified size */
+	public dropTo(length: number): void {
+		if (length > this.stack.length) {
+			throw new RuntimeError(
+				VMStatus.StackUnderflow,
+				"Stack only has " +
+					this.stack.length +
+					" items; cannot drop to a stack length of " +
+					length
+			);
+		}
+		if (length === this.stack.length) return;
+		const numItems = this.stack.length - length;
 		this.stack.splice(-numItems, numItems);
 	}
 
