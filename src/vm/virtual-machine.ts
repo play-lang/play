@@ -56,13 +56,12 @@ export class VirtualMachine {
 		try {
 			while (true) {
 				const instruction = this.readCode();
-				if (!(instruction in OpCode)) {
-					throw new RuntimeError(
-						VMStatus.InvalidInstruction,
-						"Invalid instruction encountered: " + instruction
-					);
-				}
 				switch (instruction) {
+					default:
+						throw new RuntimeError(
+							VMStatus.InvalidInstruction,
+							"Invalid instruction encountered: " + instruction
+						);
 					case OpCode.Return: {
 						// Grab the return value so that we can clean up the locals
 						// below it
