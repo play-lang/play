@@ -112,6 +112,17 @@ export class TokenParser {
 	}
 
 	/**
+	 * Consume the end of a statement
+	 * This will match the end of the file or a new line character
+	 * @param hint An optional hint
+	 */
+	public consumeEndOfStatement(
+		hint: string = "Expected end of statement"
+	): void {
+		this.consume([TokenType.Line, TokenType.EndOfFile], hint);
+	}
+
+	/**
 	 * Registers an error
 	 * @param token The token where the error occurred
 	 * @param hint The error message hint
