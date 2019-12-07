@@ -66,19 +66,13 @@ export class Parser extends TokenParser {
 						"Include preprocessor command expected"
 					);
 					this.consume(TokenType.String, "Include filename expected");
-					this.consume(
-						[TokenType.Line, TokenType.EndOfFile],
-						"Expected end of preprocessor statement"
-					);
+					this.consumeEndOfStatement("Expected end of preprocessor statement");
 					this.eatLines();
 				}
 				// A program consists of a series of statements
 				statements.push(this.statement());
 				// Expect a new line or eof token after each statement
-				this.consume(
-					[TokenType.Line, TokenType.EndOfFile],
-					"Expected end of statement"
-				);
+				this.consumeEndOfStatement();
 				// this.eatLines();
 			} catch (e) {
 				this.synchronize();
@@ -138,10 +132,7 @@ export class Parser extends TokenParser {
 				//
 				// Otherwise, the closing brace is fine for marking the end of the
 				// statement here
-				this.consume(
-					[TokenType.Line, TokenType.EndOfFile],
-					"Expected end of statement"
-				);
+				this.consumeEndOfStatement();
 				this.eatLines();
 			}
 		}
@@ -322,6 +313,7 @@ export class Parser extends TokenParser {
 		// Grab the block of statements inside the function curly braces
 		const block = this.block(true);
 
+		// Ensure that the last statement in the function is a return statement
 		const lastStatement = block.statements[block.statements.length - 1];
 		if (!(lastStatement instanceof ReturnStatementNode)) {
 			block.statements.push(new ReturnStatementNode(startToken));

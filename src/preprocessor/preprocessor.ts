@@ -118,6 +118,7 @@ export class Preprocessor {
 			if (!filename) {
 				throw parser.error(filenameToken, "Must provide a valid filename");
 			}
+			parser.consumeEndOfStatement();
 			// Recursively include files
 			await this._preprocess(filename);
 			parser.eatLines();
