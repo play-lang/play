@@ -61,6 +61,8 @@ export class Compiler extends Visitor {
 	private scopeDepth: number = 0;
 	/** Registers labels and patches jumps between contexts */
 	private patcher: BytecodeAddressResolver = new BytecodeAddressResolver();
+	/** Address of the last instruction */
+	private lastInstr: number = 0;
 
 	constructor(ast: AbstractSyntaxTree) {
 		super();
@@ -95,7 +97,14 @@ export class Compiler extends Visitor {
 		for (const statement of node.statements) {
 			statement.accept(this);
 		}
-		if (!isActionBlock) this.exitScope();
+		if (!isActionBlock) {
+			// We should clean up variables local to this block if we're just a
+			// normal block -- actions get call frames which the VM uses to clean
+			// up the stack for us
+			const numLocalsToDrop = this.symbolTable.available;
+			this.emit(OpCode.Drop, numLocalsToDrop);
+			this.exitScope();
+		}
 	}
 
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
@@ -314,7 +323,16 @@ export class Compiler extends Visitor {
 		this.patch(this.context, jump, this.context.bytecode.length);
 	}
 
-	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {}
+	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
+		const lhs = node.lhs;
+		if (lhs instanceof VariableReferenceNode) {
+			const stackPos = this.symbolTable.stackPos(lhs.variableName)!;
+			this.emit(OpCode.Set, stackPos);
+		} else {
+			throw new Error("Can't emit assignment to a non-variable");
+		}
+	}
+
 	public visitReturnStatementNode(node: ReturnStatementNode): void {
 		if (!node.expr) {
 			this.emit(OpCode.Nil);
@@ -356,7 +374,7 @@ export class Compiler extends Visitor {
 	 * @param opcode The opcode to check
 	 */
 	public checkLastEmit(opcode: number): boolean {
-		if (this.context.bytecode[this.context.bytecode.length - 1] === opcode) {
+		if (this.context.bytecode[this.lastInstr] === opcode) {
 			return true;
 		}
 		return false;
@@ -377,9 +395,13 @@ export class Compiler extends Visitor {
 		param?: number,
 		context: Context = this.context
 	): number {
-		typeof param !== "undefined"
-			? context.bytecode.push(opcode, param)
-			: context.bytecode.push(opcode);
+		if (typeof param !== "undefined") {
+			context.bytecode.push(opcode, param);
+			this.lastInstr = context.bytecode.length - 2;
+		} else {
+			context.bytecode.push(opcode);
+			this.lastInstr = context.bytecode.length - 1;
+		}
 		return context.bytecode.length - 1;
 	}
 
