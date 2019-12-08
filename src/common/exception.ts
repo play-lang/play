@@ -1,10 +1,12 @@
+import { Describable } from "../language/token";
+
 /**
  * Exception class
  *
  * Extend this class to enable your own custom classes to be throwable
  * (in Node or in the browser!)
  */
-export class Exception extends Error {
+export class Exception extends Error implements Describable {
 	/** Exception message */
 	public readonly message: string;
 
@@ -31,5 +33,10 @@ export class Exception extends Error {
 		if (Error.captureStackTrace) {
 			Error.captureStackTrace(this, this.constructor);
 		}
+	}
+
+	// MARK: Describable
+	public get description(): string {
+		return this.message;
 	}
 }

@@ -10,9 +10,9 @@ import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expr
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
 import { InvocationExpressionNode } from "../parser/nodes/invocation-operator-parselet";
-import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
+import { PrimitiveExpressionNode } from "../parser/nodes/primitive-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
@@ -180,13 +180,13 @@ export class JSONVisitor extends Visitor implements Describable {
 			lhs,
 		});
 	}
-	public visitLiteralExpressionNode(node: LiteralExpressionNode): void {
+	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {
 		this.stack.push({
 			type: "literal",
 			start: node.start,
 			end: node.end,
-			literalType: TokenType[node.literalType],
-			literalValue: node.literalValue,
+			literalType: TokenType[node.primitiveType],
+			literalValue: node.primitiveValue,
 		});
 	}
 	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {

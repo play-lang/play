@@ -108,11 +108,6 @@ export class ErrorToken extends Token {
 	}
 
 	public get description(): string {
-		return (
-			this.constructor.name +
-			"(`" +
-			describeErrorToken(this.file.name, this) +
-			"`)"
-		);
+		return this.constructor.name + "(`" + describeErrorToken(this) + "`)";
 	}
 }

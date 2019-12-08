@@ -14,9 +14,9 @@ import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expr
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
 import { InvocationExpressionNode } from "../parser/nodes/invocation-operator-parselet";
-import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
+import { PrimitiveExpressionNode } from "../parser/nodes/primitive-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
@@ -214,20 +214,20 @@ export class Compiler extends Visitor {
 				break;
 		}
 	}
-	public visitLiteralExpressionNode(node: LiteralExpressionNode): void {
+	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {
 		let value: any;
 		let type: RuntimeType = RuntimeType.Object;
-		switch (node.literalType) {
+		switch (node.primitiveType) {
 			case TokenType.String:
-				value = node.literalValue;
+				value = node.primitiveValue;
 				type = RuntimeType.String;
 				break;
 			case TokenType.Boolean:
-				value = node.literalValue === "true" ? true : false;
+				value = node.primitiveValue === "true" ? true : false;
 				value ? this.emit(OpCode.True) : this.emit(OpCode.False);
 				return;
 			case TokenType.Number:
-				value = Number.parseFloat(node.literalValue);
+				value = Number.parseFloat(node.primitiveValue);
 				type = RuntimeType.Number;
 				break;
 			case TokenType.Nil:

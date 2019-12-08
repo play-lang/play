@@ -7,9 +7,9 @@ import { AssignmentExpressionNode } from "./nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "./nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "./nodes/binary-logical-expression-node";
 import { InvocationExpressionNode } from "./nodes/invocation-operator-parselet";
-import { LiteralExpressionNode } from "./nodes/literal-expression-node";
 import { PostfixExpressionNode } from "./nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "./nodes/prefix-expression-node";
+import { PrimitiveExpressionNode } from "./nodes/primitive-expression-node";
 import { TernaryConditionalNode } from "./nodes/ternary-conditional-node";
 import { VariableReferenceNode } from "./nodes/variable-reference-node";
 import { Parser } from "./parser";
@@ -31,19 +31,21 @@ export class PrefixOperatorParselet implements PrefixParselet {
 	}
 }
 
-export class LiteralParselet implements PrefixParselet {
+export class PrimitiveParselet implements PrefixParselet {
 	public parse(parser: Parser, token: TokenLike): Expression {
-		return new LiteralExpressionNode(token);
+		return new PrimitiveExpressionNode(token);
 	}
 }
 
 export class IdParselet implements PrefixParselet {
 	public parse(parser: Parser, token: TokenLike): Expression {
-		if (parser.symbolTable.idInScope(token.lexeme)) {
-			return new VariableReferenceNode(token);
+		const scope = parser.symbolTable.idInScope(token.lexeme);
+		if (scope) {
+			const type = scope.entries.get(token.lexeme)!.typeAnnotation;
+			return new VariableReferenceNode(token, type);
 		}
 		// Todo: Look up in scope identifiers, not just actions
-		return new ActionReferenceNode(token.pos, token.end, token.lexeme);
+		return new ActionReferenceNode(token);
 	}
 }
 
