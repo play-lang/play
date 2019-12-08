@@ -48,4 +48,7 @@ describe("compiler/vm", () => {
 	it("should successfully run blank code", async () => {
 		expect(await run("")).toBe(0);
 	});
+	it("should successfully combine strings", async () => {
+		expect(await run('return "a" + "b"')).toBe("ab");
+	});
 });
