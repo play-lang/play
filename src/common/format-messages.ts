@@ -1,4 +1,4 @@
-import { ErrorToken } from "../language/token";
+import { ErrorToken, TokenLike } from "../language/token";
 
 /**
  * Ensures that the hint has no leading/trailing spaces and ends with a
@@ -18,13 +18,10 @@ export function prepareHint(hint: string): string {
  * Generates a friendly description for an error token
  * @param errorToken Token to examine
  */
-export function describeErrorToken(
-	filename: string,
-	errorToken: ErrorToken
-): string {
+export function describeErrorToken(errorToken: ErrorToken): string {
 	return (
 		"Lexical error in " +
-		filename +
+		errorToken.file.name +
 		" at " +
 		errorToken.line +
 		":" +
@@ -41,5 +38,25 @@ export function describeErrorToken(
 					.join(" ")
 					.trim()
 			: "")
+	);
+}
+
+/**
+ *  Creates an error message for a semantic error based on the specified token
+ * @param token The token where the semantic error occurred
+ * @param hint The error description
+ */
+export function formatSemanticError(token: TokenLike, hint: string): string {
+	return (
+		"Semantic error in " +
+		token.file.name +
+		" at " +
+		token.line +
+		":" +
+		token.column +
+		" (" +
+		token.pos +
+		"): " +
+		hint
 	);
 }

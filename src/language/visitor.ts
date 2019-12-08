@@ -6,9 +6,9 @@ import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expr
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
 import { InvocationExpressionNode } from "../parser/nodes/invocation-operator-parselet";
-import { LiteralExpressionNode } from "../parser/nodes/literal-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
+import { PrimitiveExpressionNode } from "../parser/nodes/primitive-expression-node";
 import { ProgramNode } from "../parser/nodes/program-node";
 import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
@@ -33,7 +33,9 @@ export abstract class Visitor {
 	public abstract visitInvocationExpressionNode(
 		node: InvocationExpressionNode
 	): void;
-	public abstract visitLiteralExpressionNode(node: LiteralExpressionNode): void;
+	public abstract visitPrimitiveExpressionNode(
+		node: PrimitiveExpressionNode
+	): void;
 	public abstract visitTernaryConditionalNode(
 		node: TernaryConditionalNode
 	): void;

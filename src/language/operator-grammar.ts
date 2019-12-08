@@ -6,10 +6,10 @@ import {
 	IdParselet,
 	InfixParselet,
 	InvocationOperatorParselet,
-	LiteralParselet,
 	PostfixOperatorParselet,
 	PrefixOperatorParselet,
 	PrefixParselet,
+	PrimitiveParselet,
 	TernaryConditionalParselet,
 } from "../parser/parselet";
 import { Precedence } from "./precedence";
@@ -26,9 +26,10 @@ export const prefixParselets: Map<TokenType, PrefixParselet> = new Map<
 	// Parenthesis (grouping)
 	[TokenType.ParenOpen, new GroupParselet()],
 	// Literal values
-	[TokenType.Number, new LiteralParselet()],
-	[TokenType.String, new LiteralParselet()],
-	[TokenType.Boolean, new LiteralParselet()],
+	[TokenType.Number, new PrimitiveParselet()],
+	[TokenType.String, new PrimitiveParselet()],
+	[TokenType.Boolean, new PrimitiveParselet()],
+	[TokenType.Nil, new PrimitiveParselet()],
 	// Inside an expression, identifiers can represent function names or variables
 	[TokenType.Id, new IdParselet()],
 	// Prefix operators
