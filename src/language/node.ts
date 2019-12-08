@@ -1,3 +1,6 @@
+import { TypeCheckable } from "../type-checker/type-checkable";
+import { TypeChecker } from "../type-checker/type-checker";
+import { TypeInfo } from "./type-system";
 import { Visitor } from "./visitor";
 
 export abstract class Node {
@@ -15,5 +18,10 @@ export abstract class Node {
 	}
 }
 
-export abstract class Expression extends Node {}
+export abstract class Expression extends Node implements TypeCheckable {
+	public abstract get isAddressable(): boolean;
+	public abstract validate(tc: TypeChecker): void;
+	public abstract computeReturnType(tc: TypeChecker): TypeInfo;
+}
+
 export abstract class Statement extends Node {}

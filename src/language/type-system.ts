@@ -1,3 +1,5 @@
+import { Describable } from "./token";
+
 /** Represents an addressability constraint for our type rules */
 export enum AddressConstraint {
 	None,
@@ -6,7 +8,7 @@ export enum AddressConstraint {
 }
 
 /** Represents a type in our simple type system */
-export class TypeInfo {
+export class TypeInfo implements Describable {
 	constructor(
 		public readonly typeAnnotation: string[],
 		public readonly isAddressable: boolean
@@ -14,15 +16,90 @@ export class TypeInfo {
 
 	/**
 	 * Returns true if this type is matched by the specified type rule
-	 * @param typeRule The rule to satisfy
+	 * @param typeRule The rule or ruleset to satisfy
 	 */
-	public satisfies(typeRule: TypeRule): boolean {
-		return typeRule.matches(this);
+	public satisfies(typeRule: TypeRule | TypeRuleset): boolean {
+		return !!typeRule.matches(this);
+	}
+
+	/**
+	 * Returns true if this type is exactly the same as the specified type,
+	 * false otherwise
+	 *
+	 * Disregards addressability
+	 *
+	 *
+	 * @param type The type to compare
+	 */
+	public equals(type: TypeInfo): boolean {
+		if (this.typeAnnotation.length !== type.typeAnnotation.length) return false;
+		for (let i = 0; i < this.typeAnnotation.length; i++) {
+			if (this.typeAnnotation[i] !== type.typeAnnotation[i]) {
+				return false;
+			}
+		}
+		return true;
+	}
+
+	/**
+	 * Returns true if this type is a supertype of the specified type, false
+	 * otherwise
+	 *
+	 * Disregards addressability
+	 *
+	 * Note that every type is a supertype and a subtype of itself
+	 *
+	 * @param type The type to compare
+	 */
+	public supertypeOf(type: TypeInfo): boolean {
+		let accepted = false;
+		// Addressability is satisfied, let's examine the actual types
+		const typeAnnotation = this.typeAnnotation;
+		// If the specified type has a length less than the rule, it is impossible
+		// for the type to be accepted by the rule
+		if (type.typeAnnotation.length < typeAnnotation.length) return false;
+
+		// Walk backwards through the type components and see if there is
+		// a conflict
+		for (let i = typeAnnotation.length - 1; i >= 0; i--) {
+			const id = typeAnnotation[i];
+			const otherId =
+				type.typeAnnotation[
+					type.typeAnnotation.length + (i - typeAnnotation.length)
+				];
+			// TODO: Make this work with an inheritance graph someday
+			accepted = id === otherId;
+			if (!accepted) break;
+		}
+
+		if (accepted) return true;
+		return false;
+	}
+
+	/**
+	 * Returns true if this type is a subtype of the specified type, false
+	 * otherwise
+	 *
+	 * Disregards addressability
+	 *
+	 * Note that every type is a supertype and a subtype of itself
+	 * @param type The type to compare
+	 */
+	public subtypeOf(type: TypeInfo): boolean {
+		return type.supertypeOf(this);
+	}
+
+	// MARK: Describable
+	public get description(): string {
+		if (this.typeAnnotation.length < 1) {
+			return "void";
+		}
+		return this.typeAnnotation.join(" ");
 	}
 }
 
 /** Represents a type rule for our simple type system */
-export class TypeRule {
+export class TypeRule implements Describable {
 	constructor(
 		/** An array of string arrays which represent the type of values allowed */
 		public readonly typeAnnotation: string[],
@@ -53,32 +130,19 @@ export class TypeRule {
 			return false;
 		}
 
-		let accepted = false;
-		// Addressability is satisfied, let's examine the actual types
-		const typeAnnotation = this.typeAnnotation;
-		// If the specified type has a length less than the rule, it is impossible
-		// for the type to be accepted by the rule
-		if (type.typeAnnotation.length < typeAnnotation.length) return false;
+		return new TypeInfo(this.typeAnnotation, true).supertypeOf(type);
+	}
 
-		// Walk backwards through the type components and see if there is
-		// a conflict
-		for (let i = typeAnnotation.length - 1; i >= 0; i--) {
-			const id = typeAnnotation[i];
-			const otherId =
-				type.typeAnnotation[
-					type.typeAnnotation.length + (i - typeAnnotation.length)
-				];
-			// TODO: Make this work with an inheritance graph someday
-			accepted = id === otherId;
-			if (!accepted) break;
+	// MARK: Describable
+	public get description(): string {
+		if (this.typeAnnotation.length < 1) {
+			return "void";
 		}
-
-		if (accepted) return true;
-		return false;
+		return this.typeAnnotation.join(" ");
 	}
 }
 
-export class TypeRuleset {
+export class TypeRuleset implements Describable {
 	constructor(
 		/** Rules contained in this ruleset */
 		public readonly rules: TypeRule[]
@@ -108,5 +172,14 @@ export class TypeRuleset {
 			}
 		}
 		return true;
+	}
+
+	// MARK: Describable
+	public get description(): string {
+		return this.rules
+			.map(typeRule => {
+				return "`" + typeRule.typeAnnotation.join(" ") + "`";
+			})
+			.join(", ");
 	}
 }
