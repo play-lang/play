@@ -7,20 +7,11 @@ export enum AddressConstraint {
 	NonAddressableOnly,
 }
 
-/** Represents a type in our simple type system */
-export class TypeInfo implements Describable {
+export class BaseType {
 	constructor(
-		public readonly typeAnnotation: string[],
-		public readonly isAddressable: boolean
+		/** Array of type components with innermost component first */
+		public readonly typeAnnotation: string[]
 	) {}
-
-	/**
-	 * Returns true if this type is matched by the specified type rule
-	 * @param typeRule The rule or ruleset to satisfy
-	 */
-	public satisfies(typeRule: TypeRule | TypeRuleset): boolean {
-		return !!typeRule.matches(this);
-	}
 
 	/**
 	 * Returns true if this type is exactly the same as the specified type,
@@ -28,10 +19,9 @@ export class TypeInfo implements Describable {
 	 *
 	 * Disregards addressability
 	 *
-	 *
 	 * @param type The type to compare
 	 */
-	public equals(type: TypeInfo): boolean {
+	public equals(type: BaseType): boolean {
 		if (this.typeAnnotation.length !== type.typeAnnotation.length) return false;
 		for (let i = 0; i < this.typeAnnotation.length; i++) {
 			if (this.typeAnnotation[i] !== type.typeAnnotation[i]) {
@@ -51,7 +41,7 @@ export class TypeInfo implements Describable {
 	 *
 	 * @param type The type to compare
 	 */
-	public supertypeOf(type: TypeInfo): boolean {
+	public supertypeOf(type: BaseType): boolean {
 		let accepted = false;
 		// Addressability is satisfied, let's examine the actual types
 		const typeAnnotation = this.typeAnnotation;
@@ -85,7 +75,7 @@ export class TypeInfo implements Describable {
 	 * Note that every type is a supertype and a subtype of itself
 	 * @param type The type to compare
 	 */
-	public subtypeOf(type: TypeInfo): boolean {
+	public subtypeOf(type: BaseType): boolean {
 		return type.supertypeOf(this);
 	}
 
@@ -98,14 +88,35 @@ export class TypeInfo implements Describable {
 	}
 }
 
+/** Represents a type in our simple type system */
+export class TypeInfo extends BaseType {
+	constructor(
+		public readonly typeAnnotation: string[],
+		/** Whether or not this type is addressable */
+		public readonly isAddressable: boolean
+	) {
+		super(typeAnnotation);
+	}
+
+	/**
+	 * Returns true if this type is matched by the specified type rule
+	 * @param typeRule The rule or ruleset to satisfy
+	 */
+	public satisfies(typeRule: TypeRule | TypeRuleset): boolean {
+		return !!typeRule.matches(this);
+	}
+}
+
 /** Represents a type rule for our simple type system */
-export class TypeRule implements Describable {
+export class TypeRule extends BaseType {
 	constructor(
 		/** An array of string arrays which represent the type of values allowed */
 		public readonly typeAnnotation: string[],
 		/** The addressability constraint for this rule, if any */
 		public readonly addressConstraint: AddressConstraint = AddressConstraint.None
-	) {}
+	) {
+		super(typeAnnotation);
+	}
 
 	/**
 	 * Returns true if the specified type is allowed (or matched) by this type
@@ -130,15 +141,7 @@ export class TypeRule implements Describable {
 			return false;
 		}
 
-		return new TypeInfo(this.typeAnnotation, true).supertypeOf(type);
-	}
-
-	// MARK: Describable
-	public get description(): string {
-		if (this.typeAnnotation.length < 1) {
-			return "void";
-		}
-		return this.typeAnnotation.join(" ");
+		return this.supertypeOf(type);
 	}
 }
 
