@@ -1,15 +1,15 @@
 import { Describable } from "../language/token";
 
 class Entry<K, V> {
-	constructor(public value: V, public readonly node: LinkedListNode<K>) {}
+	constructor(public value: V, public readonly node: LinkedMapNode<K>) {}
 }
 
-class LinkedListNode<K> {
+class LinkedMapNode<K> {
 	constructor(
 		public readonly key: K,
 		public ordinal: number,
-		public next?: LinkedListNode<K>,
-		public prev?: LinkedListNode<K>
+		public next?: LinkedMapNode<K>,
+		public prev?: LinkedMapNode<K>
 	) {}
 }
 
@@ -38,8 +38,8 @@ export class LinkedHashMap<K, V> implements Map<K, V>, Describable {
 
 	private _size: number = 0;
 	private _dict: Map<K, Entry<K, V>> = new Map<K, Entry<K, V>>();
-	private _head?: LinkedListNode<K>;
-	private _tail?: LinkedListNode<K>;
+	private _head?: LinkedMapNode<K>;
+	private _tail?: LinkedMapNode<K>;
 
 	constructor() {}
 
@@ -135,7 +135,7 @@ export class LinkedHashMap<K, V> implements Map<K, V>, Describable {
 	}
 
 	public set(key: K, value: V): this {
-		let node: LinkedListNode<K>;
+		let node: LinkedMapNode<K>;
 		if (this._dict.has(key)) {
 			const entry = this._dict.get(key)!;
 			entry.value = value;
@@ -178,9 +178,9 @@ export class LinkedHashMap<K, V> implements Map<K, V>, Describable {
 		current = this._head;
 	}
 
-	private appendNode(key: K): LinkedListNode<K> {
+	private appendNode(key: K): LinkedMapNode<K> {
 		// Add a new linked list entry
-		const node = new LinkedListNode<K>(key, this._size++);
+		const node = new LinkedMapNode<K>(key, this._size++);
 		if (!this._head) {
 			this._head = node;
 			this._tail = node;
