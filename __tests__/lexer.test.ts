@@ -5,20 +5,20 @@ import { Lexer } from "../src/lexer/lexer";
 
 describe("lexer", () => {
 	const lexer = new Lexer("10 + 20 -123.4e-56");
-	it("should initialize sensibly", () => {
+	test("should initialize sensibly", () => {
 		expect(lexer).toBeInstanceOf(Lexer);
 	});
-	it("should read the first token and lookahead", () => {
+	test("should read the first token and lookahead", () => {
 		expect(lexer.token.description).toBe("Number(`10`)");
 		expect(lexer.lookahead.description).toBe("Plus(`+`)");
 	});
-	it("should have right number of tokens scanned", () => {
+	test("should have right number of tokens scanned", () => {
 		expect(lexer.numTokens).toBe(3); // Whitespace counts
 	});
-	it("should pass odds and ends tests", () => {
+	test("should pass odds and ends tests", () => {
 		expect(lexer.isWhitespace("")).toBe(false);
 	});
-	it("should read trivia at the end of the document", () => {
+	test("should read trivia at the end of the document", () => {
 		const lexer = new Lexer(`/* comment */ \t // comment`);
 		expect(lexer.token.type).toBe(TokenType.EndOfFile);
 		expect(lexer.lookahead.type).toBe(TokenType.EndOfFile);
@@ -28,14 +28,14 @@ describe("lexer", () => {
 		expect(results[0].type).toBe(TokenType.EndOfFile);
 		expect(results[0].trivia).toHaveLength(3);
 	});
-	it("should coalesce error tokens", () => {
+	test("should coalesce error tokens", () => {
 		const lexer = new Lexer(`10+@@@@+10`);
 		const results = lexer.readAll();
 		// Only 1 warning should be produced
 		expect(results).toHaveLength(6);
 		expect(results[2].lexeme).toBe("@@@@");
 	});
-	it("should detect invalid escape warnings", () => {
+	test("should detect invalid escape warnings", () => {
 		const lexer = new Lexer(`"\\x"`);
 		lexer.readAll();
 		expect(lexer.warnings).toHaveLength(1);
@@ -55,39 +55,39 @@ describe("lexer", () => {
 			},
 		]);
 	});
-	it("should detect unclosed comments", () => {
+	test("should detect unclosed comments", () => {
 		const lexer = new Lexer(`/* unclosed block comment \n goes here`);
 		const results = lexer.readAll();
 		expect(results).toHaveLength(1);
 		expect(results[0].type).toEqual(TokenType.Error);
 	});
-	it("should detect proper block comment", () => {
+	test("should detect proper block comment", () => {
 		const lexer = new Lexer(`/* good block comment */`);
 		const results = lexer.readAll();
 		expect(results).toHaveLength(1);
 		expect(results[0].type).toEqual(TokenType.EndOfFile);
 		expect(results[0].trivia[0].type).toEqual(TokenType.CommentBlock);
 	});
-	it("should detect invalid tokens in comment logic", () => {
+	test("should detect invalid tokens in comment logic", () => {
 		const lexer = new Lexer(`/@ not a comment`);
 		const results = lexer.readAll();
 		expect(results.length).toBe(6);
 		expect(results[1].type).toEqual(TokenType.Error);
 	});
-	it("should look up id tokens", () => {
+	test("should look up id tokens", () => {
 		const lexer = new Lexer(`true false`);
 		const results = lexer.readAll();
 		expect(results.length).toBe(3);
 		expect(results[0].lexeme).toBe("true");
 		expect(results[1].lexeme).toBe("false");
 	});
-	it("should recognize unclosed strings", () => {
+	test("should recognize unclosed strings", () => {
 		const lexer = new Lexer(`" unclosed string \n goes here`);
 		const results = lexer.readAll();
 		expect(results).toHaveLength(5);
 		expect(results[0].type).toEqual(TokenType.Error);
 	});
-	it("should tokenize basic numbers", () => {
+	test("should tokenize basic numbers", () => {
 		const tokens = lexer.readAll().map(token => token.description);
 		expect(tokens).toEqual([
 			"Number(`10`)",
@@ -98,7 +98,7 @@ describe("lexer", () => {
 			"EndOfFile(``)",
 		]);
 	});
-	it("should tokenize basic id's", () => {
+	test("should tokenize basic id's", () => {
 		const lexer = new Lexer("_id1 id2 3id ++id4");
 		const tokens = lexer.readAll().map(token => token.description);
 		expect(tokens).toEqual([
@@ -111,7 +111,7 @@ describe("lexer", () => {
 			"EndOfFile(``)",
 		]);
 	});
-	it("should handle line feeds", () => {
+	test("should handle line feeds", () => {
 		const lexer = new Lexer("\n\n\na b c\n\n\n");
 		const tokens = lexer.readAll().map(token => token.description);
 		expect(tokens).toEqual([
@@ -123,7 +123,7 @@ describe("lexer", () => {
 			"EndOfFile(``)",
 		]);
 	});
-	it("should handle incorrect numbers", () => {
+	test("should handle incorrect numbers", () => {
 		const lexer = new Lexer(
 			"1. 1.2e- 1e23 1.2e34 123.456e789 123.456e-789 123.456E+789"
 		);
@@ -139,7 +139,7 @@ describe("lexer", () => {
 			"EndOfFile(``)",
 		]);
 	});
-	it("should read string and escape sequences", () => {
+	test("should read string and escape sequences", () => {
 		const lexer = new Lexer('"a\\n\\tb" "abc" "\\n\\t \\n \\t"');
 		const tokens = lexer.readAll().map(token => token.description);
 		expect(tokens).toEqual([
@@ -149,7 +149,7 @@ describe("lexer", () => {
 			"EndOfFile(``)",
 		]);
 	});
-	it("should read basic operators", () => {
+	test("should read basic operators", () => {
 		const lexer = new Lexer("a+b-c%2+=3*4/=3");
 		const tokens = lexer.readAll().map(token => token.description);
 		expect(tokens).toEqual([
@@ -169,7 +169,7 @@ describe("lexer", () => {
 			"EndOfFile(``)",
 		]);
 	});
-	it("should understand line continuations", () => {
+	test("should understand line continuations", () => {
 		const lexer = new Lexer("a+b-c%2_\n+=3*_\n4/=3");
 		const tokens = lexer.readAll().map(token => token.description);
 		expect(tokens).toEqual([
@@ -196,7 +196,7 @@ describe("lexer", () => {
 });
 
 describe("lexer file table", () => {
-	it("should resolve file table correctly for tokens", () => {
+	test("should resolve file table correctly for tokens", () => {
 		const a = new SourceFile("a");
 		const b = new SourceFile("b");
 		const c = new SourceFile("c");
@@ -216,7 +216,7 @@ describe("lexer file table", () => {
 		expect(tokens).toEqual(["a", "a", "b", "c", "d", "d", "d"]);
 	});
 
-	it("should throw error on faulty lower bound in range tree", () => {
+	test("should throw error on faulty lower bound in range tree", () => {
 		const ranges = new AvlTree<number, SourceFile>();
 		expect(() => {
 			new Lexer(

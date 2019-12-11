@@ -8,7 +8,7 @@ class TestAvlTree<K, V> extends AvlTree<K, V> {
 
 describe("avl-tree", () => {
 	/** Additional Tests for Bounds added by Joe */
-	it("should find lower bound", () => {
+	test("should find lower bound", () => {
 		const tree = new TestAvlTree();
 		expect(tree.findLowerBound(17)).toBe(null);
 		tree.insert(50);
@@ -34,7 +34,7 @@ describe("avl-tree", () => {
 		expect(tree.findLowerBound(50)).toBe(50);
 	});
 
-	it("should find lower bound with real data", () => {
+	test("should find lower bound with real data", () => {
 		const tree = new AvlTree<number, number>();
 		tree.insert(0, 1);
 		tree.insert(13, 2);
@@ -45,12 +45,12 @@ describe("avl-tree", () => {
 	});
 
 	/** Tests created by AVL Tree author */
-	it("should return false if the tree is empty", () => {
+	test("should return false if the tree is empty", () => {
 		const tree = new TestAvlTree();
 		expect(tree.contains(1)).toBe(false);
 	});
 
-	it("should return whether the tree contains a node", () => {
+	test("should return whether the tree contains a node", () => {
 		const tree = new TestAvlTree();
 		expect(tree.contains(1)).toBe(false);
 		expect(tree.contains(2)).toBe(false);
@@ -63,14 +63,14 @@ describe("avl-tree", () => {
 		expect(tree.contains(3)).toBe(true);
 	});
 
-	it("should return false when the expected parent has no children", () => {
+	test("should return false when the expected parent has no children", () => {
 		const tree = new TestAvlTree();
 		tree.insert(2);
 		expect(tree.contains(1)).toBe(false);
 		expect(tree.contains(3)).toBe(false);
 	});
 
-	it("should function correctly given a non-reverse customCompare", () => {
+	test("should function correctly given a non-reverse customCompare", () => {
 		const tree = new TestAvlTree<number, null>((a, b) => b - a);
 		tree.insert(2);
 		tree.insert(1);
@@ -87,7 +87,7 @@ describe("avl-tree", () => {
 		expect(tree.root!.right!.key).toBe(1);
 	});
 
-	it("should work when the key is a complex object", () => {
+	test("should work when the key is a complex object", () => {
 		interface IComplexObject {
 			innerKey: number;
 		}
@@ -99,12 +99,12 @@ describe("avl-tree", () => {
 		expect(tree.contains({ innerKey: 2 })).toBe(false);
 	});
 
-	it("should return null when the tree is empty", () => {
+	test("should return null when the tree is empty", () => {
 		const tree = new TestAvlTree();
 		expect(tree.findMaximum()).toBe(null);
 	});
 
-	it("should return the maximum key in the tree", () => {
+	test("should return the maximum key in the tree", () => {
 		const tree = new TestAvlTree();
 		tree.insert(3);
 		tree.insert(5);
@@ -114,12 +114,12 @@ describe("avl-tree", () => {
 		expect(tree.findMaximum()).toBe(5);
 	});
 
-	it("should return null when the tree is empty", () => {
+	test("should return null when the tree is empty", () => {
 		const tree = new TestAvlTree();
 		expect(tree.findMinimum()).toBe(null);
 	});
 
-	it("should return the minimum key in the tree", () => {
+	test("should return the minimum key in the tree", () => {
 		const tree = new TestAvlTree();
 		tree.insert(5);
 		tree.insert(3);
@@ -129,7 +129,7 @@ describe("avl-tree", () => {
 		expect(tree.findMinimum()).toBe(1);
 	});
 
-	it("should return the correct values", () => {
+	test("should return the correct values", () => {
 		const tree = new TestAvlTree();
 		tree.insert(1, 4);
 		tree.insert(2, 5);
@@ -139,7 +139,7 @@ describe("avl-tree", () => {
 		expect(tree.get(3)).toBe(6);
 	});
 
-	it("should return null when the value doesn't exist", () => {
+	test("should return null when the value doesn't exist", () => {
 		const tree = new TestAvlTree();
 		expect(tree.get(1)).toBe(null);
 		expect(tree.get(2)).toBe(null);
@@ -152,7 +152,7 @@ describe("avl-tree", () => {
 		expect(tree.get(6)).toBe(null);
 	});
 
-	it("should return whether the tree is empty", () => {
+	test("should return whether the tree is empty", () => {
 		const tree = new TestAvlTree();
 		expect(tree.isEmpty).toBe(true);
 		tree.insert(1);
@@ -161,7 +161,7 @@ describe("avl-tree", () => {
 		expect(tree.isEmpty).toBe(true);
 	});
 
-	it("should return the size of the tree", () => {
+	test("should return the size of the tree", () => {
 		const tree = new TestAvlTree();
 		expect(tree.size).toBe(0);
 		tree.insert(1);
@@ -188,13 +188,13 @@ describe("avl-tree", () => {
 });
 
 describe("avl tree delete", () => {
-	it("should not change the size of a tree with no root", () => {
+	test("should not change the size of a tree with no root", () => {
 		const tree = new TestAvlTree();
 		tree.delete(1);
 		expect(tree.size).toBe(0);
 	});
 
-	it("should delete a single key", () => {
+	test("should delete a single key", () => {
 		const tree = new TestAvlTree();
 		tree.insert(1);
 		tree.delete(1);
@@ -208,7 +208,7 @@ describe("avl tree delete", () => {
 	 *    / \                             /
 	 *   1   3                           3
 	 */
-	it("should correctly balance the left left case", () => {
+	test("should correctly balance the left left case", () => {
 		const tree = new TestAvlTree();
 		tree.insert(4, 4);
 		tree.insert(2, 2);
@@ -241,7 +241,7 @@ describe("avl tree delete", () => {
 	 *          / \                   \
 	 *         5   7                  5
 	 */
-	it("should correctly balance the right right case", () => {
+	test("should correctly balance the right right case", () => {
 		const tree = new TestAvlTree();
 		tree.insert(4, 4);
 		tree.insert(2, 2);
@@ -276,7 +276,7 @@ describe("avl tree delete", () => {
 	 *      / \
 	 *     3   5
 	 */
-	it("should correctly balance the left right case", () => {
+	test("should correctly balance the left right case", () => {
 		const tree = new TestAvlTree();
 		tree.insert(6, 6);
 		tree.insert(2, 2);
@@ -319,7 +319,7 @@ describe("avl tree delete", () => {
 	 *        / \
 	 *       4   6
 	 */
-	it("should correctly balance the right left case", () => {
+	test("should correctly balance the right left case", () => {
 		const tree = new TestAvlTree();
 		tree.insert(3, 3);
 		tree.insert(2, 2);
@@ -353,7 +353,7 @@ describe("avl tree delete", () => {
 		expect(tree.root!.right!.right!.value).toBe(8);
 	});
 
-	it("should take the right child if the left does not exist", () => {
+	test("should take the right child if the left does not exist", () => {
 		const tree = new TestAvlTree();
 		tree.insert(1, 1);
 		tree.insert(2, 2);
@@ -363,7 +363,7 @@ describe("avl tree delete", () => {
 		expect(tree.root!.value).toBe(2);
 	});
 
-	it("should take the left child if the right does not exist", () => {
+	test("should take the left child if the right does not exist", () => {
 		const tree = new TestAvlTree();
 		tree.insert(2, 2);
 		tree.insert(1, 1);
@@ -373,7 +373,7 @@ describe("avl tree delete", () => {
 		expect(tree.root!.value).toBe(1);
 	});
 
-	it("should get the right child if the node has 2 leaf children", () => {
+	test("should get the right child if the node has 2 leaf children", () => {
 		const tree = new TestAvlTree();
 		tree.insert(2, 2);
 		tree.insert(1, 1);
@@ -384,7 +384,7 @@ describe("avl tree delete", () => {
 		expect(tree.root!.value).toBe(3);
 	});
 
-	it("should get the in-order successor if the node has both children", () => {
+	test("should get the in-order successor if the node has both children", () => {
 		const tree = new TestAvlTree();
 		tree.insert(2, 2);
 		tree.insert(1, 1);
@@ -399,7 +399,7 @@ describe("avl tree delete", () => {
 });
 
 describe("avl tree insert", () => {
-	it("should return the size of the tree", () => {
+	test("should return the size of the tree", () => {
 		const tree = new TestAvlTree();
 		tree.insert(1);
 		tree.insert(2);
@@ -409,7 +409,7 @@ describe("avl tree insert", () => {
 		expect(tree.size).toBe(5);
 	});
 
-	it("should ignore insert of duplicate key", () => {
+	test("should ignore insert of duplicate key", () => {
 		const tree = new TestAvlTree();
 		tree.insert(1);
 		tree.insert(1);
@@ -425,7 +425,7 @@ describe("avl tree insert", () => {
 	 *    / \           w   x y   z
 	 *   w   x
 	 */
-	it("should correctly balance the left left case", () => {
+	test("should correctly balance the left left case", () => {
 		const tree = new TestAvlTree();
 		tree.insert(3);
 		tree.insert(2);
@@ -443,7 +443,7 @@ describe("avl tree insert", () => {
 	 *      / \       w   x y   z
 	 *     x   y
 	 */
-	it("should correctly balance the left right case", () => {
+	test("should correctly balance the left right case", () => {
 		const tree = new TestAvlTree();
 		tree.insert(3);
 		tree.insert(1);
@@ -461,7 +461,7 @@ describe("avl tree insert", () => {
 	 *        / \       w   x y   z
 	 *       y   z
 	 */
-	it("should correctly balance the right right case", () => {
+	test("should correctly balance the right right case", () => {
 		const tree = new TestAvlTree();
 		tree.insert(1);
 		tree.insert(2);
@@ -479,7 +479,7 @@ describe("avl tree insert", () => {
 	 *    / \         w   x y   z
 	 *   x   y
 	 */
-	it("should correctly balance the right left case", () => {
+	test("should correctly balance the right left case", () => {
 		const tree = new TestAvlTree();
 		tree.insert(1);
 		tree.insert(3);

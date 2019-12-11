@@ -2,7 +2,7 @@ import { runFile, str } from "../shared/test-utils";
 import { Play } from "../src/play";
 
 describe("simple function call", () => {
-	it("should parse a function", () => {
+	test("should parse a function", () => {
 		const code = str`
 			function myAction(): str {
 				return
@@ -70,7 +70,7 @@ describe("simple function call", () => {
 	// - Variables get popped from stack when scope exits
 
 	describe("variable handling", () => {
-		it("should handle local variables", () => {
+		test("should handle local variables", () => {
 			const code = str`
 				first(1, 2)
 				function first(a: num, b: num): num {
@@ -83,7 +83,7 @@ describe("simple function call", () => {
 			const result = Play.run(code);
 			expect(result.value.value).toBe(3);
 		});
-		it("should allow function calls out of order from declaration", () => {
+		test("should allow function calls out of order from declaration", () => {
 			const code = str`
 				function first(a: num, b: num): num {
 					return a + b
@@ -96,7 +96,7 @@ describe("simple function call", () => {
 			const result = Play.run(code);
 			expect(result.value.value).toBe(3);
 		});
-		it("should mix local and global variables", () => {
+		test("should mix local and global variables", () => {
 			const code = str`
 				let a: num = 10
 				return add(1)
@@ -107,7 +107,7 @@ describe("simple function call", () => {
 			const result = Play.run(code);
 			expect(result.value.value).toBe(11);
 		});
-		it("should support blank functions with globals", () => {
+		test("should support blank functions with globals", () => {
 			const code = str`
 					let a: num = 10
 					return add(1) // nil
@@ -116,7 +116,7 @@ describe("simple function call", () => {
 			const result = Play.run(code);
 			expect(result.value.value).toBe(null);
 		});
-		it("should handle recursive fibonacci", async () => {
+		test("should handle recursive fibonacci", async () => {
 			const result = await runFile("fib12.play");
 			expect(result).toBe(144);
 		});

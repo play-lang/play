@@ -23,10 +23,10 @@ describe("symbol table", () => {
 	const globalScope = new SymbolTable();
 	let s1: SymbolTable;
 	const t1 = fakeToken(); // a
-	it("should initialize", () => {
+	test("should initialize", () => {
 		expect(globalScope).toBeInstanceOf(SymbolTable);
 	});
-	it("should register ids", () => {
+	test("should register ids", () => {
 		const t2 = fakeToken(); // b
 		globalScope.register(new VariableDeclarationNode(0, 0, t1, ["num"], false));
 		expect(globalScope.entries.has(t1.lexeme));
@@ -36,11 +36,11 @@ describe("symbol table", () => {
 			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"]}'
 		);
 	});
-	it("should recognize ids in immediate scope", () => {
+	test("should recognize ids in immediate scope", () => {
 		expect(globalScope.idInScope("a")).toBeTruthy();
 		expect(globalScope.idInScope("b")).toBeTruthy();
 	});
-	it("should recognize ids in enclosing scopes", () => {
+	test("should recognize ids in enclosing scopes", () => {
 		s1 = globalScope.addScope();
 		const t3 = fakeToken(); // c
 		const t4 = fakeToken(); // d
@@ -59,7 +59,7 @@ describe("symbol table", () => {
 		const t5 = fakeToken(); // e
 		s2.register(new VariableDeclarationNode(0, 0, t5, ["num"], false));
 	});
-	it("should perform lookups", () => {
+	test("should perform lookups", () => {
 		expect(JSON.parse(JSON.stringify(globalScope.lookup("a")))).toEqual({
 			isImmutable: false,
 			end: 0,
@@ -79,7 +79,7 @@ describe("symbol table", () => {
 			typeAnnotation: ["num"],
 		});
 	});
-	it("should prevent duplicate id's from being registered", () => {
+	test("should prevent duplicate id's from being registered", () => {
 		expect(
 			globalScope.register(
 				new VariableDeclarationNode(0, 0, t1, ["num"], false)
