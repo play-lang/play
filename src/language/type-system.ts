@@ -13,6 +13,25 @@ export class BaseType {
 		public readonly typeAnnotation: string[]
 	) {}
 
+	/** The innermost type */
+	public get storageType(): string {
+		return this.typeAnnotation[0] || "void";
+	}
+
+	public objectType(typeComponent: string = this.storageType): boolean {
+		switch (typeComponent) {
+			case "void":
+			case "num":
+			case "str":
+			case "bool":
+			case "list":
+			case "map":
+			case "set":
+				return false;
+		}
+		return true;
+	}
+
 	/**
 	 * Returns true if this type is exactly the same as the specified type,
 	 * false otherwise
@@ -58,7 +77,8 @@ export class BaseType {
 					type.typeAnnotation.length + (i - typeAnnotation.length)
 				];
 			// TODO: Make this work with an inheritance graph someday
-			accepted = id === otherId;
+			accepted =
+				id === otherId || (id === "object" && this.objectType(otherId));
 			if (!accepted) break;
 		}
 
@@ -162,19 +182,27 @@ export class TypeRuleset implements Describable {
 		}
 	}
 
-	public matchMultiple(...types: TypeInfo[]): boolean {
+	/**
+	 * Returns true if the specified types all match the same rule
+	 *
+	 * Be sure to structure rulesets in such a way that multiple rules
+	 * do not overlap (rules should be disjoint)
+	 *
+	 * @param types The types to match
+	 */
+	public matchMultiple(...types: TypeInfo[]): TypeRule | undefined {
 		let rule: TypeRule | undefined;
-		if (types.length < 1) return false;
-		if (this.rules.length < 1) return false;
+		if (types.length < 1) return;
+		if (this.rules.length < 1) return;
 		for (const type of types) {
 			if (rule) {
-				if (!type.satisfies(rule)) return false;
+				if (!type.satisfies(rule)) return;
 			} else {
 				rule = this.matches(type);
-				if (!rule) return false;
+				if (!rule) return;
 			}
 		}
-		return true;
+		return rule;
 	}
 
 	// MARK: Describable

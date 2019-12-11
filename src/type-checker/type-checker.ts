@@ -118,8 +118,8 @@ export class TypeChecker extends Visitor {
 		type: TypeInfo,
 	): boolean {
 		if (type.satisfies(ruleset)) return true;
-		const prettyExpectedType = this.prettyRuleset(ruleset);
-		const prettyEncounteredType = this.prettyType(type);
+		const prettyExpectedType = ruleset.description;
+		const prettyEncounteredType = type.description;
 
 		const prefix =
 			"Type error in " +
@@ -154,34 +154,4 @@ export class TypeChecker extends Visitor {
 	}
 
 	// MARK: Type Checker
-
-	/**
-	 * Compares two type annotations (string arrays) to see if they are equal
-	 * Worst case runtime is O(N) unless the two arrays have separate lengths
-	 * @param type1 The first type annotation
-	 * @param type2 The second type annotation
-	 */
-	private compareTypes(type1: string[], type2: string[]): boolean {
-		if (type1.length !== type2.length) return false;
-		for (let i = 0; i < type1.length; i++) {
-			if (type1[i] !== type2[i]) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	/** Make a pretty string from the specified type */
-	private prettyType(type: TypeInfo): string {
-		if (type.typeAnnotation.length < 1) {
-			return "void";
-		}
-		return type.typeAnnotation.join(" ");
-	}
-
-	private prettyRuleset(ruleset: TypeRuleset): string {
-		return ruleset.rules.map(typeRule => {
-			return "`" + typeRule.typeAnnotation.join(" ") + "`";
-		}).join(", ");
-	}
 }
