@@ -4,9 +4,19 @@ import { LinkedHashMap } from "../../common/linked-hash-map";
  * Primitive types that can be represented with an instance of a PrimitiveType
  */
 export enum Primitive {
-	Bool = 1,
-	Num = 2,
-	Str = 3,
+	Void,
+	Bool,
+	Num,
+	Str,
+}
+
+/**
+ * Collection types that can be represented with type constructors
+ */
+export enum Collection {
+	List = 1,
+	Map,
+	Set,
 }
 
 abstract class Type {
@@ -24,6 +34,17 @@ abstract class Type {
 	public abstract equivalent(type: Type): boolean;
 }
 
+/** Represents an error type */
+export class ErrorType extends Type {
+	constructor() {
+		super();
+	}
+
+	public equivalent(type: Type): boolean {
+		return type === this || type instanceof ErrorType;
+	}
+}
+
 /**
  * Basic type
  *
@@ -38,7 +59,10 @@ export class PrimitiveType extends Type {
 	}
 
 	public equivalent(type: Type): boolean {
-		return type instanceof PrimitiveType && type.primitive === this.primitive;
+		return (
+			type === this ||
+			(type instanceof PrimitiveType && type.primitive === this.primitive)
+		);
 	}
 }
 
@@ -69,6 +93,7 @@ export class ProductType extends Type {
 	}
 
 	public equivalent(type: Type): boolean {
+		if (type === this) return true;
 		if (!(type instanceof ProductType)) return false;
 		if (type.operands.size !== this.operands.size) return false;
 		for (const name of type.operands.keys()) {
@@ -105,14 +130,17 @@ export class FunctionType extends Type {
 
 	public equivalent(type: Type): boolean {
 		return (
-			type instanceof FunctionType &&
-			this.parameters.equivalent(type.parameters)
+			type === this ||
+			(type instanceof FunctionType &&
+				this.parameters.equivalent(type.parameters))
 		);
 	}
 }
 
-export class List extends Type {
+export class CollectionType extends Type {
 	constructor(
+		/** The type of collection being represented by this instance */
+		public readonly collection: Collection,
 		/** Type of the elements to be stored in the list */
 		public readonly elementType: Type
 	) {
@@ -121,34 +149,59 @@ export class List extends Type {
 
 	public equivalent(type: Type): boolean {
 		return (
-			type instanceof List && this.elementType.equivalent(type.elementType)
+			type === this ||
+			(type instanceof CollectionType &&
+				this.collection === type.collection &&
+				this.elementType.equivalent(type.elementType))
 		);
 	}
 }
 
-export class Map extends Type {
-	constructor(
-		/* public readonly indexType: Type, */
-		/** Type of the elements to be stored in the map */
-		public readonly elementType: Type
-	) {
-		super();
-	}
+/** Void type */
+export const Void = new PrimitiveType(Primitive.Void);
+/** String type */
+export const Str = new PrimitiveType(Primitive.Str);
+/** Number type */
+export const Num = new PrimitiveType(Primitive.Num);
+/** Boolean type */
+export const Bool = new PrimitiveType(Primitive.Bool);
+/** Error type */
+export const ErrType = new ErrorType();
 
-	public equivalent(type: Type): boolean {
-		return type instanceof Map && this.elementType.equivalent(type.elementType);
-	}
-}
+export const primitives: Map<string, PrimitiveType> = new Map([
+	["void", Void],
+	["str", Str],
+	["num", Num],
+	["bool", Bool],
+]);
 
-export class Set extends Type {
-	constructor(
-		/** Type of the elements to be stored in the set */
-		public readonly elementType: Type
-	) {
-		super();
+/**
+ * Construct a type instance from the specified type annotation array
+ *
+ * @param typeAnnotation A type annotation string array
+ * Examples include ["str"], ["bool"], ["Wizard"], ["str", "map"],
+ * ["str", "list", "map"], ["num", "list"]
+ */
+export function constructType(typeAnnotation: string[]): Type {
+	if (typeAnnotation.length < 1) return Void;
+	let annotation = typeAnnotation[0]!;
+	let type: Type = primitives.get(annotation) || ErrType;
+	for (let i = 1; i < annotation.length; i++) {
+		annotation = typeAnnotation[i];
+		switch (annotation) {
+			// Wrap the last type in the appropriate type constructor
+			case "list":
+				type = new CollectionType(Collection.List, type);
+				break;
+			case "map":
+				type = new CollectionType(Collection.Map, type);
+				break;
+			case "set":
+				type = new CollectionType(Collection.Set, type);
+				break;
+			default:
+				type = ErrType;
+		}
 	}
-
-	public equivalent(type: Type): boolean {
-		return type instanceof Set && this.elementType.equivalent(type.elementType);
-	}
+	return type;
 }
