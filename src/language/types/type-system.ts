@@ -208,7 +208,7 @@ export function constructType(
 		default:
 			type = new ErrorType(isAssignable);
 	}
-	for (let i = 1; i < annotation.length; i++) {
+	for (let i = 1; i < typeAnnotation.length; i++) {
 		annotation = typeAnnotation[i];
 		switch (annotation) {
 			// Wrap the last type in the appropriate type constructor

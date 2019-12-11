@@ -205,4 +205,14 @@ describe("linked hash map", () => {
 		map.delete("k1");
 		map.delete("k0");
 	});
+	test("should initialize with values", () => {
+		const map = new LinkedHashMap<string, number>([
+			["hi", 1],
+			["hey", 2],
+		]);
+		expect(map.ordinal("hi")!).toBe(0);
+		expect(map.ordinal("hey")!).toBe(1);
+		expect(map.get("hi")!).toBe(1);
+		expect(map.get("hey")!).toBe(2);
+	});
 });
