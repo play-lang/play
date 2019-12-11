@@ -1,4 +1,4 @@
-import { TypeInfo } from "../language/type-system";
+import { TypeRule } from "../language/type-system";
 import { TypeChecker } from "./type-checker";
 
 /** Represents a type that can be directly type-checked */
@@ -37,5 +37,5 @@ export interface TypeCheckable {
 	 * @param tc The type checker containing the AST, symbol table, and
 	 * action table
 	 */
-	computeReturnType(tc: TypeChecker): TypeInfo;
+	computeReturnType(tc: TypeChecker): TypeRule;
 }
