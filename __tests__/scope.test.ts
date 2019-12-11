@@ -1,6 +1,6 @@
 import { run, str } from "../shared/test-utils";
 describe("block scope", () => {
-	it("should know about deeply nested block-scoped variables", async () => {
+	test("should know about deeply nested block-scoped variables", async () => {
 		const code = str`
 		function deepNest(a: num): num {
 			let b: num = a

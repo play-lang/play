@@ -6,14 +6,14 @@ const filePathResolver = async (path: string): Promise<string> => {
 };
 
 describe("preprocessor", () => {
-	it("should initialize", () => {
+	test("should initialize", () => {
 		const fileProvider = async (path: string): Promise<string> => {
 			return "";
 		};
 		const pp = new Preprocessor("test.play", filePathResolver, fileProvider);
 		expect(pp).toBeInstanceOf(Preprocessor);
 	});
-	it("should combine files with empty file in the middle", async () => {
+	test("should combine files with empty file in the middle", async () => {
 		const fileContents: { [key: string]: string } = {
 			a: "file a",
 			b: "file b",
@@ -38,7 +38,7 @@ describe("preprocessor", () => {
 		await pp.preprocess();
 		expect(testRanges(pp.ranges, fileContents, filenames)).toBe("");
 	});
-	it("should combine recursively", async () => {
+	test("should combine recursively", async () => {
 		const fileContents: { [key: string]: string } = {
 			a: str`
 				#include "b"
@@ -61,7 +61,7 @@ describe("preprocessor", () => {
 		await pp.preprocess();
 		expect(testRanges(pp.ranges, fileContents, filenames)).toBe("");
 	});
-	it("should only include files once", async () => {
+	test("should only include files once", async () => {
 		const fileContents: { [key: string]: string } = {
 			a: str`
 				#include "b"
@@ -85,7 +85,7 @@ describe("preprocessor", () => {
 		await pp.preprocess();
 		expect(testRanges(pp.ranges, fileContents, filenames)).toBe("");
 	});
-	it("should throw errors when it can't resolve a filename", async () => {
+	test("should throw errors when it can't resolve a filename", async () => {
 		const pp = new Preprocessor(
 			"test.play",
 			async (path: string) => "",
@@ -93,7 +93,7 @@ describe("preprocessor", () => {
 		);
 		expect(pp.addFile("does-not-exist.play")).rejects.toThrow();
 	});
-	it("should return nothing if it can't find file contents", async () => {
+	test("should return nothing if it can't find file contents", async () => {
 		const pp = new Preprocessor(
 			"test.play",
 			async (path: string) => path,
@@ -101,7 +101,7 @@ describe("preprocessor", () => {
 		);
 		expect(await pp.preprocess()).toBe("");
 	});
-	it("throws an error when a blank filename is included", async () => {
+	test("throws an error when a blank filename is included", async () => {
 		const pp = new Preprocessor(
 			"test.play",
 			async (path: string) => path,
