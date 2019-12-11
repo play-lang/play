@@ -2,13 +2,13 @@ import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { Describable } from "../language/token";
 import { TokenType } from "../language/token-type";
 import { Visitor } from "../language/visitor";
-import { ActionDeclarationNode } from "../parser/nodes/action-declaration-node";
-import { ActionReferenceNode } from "../parser/nodes/action-reference-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
+import { FunctionDeclarationNode } from "../parser/nodes/function-declaration-node";
+import { FunctionReferenceNode } from "../parser/nodes/function-reference-node";
 import { InvocationExpressionNode } from "../parser/nodes/invocation-operator-parselet";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
@@ -98,12 +98,12 @@ export class JSONVisitor extends Visitor implements Describable {
 			variableName: node.variableName,
 		});
 	}
-	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
+	public visitActionDeclarationNode(node: FunctionDeclarationNode): void {
 		node.block!.accept(this);
 		const block = this.stack.pop();
 		const parameterTypes = Array.from(node.info.parameterTypes.entries());
 		this.stack.push({
-			type: "action-decl",
+			type: "function-decl",
 			start: node.start,
 			end: node.end,
 			typeAnnotation: node.info.typeAnnotation,
@@ -112,12 +112,12 @@ export class JSONVisitor extends Visitor implements Describable {
 			block,
 		});
 	}
-	public visitActionReferenceNode(node: ActionReferenceNode): void {
+	public visitActionReferenceNode(node: FunctionReferenceNode): void {
 		this.stack.push({
-			type: "action-ref",
+			type: "function-ref",
 			start: node.start,
 			end: node.end,
-			actionName: node.actionName,
+			functionName: node.functionName,
 		});
 	}
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
@@ -172,10 +172,10 @@ export class JSONVisitor extends Visitor implements Describable {
 		node.lhs.accept(this);
 		const lhs = this.stack.pop();
 		this.stack.push({
-			type: "action-call",
+			type: "function-call",
 			start: node.start,
 			end: node.end,
-			actionName: node.actionName,
+			functionName: node.functionName,
 			args: node.args,
 			lhs,
 		});

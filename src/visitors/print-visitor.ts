@@ -2,13 +2,13 @@ import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { Describable } from "../language/token";
 import { TokenType } from "../language/token-type";
 import { Visitor } from "../language/visitor";
-import { ActionDeclarationNode } from "../parser/nodes/action-declaration-node";
-import { ActionReferenceNode } from "../parser/nodes/action-reference-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
+import { FunctionDeclarationNode } from "../parser/nodes/function-declaration-node";
+import { FunctionReferenceNode } from "../parser/nodes/function-reference-node";
 import { InvocationExpressionNode } from "../parser/nodes/invocation-operator-parselet";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
@@ -75,7 +75,7 @@ export class PrintVisitor extends Visitor implements Describable {
 		this.desc += "VariableReference(" + node.variableName + ")\n";
 	}
 
-	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
+	public visitActionDeclarationNode(node: FunctionDeclarationNode): void {
 		let params = "";
 		let i = 0;
 		for (const [param, typeAnnotation] of node.info.parameterTypes.entries()) {
@@ -85,7 +85,7 @@ export class PrintVisitor extends Visitor implements Describable {
 			i++;
 		}
 		this.desc +=
-			"Action " +
+			"Function " +
 			node.info.typeAnnotation.join(" ") +
 			" " +
 			node.info.name +
@@ -100,12 +100,12 @@ export class PrintVisitor extends Visitor implements Describable {
 		this.indent -= 1;
 	}
 
-	public visitActionReferenceNode(node: ActionReferenceNode): void {
-		this.desc += "ActionReference(" + node.actionName + ")\n";
+	public visitActionReferenceNode(node: FunctionReferenceNode): void {
+		this.desc += "FunctionReference(" + node.functionName + ")\n";
 	}
 
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
-		this.desc += "Call(" + node.actionName + ")\n";
+		this.desc += "Call(" + node.functionName + ")\n";
 		this.indent += 1;
 		for (const arg of node.args) {
 			const last = arg === node.args[node.args.length - 1];

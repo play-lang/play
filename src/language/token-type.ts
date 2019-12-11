@@ -34,7 +34,7 @@ export enum TokenType {
 	// Reserved declaration words
 	Model,
 	Contract,
-	Action,
+	Function,
 	Has,
 	Uses,
 
@@ -98,7 +98,7 @@ export const idTokenTypes: { [key: string]: TokenType } = {
 	// Preprocessor commands:
 	include: TokenType.Include,
 	// Play language:
-	action: TokenType.Action,
+	function: TokenType.Function,
 	if: TokenType.If,
 	while: TokenType.While,
 	for: TokenType.For,

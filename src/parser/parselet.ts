@@ -2,10 +2,10 @@ import { Expression } from "../language/node";
 import { Precedence } from "../language/precedence";
 import { TokenLike } from "../language/token";
 import { TokenType } from "../language/token-type";
-import { ActionReferenceNode } from "./nodes/action-reference-node";
 import { AssignmentExpressionNode } from "./nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "./nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "./nodes/binary-logical-expression-node";
+import { FunctionReferenceNode } from "./nodes/function-reference-node";
 import { InvocationExpressionNode } from "./nodes/invocation-operator-parselet";
 import { PostfixExpressionNode } from "./nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "./nodes/prefix-expression-node";
@@ -44,8 +44,8 @@ export class IdParselet implements PrefixParselet {
 			const type = scope.entries.get(token.lexeme)!.typeAnnotation;
 			return new VariableReferenceNode(token, type);
 		}
-		// Todo: Look up in scope identifiers, not just actions
-		return new ActionReferenceNode(token);
+		// Todo: Look up in scope identifiers, not just functions
+		return new FunctionReferenceNode(token);
 	}
 }
 
@@ -138,7 +138,7 @@ export class InvocationOperatorParselet implements InfixParselet {
 			} while (parser.match(TokenType.Comma));
 			parser.consume(
 				TokenType.ParenClose,
-				"Expected closing parenthesis following action arguments"
+				"Expected closing parenthesis following function arguments"
 			);
 			end = parser.previous.end;
 		}

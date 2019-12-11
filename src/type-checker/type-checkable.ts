@@ -18,7 +18,7 @@ export interface TypeCheckable {
 	 *
 	 * @param tc The type checker that is requesting the check
 	 * Providing the type checker also allows the node to reference the
-	 * symbol table and action table (both of which are properties of the AST)
+	 * symbol table and function table (both of which are properties of the AST)
 	 * since they are only available after parsing completes (which happens
 	 * before type checking)
 	 */

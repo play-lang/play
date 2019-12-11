@@ -12,7 +12,7 @@ describe("parser", () => {
 					type: "binary-expr",
 					start: 0,
 					end: 28,
-					lhs: { type: "action-ref", start: 0, end: 1, actionName: "a" },
+					lhs: { type: "function-ref", start: 0, end: 1, functionName: "a" },
 					rhs: {
 						type: "binary-expr",
 						start: 6,
@@ -34,16 +34,16 @@ describe("parser", () => {
 										start: 6,
 										end: 11,
 										lhs: {
-											type: "action-ref",
+											type: "function-ref",
 											start: 6,
 											end: 7,
-											actionName: "b",
+											functionName: "b",
 										},
 										rhs: {
-											type: "action-ref",
+											type: "function-ref",
 											start: 10,
 											end: 11,
-											actionName: "c",
+											functionName: "c",
 										},
 									},
 									rhs: {
