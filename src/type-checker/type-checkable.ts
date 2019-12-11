@@ -3,14 +3,6 @@ import { TypeChecker } from "./type-checker";
 /** Represents a type that can be directly type-checked */
 export interface TypeCheckable {
 	/**
-	 * True if the expression can be used as a left-hand side expression
-	 *
-	 * (i.e., `++5` is not legal, but `++someId` is, provided `someId` is a
-	 * reference to a number variable)
-	 */
-	readonly isAddressable: boolean;
-
-	/**
 	 * Expression nodes should implement this to validate child node(s) type or
 	 * other semantic properties
 	 *

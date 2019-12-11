@@ -20,9 +20,16 @@ export enum Collection {
 	Set,
 }
 
-abstract class Type {
-	/** True if the type is addressable */
-	public readonly isAddressable: boolean = false;
+export abstract class Type {
+	constructor(
+		/**
+		 * True if the type is addressable and assignable
+		 *
+		 * Some addressable types, like constants, cannot be assigned to
+		 * This basically informs us of l-values in assignment expressions
+		 */
+		public readonly isAssignable: boolean
+	) {}
 
 	/**
 	 * Type subclasses should implement this to determine equivalence for a
@@ -37,8 +44,8 @@ abstract class Type {
 
 /** Represents an error type */
 export class ErrorType extends Type {
-	constructor() {
-		super();
+	constructor(isAssignable: boolean) {
+		super(isAssignable);
 	}
 
 	public equivalent(type: Type): boolean {
@@ -54,9 +61,10 @@ export class ErrorType extends Type {
 export class PrimitiveType extends Type {
 	constructor(
 		/** The data type primitive represented by this type */
-		public readonly primitive: Primitive
+		public readonly primitive: Primitive,
+		isAssignable: boolean
 	) {
-		super();
+		super(isAssignable);
 	}
 
 	public equivalent(type: Type): boolean {
@@ -88,9 +96,10 @@ export class PrimitiveType extends Type {
 export class ProductType extends Type {
 	constructor(
 		/** The type operands for this product type keyed by the name */
-		public readonly operands: LinkedHashMap<string, Type>
+		public readonly operands: LinkedHashMap<string, Type>,
+		isAssignable: boolean = false
 	) {
-		super();
+		super(isAssignable);
 	}
 
 	public equivalent(type: Type): boolean {
@@ -128,7 +137,7 @@ export class FunctionType extends Type {
 		/** Return value type (range type) */
 		public readonly returnType: Type
 	) {
-		super();
+		super(false);
 	}
 
 	public equivalent(type: Type): boolean {
@@ -146,9 +155,10 @@ export class CollectionType extends Type {
 		/** The type of collection being represented by this instance */
 		public readonly collection: Collection,
 		/** Type of the elements to be stored in the list */
-		public readonly elementType: Type
+		public readonly elementType: Type,
+		isAssignable: boolean = false
 	) {
-		super();
+		super(isAssignable);
 	}
 
 	public equivalent(type: Type): boolean {
@@ -161,23 +171,8 @@ export class CollectionType extends Type {
 	}
 }
 
-/** Void type */
-export const Void = new PrimitiveType(Primitive.Void);
-/** String type */
-export const Str = new PrimitiveType(Primitive.Str);
-/** Number type */
-export const Num = new PrimitiveType(Primitive.Num);
-/** Boolean type */
-export const Bool = new PrimitiveType(Primitive.Bool);
-/** Error type */
-export const ErrType = new ErrorType();
-
-export const primitives: Map<string, PrimitiveType> = new Map([
-	["void", Void],
-	["str", Str],
-	["num", Num],
-	["bool", Bool],
-]);
+/** Void type, for your convenience */
+export const Void = new PrimitiveType(Primitive.Void, false);
 
 /**
  * Construct a type instance from the specified type annotation array
@@ -185,11 +180,34 @@ export const primitives: Map<string, PrimitiveType> = new Map([
  * @param typeAnnotation A type annotation string array
  * Examples include ["str"], ["bool"], ["Wizard"], ["str", "map"],
  * ["str", "list", "map"], ["num", "list"]
+ * @param [isAssignable=false] Whether or not the type represents an entity type that
+ * can be assigned to (like a mutable variable)
  */
-export function constructType(typeAnnotation: string[]): Type {
-	if (typeAnnotation.length < 1) return Void;
+export function constructType(
+	typeAnnotation: string[],
+	isAssignable: boolean = false
+): Type {
+	if (typeAnnotation.length < 1) {
+		return new PrimitiveType(Primitive.Void, false);
+	}
 	let annotation = typeAnnotation[0]!;
-	let type: Type = primitives.get(annotation) || ErrType;
+	let type: Type;
+	switch (annotation) {
+		case "void":
+			type = new PrimitiveType(Primitive.Void, false);
+			break;
+		case "str":
+			type = new PrimitiveType(Primitive.Str, isAssignable);
+			break;
+		case "num":
+			type = new PrimitiveType(Primitive.Num, isAssignable);
+			break;
+		case "bool":
+			type = new PrimitiveType(Primitive.Bool, isAssignable);
+			break;
+		default:
+			type = new ErrorType(isAssignable);
+	}
 	for (let i = 1; i < annotation.length; i++) {
 		annotation = typeAnnotation[i];
 		switch (annotation) {
@@ -204,7 +222,7 @@ export function constructType(typeAnnotation: string[]): Type {
 				type = new CollectionType(Collection.Set, type);
 				break;
 			default:
-				type = ErrType;
+				type = new ErrorType(isAssignable);
 		}
 	}
 	return type;
@@ -227,4 +245,14 @@ export function constructFunctionType(info: FunctionInfo): FunctionType {
 	const returnType = constructType(info.typeAnnotation);
 	const type = new FunctionType(info.name, parametersType, returnType);
 	return type;
+}
+
+/**
+ * Determines whether or not the specified right-hand side type can be assigned
+ * to the specified left-hand side type
+ * @param lhs The type of the left-hand side (assignee)
+ * @param rhs The type of the value being assigned
+ */
+export function allowAssignment(lhs: Type, rhs: Type): boolean {
+	return lhs.isAssignable && lhs.equivalent(rhs);
 }

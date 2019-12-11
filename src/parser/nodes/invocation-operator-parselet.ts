@@ -1,4 +1,6 @@
+import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
+import { ErrorType, Type } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 import { FunctionReferenceNode } from "./function-reference-node";
 
@@ -21,9 +23,17 @@ export class InvocationExpressionNode extends Expression {
 		public readonly args: Expression[]
 	) {
 		super(start, end);
+		this.type = lhs.type;
 	}
 
 	public accept(visitor: Visitor): void {
 		visitor.visitInvocationExpressionNode(this);
+	}
+
+	public type(ast: AbstractSyntaxTree): Type {
+		if (this.lhs instanceof FunctionReferenceNode) {
+			return this.lhs.type(ast);
+		}
+		return new ErrorType(false);
 	}
 }

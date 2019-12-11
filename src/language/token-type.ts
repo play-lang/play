@@ -131,3 +131,18 @@ export const primitiveTypeAnnotations: Map<TokenType, string[]> = new Map([
 	[TokenType.Boolean, ["bool"]],
 	[TokenType.Nil, ["object"]],
 ]);
+
+/** Prefix operator types mapped to their type annotation */
+export const prefixTypeAnnotations: Map<TokenType, string[]> = new Map([
+	[TokenType.Bang, ["bool"]],
+	[TokenType.Plus, ["num"]],
+	[TokenType.Minus, ["num"]],
+	[TokenType.PlusPlus, ["num"]],
+	[TokenType.MinusMinus, ["num"]],
+]);
+
+/** Prefix operator types mapped to their type annotation */
+export const postfixTypeAnnotations: Map<TokenType, string[]> = new Map([
+	[TokenType.PlusPlus, ["num"]],
+	[TokenType.MinusMinus, ["num"]],
+]);

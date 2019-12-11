@@ -1,5 +1,6 @@
 import { FunctionInfo } from "../../language/function-info";
 import { Statement } from "../../language/node";
+import { constructFunctionType, Type } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 import { BlockStatementNode } from "./block-statement-node";
 
@@ -13,6 +14,10 @@ export class FunctionDeclarationNode extends Statement {
 		public readonly block: BlockStatementNode
 	) {
 		super(start, block.end);
+	}
+
+	public type(): Type {
+		return constructFunctionType(this.info);
 	}
 
 	public accept(visitor: Visitor): void {

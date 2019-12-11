@@ -1,5 +1,11 @@
+import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
+import {
+	constructType,
+	ErrorType,
+	Type,
+} from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
 /**
@@ -18,8 +24,12 @@ export class FunctionReferenceNode extends Expression {
 		super(token.pos, token.end);
 	}
 
-	public get isAddressable(): boolean {
-		return false;
+	public type(ast: AbstractSyntaxTree): Type {
+		const info = ast.functionTable.get(this.functionName);
+		if (info) {
+			return constructType(info.typeAnnotation);
+		}
+		return new ErrorType(false);
 	}
 
 	// MARK: Visitor
