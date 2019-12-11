@@ -1,5 +1,6 @@
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
+import { constructType, Type } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
 /**
@@ -23,8 +24,8 @@ export class VariableReferenceNode extends Expression {
 		this.variableName = token.lexeme;
 	}
 
-	public get isAddressable(): boolean {
-		return true;
+	public type(): Type {
+		return constructType(this.typeAnnotation, true);
 	}
 
 	// MARK: Visitor

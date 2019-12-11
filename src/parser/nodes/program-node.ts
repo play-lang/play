@@ -1,4 +1,5 @@
 import { Node } from "../../language/node";
+import { Type, Void } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
 export class ProgramNode extends Node {
@@ -13,7 +14,13 @@ export class ProgramNode extends Node {
 		super(start, end);
 	}
 
+	public type(): Type {
+		return Void;
+	}
+
 	public accept(visitor: Visitor): void {
+		// TODO: Infer type
+		// Make this analyze outer level return statements to infer return type
 		visitor.visitProgramNode(this);
 	}
 }

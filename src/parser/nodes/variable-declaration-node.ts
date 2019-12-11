@@ -1,6 +1,7 @@
 import { IdentifierSymbol } from "../../language/identifier-symbol";
 import { Expression, Statement } from "../../language/node";
 import { TokenLike } from "../../language/token";
+import { constructType, Type } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
 export class VariableDeclarationNode extends Statement
@@ -25,6 +26,10 @@ export class VariableDeclarationNode extends Statement
 		public readonly expr?: Expression
 	) {
 		super(start, end);
+	}
+
+	public type(): Type {
+		return constructType(this.typeAnnotation, false);
 	}
 
 	public accept(visitor: Visitor): void {

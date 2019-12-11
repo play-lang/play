@@ -1,6 +1,11 @@
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
-import { TokenType } from "../../language/token-type";
+import { primitiveTypeAnnotations, TokenType } from "../../language/token-type";
+import {
+	constructType,
+	ErrorType,
+	Type,
+} from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
 export class PrimitiveExpressionNode extends Expression {
@@ -18,8 +23,12 @@ export class PrimitiveExpressionNode extends Expression {
 		this.primitiveValue = token.lexeme;
 	}
 
-	public get isAddressable(): boolean {
-		return false;
+	public type(): Type {
+		const annotation = primitiveTypeAnnotations.get(this.token.type);
+		if (annotation) {
+			return constructType(annotation);
+		}
+		return new ErrorType(false);
 	}
 
 	// MARK: Visitor

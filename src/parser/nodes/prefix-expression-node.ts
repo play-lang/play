@@ -1,6 +1,12 @@
+import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
-import { TokenType } from "../../language/token-type";
+import { prefixTypeAnnotations, TokenType } from "../../language/token-type";
+import {
+	constructType,
+	ErrorType,
+	Type,
+} from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
 export class PrefixExpressionNode extends Expression {
@@ -18,35 +24,13 @@ export class PrefixExpressionNode extends Expression {
 		this.rhs = rhs;
 	}
 
-	// MARK: Expression
-	public computeType(/* ast: AbstractSyntaxTree */): string[] {
-		switch (this.operatorType) {
-			case TokenType.Bang:
-				return ["bool"];
-			case TokenType.Plus:
-			case TokenType.Minus:
-			case TokenType.PlusPlus:
-			case TokenType.MinusMinus:
-				return ["num"];
+	public type(ast: AbstractSyntaxTree): Type {
+		const rhsType = this.rhs.type(ast);
+		const annotation = prefixTypeAnnotations.get(this.token.type);
+		if (annotation) {
+			return constructType(annotation, rhsType.isAssignable);
 		}
-		throw new Error(
-			"Internal: cannot reconcile token type " +
-				TokenType[this.operatorType] +
-				" in a prefix expression node"
-		);
-	}
-
-	public get isAddressable(): boolean {
-		switch (this.operatorType) {
-			case TokenType.Bang:
-			case TokenType.Plus:
-			case TokenType.Minus:
-				return false; // Uses rhs as a primitive type
-			case TokenType.PlusPlus:
-			case TokenType.MinusMinus:
-				return true; // Uses rhs as a reference
-		}
-		return false;
+		return new ErrorType(rhsType.isAssignable);
 	}
 
 	// MARK: Visitor

@@ -1,4 +1,5 @@
 import { Statement } from "../../language/node";
+import { Type, Void } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
 export class BlockStatementNode extends Statement {
@@ -13,6 +14,13 @@ export class BlockStatementNode extends Statement {
 		public readonly isActionBlock: boolean
 	) {
 		super(start, end);
+	}
+
+	public type(): Type {
+		// Todo: Infer type
+		// Examine return statements in this block to figure out / enforce what
+		// the return type is
+		return Void;
 	}
 
 	public accept(visitor: Visitor): void {
