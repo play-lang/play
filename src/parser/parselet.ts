@@ -87,7 +87,7 @@ export class AssignmentParselet implements InfixParselet {
 		//
 		// Assignment is right-associative, so we drop precedence by 1:
 		const rhs: Expression = parser.expression(this.precedence - 1);
-		return new AssignmentExpressionNode(token.type, lhs, rhs);
+		return new AssignmentExpressionNode(token, token.type, lhs, rhs);
 	}
 	public get precedence(): number {
 		return Precedence.Assignment;

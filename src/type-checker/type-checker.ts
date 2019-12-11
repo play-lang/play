@@ -18,10 +18,6 @@ import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
 
 import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { SemanticError } from "../language/semantic-error";
-import { TokenLike } from "../language/token";
-import { TokenType } from "../language/token-type";
-import { TypeInfo, TypeRuleset } from "../language/type-system";
-import { TypeCheckerError } from "./type-checker-error";
 
 export class TypeChecker extends Visitor {
 	/* Type checker errors encountered while checking types */
@@ -51,46 +47,11 @@ export class TypeChecker extends Visitor {
 			statement.accept(this);
 		}
 	}
-	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
-		const expr = node.expr;
-		if (expr) {
-			const expectedType = node.typeAnnotation;
-			try {
-				const encounteredType = expr.computeType(this.ast);
-				this.assertType(node.token, expectedType, encounteredType);
-			} catch (e) {
-				this.errors.push(e);
-			}
-		}
-	}
+	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {}
 	public visitVariableReferenceNode(node: VariableReferenceNode): void {}
 	public visitActionDeclarationNode(node: ActionDeclarationNode): void {}
 	public visitActionReferenceNode(node: ActionReferenceNode): void {}
-	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
-		let expectedType: string[] = [];
-		if (!node.rhs.isAddressable) {
-			throw new SemanticError(node.);
-		}
-		switch (node.operatorType) {
-			case TokenType.Bang:
-				expectedType = ["bool"];
-				break;
-			case TokenType.Plus:
-			case TokenType.Minus:
-				expectedType = ["num"];
-				break;
-			case TokenType.PlusPlus:
-			case TokenType.MinusMinus:
-		}
-		node.operatorType;
-		[
-			TokenType.Bang,
-			TokenType.Plus,
-			TokenType.Minus,
-			TokenType.PlusPlus,
-			TokenType.MinusMinus,
-		];
-	}
+	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {}
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {}
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {}
 	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {}
@@ -112,35 +73,30 @@ export class TypeChecker extends Visitor {
 	 * @returns True if the expected type is the encountered type, false if a type
 	 * error was found
 	 */
-	public assertType(
-		token: TokenLike,
-		ruleset: TypeRuleset,
-		type: TypeInfo,
-	): boolean {
-		if (type.satisfies(ruleset)) return true;
-		const prettyExpectedType = ruleset.description;
-		const prettyEncounteredType = type.description;
+	// public assertType(
+	// 	token: TokenLike,
+	// 	ruleset: TypeRuleset,
+	// 	type: TypeInfo
+	// ): boolean {
+	// 	if (type.satisfies(ruleset)) return true;
+	// 	const prettyExpectedType = ruleset.description;
+	// 	const prettyEncounteredType = type.description;
 
-		const prefix =
-			"Type error in " +
-			token.file.name +
-			" at " +
-			token.line +
-			":" +
-			token.column +
-			" (" +
-			token.pos +
-			"): ";
-		const hint = `${prefix} Expected ${token.lexeme} to have type ${prettyExpectedType} instead of ${prettyEncounteredType}`;
-		const error = new TypeCheckerError(
-			token,
-			ruleset,
-			type,
-			hint
-		);
-		this.errors.push(error);
-		return false;
-	}
+	// 	const prefix =
+	// 		"Type error in " +
+	// 		token.file.name +
+	// 		" at " +
+	// 		token.line +
+	// 		":" +
+	// 		token.column +
+	// 		" (" +
+	// 		token.pos +
+	// 		"): ";
+	// 	const hint = `${prefix} Expected ${token.lexeme} to have type ${prettyExpectedType} instead of ${prettyEncounteredType}`;
+	// 	const error = new TypeCheckerError(token, ruleset, type, hint);
+	// 	this.errors.push(error);
+	// 	return false;
+	// }
 
 	/**
 	 * Report a semantic error to the type checker

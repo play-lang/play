@@ -125,7 +125,7 @@ export const idTokenTypes: { [key: string]: TokenType } = {
 };
 
 /** Primitive token types mapped to their type annotation */
-export const primitiveTypes: Map<TokenType, string[]> = new Map([
+export const primitiveTypeAnnotations: Map<TokenType, string[]> = new Map([
 	[TokenType.String, ["str"]],
 	[TokenType.Number, ["num"]],
 	[TokenType.Boolean, ["bool"]],
