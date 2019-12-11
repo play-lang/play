@@ -121,6 +121,8 @@ export class ProductType extends Type {
  */
 export class FunctionType extends Type {
 	constructor(
+		/** Name of the function */
+		public readonly name: string,
 		/** Function parameters (domain) type */
 		public readonly parameters: ProductType,
 		/** Return value type (range type) */
@@ -133,6 +135,7 @@ export class FunctionType extends Type {
 		return (
 			type === this ||
 			(type instanceof FunctionType &&
+				this.name === type.name &&
 				this.parameters.equivalent(type.parameters))
 		);
 	}
@@ -207,4 +210,21 @@ export function constructType(typeAnnotation: string[]): Type {
 	return type;
 }
 
-export function constructFunctionType(info: FunctionInfo): void {}
+/**
+ * Construct a function type for use with type checking from a function
+ * information object (which comes from the parser)
+ *
+ * @param info Function information from the parser
+ */
+export function constructFunctionType(info: FunctionInfo): FunctionType {
+	const parameters = new LinkedHashMap<string, Type>();
+	for (const paramName of info.parameters) {
+		const annotation = info.parameterTypes.get(paramName)!;
+		const type = constructType(annotation);
+		parameters.set(paramName, type);
+	}
+	const parametersType = new ProductType(parameters);
+	const returnType = constructType(info.typeAnnotation);
+	const type = new FunctionType(info.name, parametersType, returnType);
+	return type;
+}

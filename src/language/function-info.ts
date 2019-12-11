@@ -3,9 +3,9 @@
  */
 export class FunctionInfo {
 	constructor(
-		/** Name of the function */
+		/** Name (string id) of the function */
 		public readonly name: string,
-		/** Type of the function */
+		/** Return type of the function */
 		public readonly typeAnnotation: string[],
 		/** Parameter names list */
 		public readonly parameters: string[],
