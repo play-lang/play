@@ -1,4 +1,3 @@
-import { TypeRule } from "../language/type-system";
 import { TypeChecker } from "./type-checker";
 
 /** Represents a type that can be directly type-checked */
@@ -15,9 +14,6 @@ export interface TypeCheckable {
 	 * Expression nodes should implement this to validate child node(s) type or
 	 * other semantic properties
 	 *
-	 * May call `assertType` on the type checker if a type check needs to be
-	 * enforced
-	 *
 	 * May call `report` on the type checker to report other semantic errors
 	 *
 	 * @param tc The type checker that is requesting the check
@@ -27,15 +23,4 @@ export interface TypeCheckable {
 	 * before type checking)
 	 */
 	validate(tc: TypeChecker): void;
-
-	/**
-	 * Expression nodes should implement this to compute their "return" type
-	 *
-	 * An expression may take different type operands and combine them to produce
-	 * a resulting type represented by the "return" type here
-	 *
-	 * @param tc The type checker containing the AST, symbol table, and
-	 * action table
-	 */
-	computeReturnType(tc: TypeChecker): TypeRule;
 }
