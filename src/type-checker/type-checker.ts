@@ -1,11 +1,11 @@
 import { Visitor } from "../language/visitor";
-import { ActionDeclarationNode } from "../parser/nodes/action-declaration-node";
-import { ActionReferenceNode } from "../parser/nodes/action-reference-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
+import { FunctionDeclarationNode } from "../parser/nodes/function-declaration-node";
+import { FunctionReferenceNode } from "../parser/nodes/function-reference-node";
 import { InvocationExpressionNode } from "../parser/nodes/invocation-operator-parselet";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
@@ -49,8 +49,8 @@ export class TypeChecker extends Visitor {
 	}
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {}
 	public visitVariableReferenceNode(node: VariableReferenceNode): void {}
-	public visitActionDeclarationNode(node: ActionDeclarationNode): void {}
-	public visitActionReferenceNode(node: ActionReferenceNode): void {}
+	public visitActionDeclarationNode(node: FunctionDeclarationNode): void {}
+	public visitActionReferenceNode(node: FunctionReferenceNode): void {}
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {}
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {}
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {}

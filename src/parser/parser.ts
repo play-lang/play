@@ -1,5 +1,5 @@
 import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
-import { ActionInfo } from "../language/action-info";
+import { FunctionInfo } from "../language/function-info";
 import { Expression, Statement } from "../language/node";
 import { infixParselets, prefixParselets } from "../language/operator-grammar";
 import SymbolTable from "../language/symbol-table";
@@ -7,9 +7,9 @@ import { TokenLike } from "../language/token";
 import { TokenParser } from "../language/token-parser";
 import { TokenType } from "../language/token-type";
 import { Lexer } from "../lexer/lexer";
-import { ActionDeclarationNode } from "./nodes/action-declaration-node";
 import { BlockStatementNode } from "./nodes/block-statement-node";
 import { ExpressionStatementNode } from "./nodes/expression-statement-node";
+import { FunctionDeclarationNode } from "./nodes/function-declaration-node";
 import { ProgramNode } from "./nodes/program-node";
 import { ReturnStatementNode } from "./nodes/return-statement-node";
 import { VariableDeclarationNode } from "./nodes/variable-declaration-node";
@@ -27,10 +27,10 @@ export class Parser extends TokenParser {
 	}
 
 	/**
-	 * Context names mapped to action nodes
+	 * Context names mapped to function nodes
 	 * This allows us to look-up functions by name without having to walk the tree
 	 */
-	public readonly actionTable: Map<string, ActionInfo> = new Map();
+	public readonly functionTable: Map<string, FunctionInfo> = new Map();
 
 	/** Symbol table pointer stack for tracking scopes */
 	protected _symbolTables: SymbolTable[] = [];
@@ -85,7 +85,7 @@ export class Parser extends TokenParser {
 				? this.previous.end
 				: statements[statements.length - 1].end;
 		const root = new ProgramNode(start, end, statements);
-		return new AbstractSyntaxTree(root, this.symbolTable, this.actionTable);
+		return new AbstractSyntaxTree(root, this.symbolTable, this.functionTable);
 	}
 
 	public statement(): Statement {
@@ -99,9 +99,9 @@ export class Parser extends TokenParser {
 		} else if (this.match(TokenType.BraceOpen)) {
 			// Match a block statement
 			return this.block();
-		} else if (this.match(TokenType.Action)) {
+		} else if (this.match(TokenType.Function)) {
 			// Function definition
-			return this.actionDeclaration();
+			return this.functionDeclaration();
 		} else if (this.match(TokenType.Return)) {
 			return this.returnStatement();
 		} else {
@@ -112,7 +112,7 @@ export class Parser extends TokenParser {
 
 	/**
 	 * Parse a block statement, optionally specifying if it represents an
-	 * action block
+	 * function block
 	 */
 	public block(isActionBlock: boolean = false): BlockStatementNode {
 		// Brace open has already been matched for us
@@ -120,7 +120,7 @@ export class Parser extends TokenParser {
 		this.eatLines();
 		if (!isActionBlock) {
 			// Create a new symbol table scope and push it on the symbol table stack
-			// (Only if we're not an action block -- it brings its own symbol table)
+			// (Only if we're not a function block -- it brings its own symbol table)
 			this._symbolTables.push(this.symbolTable.addScope());
 		}
 		const statements: Statement[] = [];
@@ -221,35 +221,35 @@ export class Parser extends TokenParser {
 	}
 
 	/**
-	 * Parse an action declaration
+	 * Parse a function declaration
 	 *
 	 * e.g.,
 	 *
 	 * ```
-	 * action str map makeStringMap(str param1, str param2) {
+	 * function str map makeStringMap(str param1, str param2) {
 	 *   ...
 	 * }
 	 * ```
 	 */
-	public actionDeclaration(): ActionDeclarationNode {
+	public functionDeclaration(): FunctionDeclarationNode {
 		if (!this.symbolTable.isGlobalScope) {
 			throw this.error(
 				this.previous,
-				"Actions can only be declared in global scope"
+				"Functions can only be declared in global scope"
 			);
 		}
-		// Action keyword has already been matched for us
+		// Function keyword has already been matched for us
 		const startToken = this.previous;
 		const start = this.previous.pos;
 		const nameToken = this.consume(
 			TokenType.Id,
-			"Expected action name following declaration"
+			"Expected function name following declaration"
 		);
 		const name = nameToken.lexeme;
-		if (this.actionTable.has(name)) {
+		if (this.functionTable.has(name)) {
 			throw this.error(
 				nameToken,
-				"Cannot redeclare action with the name `" + name + "`"
+				"Cannot redeclare function with the name `" + name + "`"
 			);
 		}
 		const parameterTypes: Map<string, string[]> = new Map();
@@ -276,31 +276,34 @@ export class Parser extends TokenParser {
 		}
 		this.match(TokenType.ParenClose);
 		// Optionally match a type annotation following function
-		// parameter parenthesis -> action doSomething(a: num): str {}
+		// parameter parenthesis -> function doSomething(a: num): str {}
 		//                                                       ^
 		const typeAnnotation = this.match(TokenType.Colon)
 			? this.typeAnnotation()
 			: [];
 		// Create a node
-		const info = new ActionInfo(
+		const info = new FunctionInfo(
 			name,
 			typeAnnotation,
 			parameters,
 			parameterTypes
 		);
-		// Register the function name and the action info that it points to
+		// Register the function name and the function info that it points to
 		// This will make compilation of functions simpler since we can look up
 		// how many parameters and what kind a function takes when we call it
-		this.actionTable.set(name, info);
-		// Start parsing the action block
-		this.consume(TokenType.BraceOpen, "Expected opening brace of action block");
+		this.functionTable.set(name, info);
+		// Start parsing the function block
+		this.consume(
+			TokenType.BraceOpen,
+			"Expected opening brace of function block"
+		);
 
-		// Create a scope for this action
+		// Create a scope for this function
 		this._symbolTables.push(this.symbolTable.addScope());
 
 		let i = 0;
 		for (const param of parameters) {
-			// Register each parameter in the action's symbol table
+			// Register each parameter in the function's symbol table
 			this.symbolTable.register({
 				name: param,
 				token: paramTokens[i],
@@ -319,10 +322,10 @@ export class Parser extends TokenParser {
 			block.statements.push(new ReturnStatementNode(startToken));
 		}
 
-		// Pop the scope for this action
+		// Pop the scope for this function
 		this._symbolTables.pop();
 
-		const node = new ActionDeclarationNode(start, info, block);
+		const node = new FunctionDeclarationNode(start, info, block);
 		return node;
 	}
 

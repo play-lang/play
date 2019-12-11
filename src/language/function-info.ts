@@ -1,11 +1,11 @@
 /**
- * Holds information about a parsed action
+ * Holds information about a parsed function
  */
-export class ActionInfo {
+export class FunctionInfo {
 	constructor(
-		/** Name of the action */
+		/** Name of the function */
 		public readonly name: string,
-		/** Type of the action */
+		/** Type of the function */
 		public readonly typeAnnotation: string[],
 		/** Parameter names list */
 		public readonly parameters: string[],

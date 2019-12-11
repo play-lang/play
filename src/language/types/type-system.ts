@@ -1,4 +1,5 @@
 import { LinkedHashMap } from "../../common/linked-hash-map";
+import { FunctionInfo } from "../function-info";
 
 /**
  * Primitive types that can be represented with an instance of a PrimitiveType
@@ -205,3 +206,5 @@ export function constructType(typeAnnotation: string[]): Type {
 	}
 	return type;
 }
+
+export function constructFunctionType(info: FunctionInfo): void {}

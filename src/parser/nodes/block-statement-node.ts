@@ -9,7 +9,7 @@ export class BlockStatementNode extends Statement {
 		end: number,
 		/** Block statements */
 		public readonly statements: Statement[],
-		/** True if the block represents an action (function) block */
+		/** True if the block represents a function block */
 		public readonly isActionBlock: boolean
 	) {
 		super(start, end);

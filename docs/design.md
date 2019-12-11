@@ -48,7 +48,7 @@ Pratt parsing effectively allows parsing extremely "complicated" operators (like
 
 These expression subroutines are abstracted away in `src/language/operator-grammar` and located in `src/parser/parselet`.
 
-The parser is responsible for generating an abstract syntax tree. The data structure for the tree contains the root node, which is always a program node, a symbol table constructed while parsing, and a table that maps action (function) names to information about those actions.
+The parser is responsible for generating an abstract syntax tree. The data structure for the tree contains the root node, which is always a program node, a symbol table constructed while parsing, and a table that maps function names to information about those functions.
 
 ## Type Checker
 
@@ -72,7 +72,7 @@ The preprocessor utilizes an AVL Tree (a type of balanced binary tree) for track
 
 The compiler is responsible for walking the abstract syntax tree produced by the parser and producing the bytecode that runs the program. It is implemented as a single pass compiler that produces bytecode for a stack-based virtual machine.
 
-The compiler actually produces multiple *contexts* which hold bytecode and a single, shared *constant pool* which contains the literal values referenced in the bytecode contexts. A context is produced for each action that is compiled as well as the main scope (which consists of the code outside any actions).
+The compiler actually produces multiple *contexts* which hold bytecode and a single, shared *constant pool* which contains the literal values referenced in the bytecode contexts. A context is produced for each function that is compiled as well as the main scope (which consists of the code outside any functions).
 
 The compiler, upon successful compilation, creates an object that contains a list of compiled contexts, a constant pool, the number of globals in the main scope, and an address resolver which contains information about bytecode addresses inside the compiled bytecode contexts that need to be "patched" or "resolved" by the linker after all the bytecode in the contexts has been chained together into one single array of bytecode.
 

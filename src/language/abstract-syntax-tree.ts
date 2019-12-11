@@ -1,5 +1,5 @@
 import { ProgramNode } from "../parser/nodes/program-node";
-import { ActionInfo } from "./action-info";
+import { FunctionInfo } from "./function-info";
 import SymbolTable from "./symbol-table";
 
 /**
@@ -10,7 +10,7 @@ export class AbstractSyntaxTree {
 	constructor(
 		public readonly root: ProgramNode,
 		public readonly symbolTable: SymbolTable,
-		public readonly actionTable: Map<string, ActionInfo>
+		public readonly functionTable: Map<string, FunctionInfo>
 	) {}
 
 	public get json(): string {

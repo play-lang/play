@@ -1,12 +1,12 @@
 import { Expression } from "../../language/node";
 import { Visitor } from "../../language/visitor";
-import { ActionReferenceNode } from "./action-reference-node";
+import { FunctionReferenceNode } from "./function-reference-node";
 
 export class InvocationExpressionNode extends Expression {
-	/** Name of the action to call */
-	public get actionName(): string | undefined {
-		if (this.lhs instanceof ActionReferenceNode) {
-			return this.lhs.actionName;
+	/** Name of the function to call */
+	public get functionName(): string | undefined {
+		if (this.lhs instanceof FunctionReferenceNode) {
+			return this.lhs.functionName;
 		}
 	}
 

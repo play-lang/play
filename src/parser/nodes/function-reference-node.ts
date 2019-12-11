@@ -3,16 +3,16 @@ import { TokenLike } from "../../language/token";
 import { Visitor } from "../../language/visitor";
 
 /**
- * When an action id is used in an expression as an action reference
- * for invocation (or whatever else), it parses into an action reference node
+ * When a function id is used in an expression as a function reference
+ * for invocation (or whatever else), it parses into a function reference node
  */
-export class ActionReferenceNode extends Expression {
-	public get actionName(): string {
+export class FunctionReferenceNode extends Expression {
+	public get functionName(): string {
 		return this.token.lexeme;
 	}
 
 	constructor(
-		/** Action reference token */
+		/** Function reference token */
 		public readonly token: TokenLike
 	) {
 		super(token.pos, token.end);

@@ -1,18 +1,18 @@
 import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
-import { ActionInfo } from "../language/action-info";
 import { BytecodeAddressResolver } from "../language/bytecode-address-resolver";
 import { Context } from "../language/context";
+import { FunctionInfo } from "../language/function-info";
 import { OpCode } from "../language/op-code";
 import SymbolTable from "../language/symbol-table";
 import { TokenType } from "../language/token-type";
 import { Visitor } from "../language/visitor";
-import { ActionDeclarationNode } from "../parser/nodes/action-declaration-node";
-import { ActionReferenceNode } from "../parser/nodes/action-reference-node";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
+import { FunctionDeclarationNode } from "../parser/nodes/function-declaration-node";
+import { FunctionReferenceNode } from "../parser/nodes/function-reference-node";
 import { InvocationExpressionNode } from "../parser/nodes/invocation-operator-parselet";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
@@ -46,10 +46,10 @@ export class Compiler extends Visitor {
 	public readonly contexts: Map<SymbolTable, Context> = new Map();
 
 	/**
-	 * Context names mapped to action nodes
+	 * Context names mapped to function nodes
 	 * Should be provided from the parser
 	 */
-	public readonly actionTable: Map<string, ActionInfo>;
+	public readonly functionTable: Map<string, FunctionInfo>;
 
 	/** Global scope */
 	private globalScope: SymbolTable;
@@ -78,7 +78,7 @@ export class Compiler extends Visitor {
 				this.symbolTable.totalEntries
 			)
 		);
-		this.actionTable = ast.actionTable;
+		this.functionTable = ast.functionTable;
 	}
 
 	// MARK: Visitor
@@ -90,8 +90,8 @@ export class Compiler extends Visitor {
 	}
 
 	public visitBlockStatementNode(node: BlockStatementNode): void {
-		// Only enter and exit a scope if we're not inside an action block
-		// Action block scope is handled for us elsewhere
+		// Only enter and exit a scope if we're not inside a function block
+		// Function block scope is handled for us elsewhere
 		const isActionBlock = node.isActionBlock;
 		if (!isActionBlock) this.enterScope();
 		for (const statement of node.statements) {
@@ -99,7 +99,7 @@ export class Compiler extends Visitor {
 		}
 		if (!isActionBlock) {
 			// We should clean up variables local to this block if we're just a
-			// normal block -- actions get call frames which the VM uses to clean
+			// normal block -- functions get call frames which the VM uses to clean
 			// up the stack for us
 			const numLocalsToDrop = this.symbolTable.available;
 			this.emit(OpCode.Drop, numLocalsToDrop);
@@ -152,7 +152,7 @@ export class Compiler extends Visitor {
 		);
 	}
 
-	public visitActionDeclarationNode(node: ActionDeclarationNode): void {
+	public visitActionDeclarationNode(node: FunctionDeclarationNode): void {
 		this.enterScope(node.info.name);
 		this.symbolTable.available += node.info.parameters.length;
 		node.block!.accept(this);
@@ -162,15 +162,19 @@ export class Compiler extends Visitor {
 		this.exitScope();
 	}
 
-	public visitActionReferenceNode(node: ActionReferenceNode): void {
+	public visitActionReferenceNode(node: FunctionReferenceNode): void {
 		// Register a function load address to be patched later
 		const offset = this.emit(OpCode.Load, -1) - 1;
-		this.patcher.registerContextAddress(this.context, offset, node.actionName);
+		this.patcher.registerContextAddress(
+			this.context,
+			offset,
+			node.functionName
+		);
 	}
 
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
-		if (!(node.lhs instanceof ActionReferenceNode)) {
-			throw new Error("Can't invoke something that isn't an action");
+		if (!(node.lhs instanceof FunctionReferenceNode)) {
+			throw new Error("Can't invoke something that isn't a function");
 		}
 		// Arguments given to function go onto the stack
 		for (const arg of node.args) {
