@@ -75,7 +75,7 @@ export class PrintVisitor extends Visitor implements Describable {
 		this.desc += "VariableReference(" + node.variableName + ")\n";
 	}
 
-	public visitActionDeclarationNode(node: FunctionDeclarationNode): void {
+	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
 		let params = "";
 		let i = 0;
 		for (const [param, typeAnnotation] of node.info.parameterTypes.entries()) {
@@ -100,7 +100,7 @@ export class PrintVisitor extends Visitor implements Describable {
 		this.indent -= 1;
 	}
 
-	public visitActionReferenceNode(node: FunctionReferenceNode): void {
+	public visitFunctionReferenceNode(node: FunctionReferenceNode): void {
 		this.desc += "FunctionReference(" + node.functionName + ")\n";
 	}
 

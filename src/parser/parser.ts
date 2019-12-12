@@ -114,11 +114,11 @@ export class Parser extends TokenParser {
 	 * Parse a block statement, optionally specifying if it represents an
 	 * function block
 	 */
-	public block(isActionBlock: boolean = false): BlockStatementNode {
+	public block(isFunctionBlock: boolean = false): BlockStatementNode {
 		// Brace open has already been matched for us
 		const start = this.previous.pos;
 		this.eatLines();
-		if (!isActionBlock) {
+		if (!isFunctionBlock) {
 			// Create a new symbol table scope and push it on the symbol table stack
 			// (Only if we're not a function block -- it brings its own symbol table)
 			this._symbolTables.push(this.symbolTable.addScope());
@@ -139,13 +139,13 @@ export class Parser extends TokenParser {
 		this.eatLines();
 		this.consume(TokenType.BraceClose, "Expected closing brace for block");
 		// Pop the scope
-		if (!isActionBlock) this._symbolTables.pop();
+		if (!isFunctionBlock) this._symbolTables.pop();
 		// Calculate start and end in the input string
 		const end =
 			statements.length < 1
 				? this.previous.end
 				: statements[statements.length - 1].end;
-		return new BlockStatementNode(start, end, statements, isActionBlock);
+		return new BlockStatementNode(start, end, statements, isFunctionBlock);
 	}
 
 	/**
@@ -185,13 +185,12 @@ export class Parser extends TokenParser {
 		const start = this.previous.pos;
 		const isImmutable = this.previous.type === TokenType.Let;
 		const nameToken = this.consume(TokenType.Id, "Expected variable name");
-		// Expect a colon for a type annotation -> let x: num = 10
-		this.consume(
-			TokenType.Colon,
-			"Expected colon for variable type annotation"
-		);
-		// Type annotation identifiers follow the colon:
-		const typeAnnotation = this.typeAnnotation();
+		let typeAnnotation: string[] = [];
+		if (this.match(TokenType.Colon)) {
+			// Expect a colon for a type annotation -> let x: num = 10
+			// Type annotation identifiers follow the colon:
+			typeAnnotation = this.typeAnnotation();
+		}
 		// Variable declarations may be followed by an equals sign to initialize
 		// the value, otherwise we initialize the zero-value for it
 		let expr: Expression | undefined;
@@ -206,9 +205,9 @@ export class Parser extends TokenParser {
 			start,
 			end,
 			nameToken,
-			typeAnnotation,
 			isImmutable,
-			expr
+			expr,
+			typeAnnotation
 		);
 		// Register the declared variable in the symbol table
 		this.symbolTable.register({

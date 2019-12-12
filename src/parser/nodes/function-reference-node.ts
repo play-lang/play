@@ -34,6 +34,6 @@ export class FunctionReferenceNode extends Expression {
 
 	// MARK: Visitor
 	public accept(visitor: Visitor): void {
-		visitor.visitActionReferenceNode(this);
+		visitor.visitFunctionReferenceNode(this);
 	}
 }

@@ -28,6 +28,8 @@ export class VariableReferenceNode extends Expression {
 		return constructType(this.typeAnnotation, true);
 	}
 
+	public validate(): void {}
+
 	// MARK: Visitor
 	public accept(visitor: Visitor): void {
 		visitor.visitVariableReferenceNode(this);

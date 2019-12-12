@@ -28,9 +28,13 @@ describe("symbol table", () => {
 	});
 	test("should register ids", () => {
 		const t2 = fakeToken(); // b
-		globalScope.register(new VariableDeclarationNode(0, 0, t1, ["num"], false));
+		globalScope.register(
+			new VariableDeclarationNode(0, 0, t1, false, undefined, ["num"])
+		);
 		expect(globalScope.entries.has(t1.lexeme));
-		globalScope.register(new VariableDeclarationNode(0, 0, t2, ["str"], false));
+		globalScope.register(
+			new VariableDeclarationNode(0, 0, t2, false, undefined, ["str"])
+		);
 		expect(globalScope.entries.has(t2.lexeme));
 		expect(globalScope.description).toEqual(
 			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"]}'
@@ -44,8 +48,12 @@ describe("symbol table", () => {
 		s1 = globalScope.addScope();
 		const t3 = fakeToken(); // c
 		const t4 = fakeToken(); // d
-		s1.register(new VariableDeclarationNode(0, 0, t3, ["num"], false));
-		s1.register(new VariableDeclarationNode(0, 0, t4, ["str"], false));
+		s1.register(
+			new VariableDeclarationNode(0, 0, t3, false, undefined, ["num"])
+		);
+		s1.register(
+			new VariableDeclarationNode(0, 0, t4, false, undefined, ["str"])
+		);
 		expect(s1.idInScope("a")).toBeTruthy();
 		expect(s1.idInScope("b")).toBeTruthy();
 		expect(s1.idInScope("e")).toBeFalsy();
@@ -57,7 +65,9 @@ describe("symbol table", () => {
 			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"], "scopes": [{ "ids": ["Id(0, `c`, `num`)", "Id(1, `d`, `str`)"]}, { "ids": []}]}'
 		);
 		const t5 = fakeToken(); // e
-		s2.register(new VariableDeclarationNode(0, 0, t5, ["num"], false));
+		s2.register(
+			new VariableDeclarationNode(0, 0, t5, false, undefined, ["num"])
+		);
 	});
 	test("should perform lookups", () => {
 		expect(JSON.parse(JSON.stringify(globalScope.lookup("a")))).toEqual({
@@ -82,7 +92,7 @@ describe("symbol table", () => {
 	test("should prevent duplicate id's from being registered", () => {
 		expect(
 			globalScope.register(
-				new VariableDeclarationNode(0, 0, t1, ["num"], false)
+				new VariableDeclarationNode(0, 0, t1, false, undefined, ["num"])
 			)
 		).toBe(false);
 	});

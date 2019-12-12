@@ -92,12 +92,12 @@ export class Compiler extends Visitor {
 	public visitBlockStatementNode(node: BlockStatementNode): void {
 		// Only enter and exit a scope if we're not inside a function block
 		// Function block scope is handled for us elsewhere
-		const isActionBlock = node.isActionBlock;
-		if (!isActionBlock) this.enterScope();
+		const isFunctionBlock = node.isFunctionBlock;
+		if (!isFunctionBlock) this.enterScope();
 		for (const statement of node.statements) {
 			statement.accept(this);
 		}
-		if (!isActionBlock) {
+		if (!isFunctionBlock) {
 			// We should clean up variables local to this block if we're just a
 			// normal block -- functions get call frames which the VM uses to clean
 			// up the stack for us
@@ -152,7 +152,7 @@ export class Compiler extends Visitor {
 		);
 	}
 
-	public visitActionDeclarationNode(node: FunctionDeclarationNode): void {
+	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
 		this.enterScope(node.info.name);
 		this.symbolTable.available += node.info.parameters.length;
 		node.block!.accept(this);
@@ -162,7 +162,7 @@ export class Compiler extends Visitor {
 		this.exitScope();
 	}
 
-	public visitActionReferenceNode(node: FunctionReferenceNode): void {
+	public visitFunctionReferenceNode(node: FunctionReferenceNode): void {
 		// Register a function load address to be patched later
 		const offset = this.emit(OpCode.Load, -1) - 1;
 		this.patcher.registerContextAddress(

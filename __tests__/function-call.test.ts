@@ -4,7 +4,7 @@ import { Play } from "../src/play";
 describe("simple function call", () => {
 	test("should parse a function", () => {
 		const code = str`
-			function myAction(): str {
+			function myFunction(): str {
 				return
 				return 3 + 4
 			}
@@ -26,7 +26,7 @@ describe("simple function call", () => {
 						type: "block",
 						start: 25,
 						end: 46,
-						isActionBlock: true,
+						isFunctionBlock: true,
 						statements: [
 							{
 								type: "return",

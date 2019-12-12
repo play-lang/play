@@ -21,6 +21,6 @@ export class FunctionDeclarationNode extends Statement {
 	}
 
 	public accept(visitor: Visitor): void {
-		visitor.visitActionDeclarationNode(this);
+		visitor.visitFunctionDeclarationNode(this);
 	}
 }

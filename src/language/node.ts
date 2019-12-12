@@ -22,7 +22,7 @@ export abstract class Node implements TypeCheckable {
 
 	public abstract accept(visitor: Visitor): any;
 
-	public validate(tc: TypeChecker): void {}
+	public abstract validate(tc: TypeChecker): void;
 }
 
 export abstract class Expression extends Node {}

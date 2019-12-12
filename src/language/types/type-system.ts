@@ -57,11 +57,7 @@ export class ErrorType extends Type {
 	}
 
 	public get description(): string {
-		return (
-			(this.isAssignable ? "Ref<" : "") +
-			"ErrorType" +
-			(this.isAssignable ? ">" : "")
-		);
+		return (this.isAssignable ? "&" : "") + "ErrorType";
 	}
 }
 
@@ -87,35 +83,31 @@ export class PrimitiveType extends Type {
 	}
 
 	public get description(): string {
-		return (
-			(this.isAssignable ? "Ref<" : "") +
-			Primitive[this.primitive] +
-			(this.isAssignable ? ">" : "")
-		);
+		return (this.isAssignable ? "&" : "") + Primitive[this.primitive];
 	}
 }
 
 /**
- * A product of types is another, compounded, type in a structure.
+ * A record of types is a named type tuple: equivalence to another record
+ * requires that both records have the same number of types with the same
+ * names in the same order
  *
- * The "operands" of the product are types, and the structure of a product
- * type is determined by the fixed order of the operands in the product
+ * The "operands" of the record are types, and the structure of a record
+ * type is determined by the fixed order of the operands in the record
  *
- * This product type ensures equivalence between another product type by
+ * This record type ensures equivalence between another record type by
  * checking that its parameters have the same name, occur in the same order,
  * and have the same types
  *
  * https://en.wikipedia.org/wiki/Product_type
  *
- * This is not a true product type because the operand types are named
  *
- * In theory, this aligns more with the Dragon book's definition of a record
- * type (first edition, p. 345), but information on that is harder to
- * find elsewhere
+ * This aligns more with the Dragon book's definition of a record
+ * type (first edition, p. 345)
  */
-export class ProductType extends Type {
+export class RecordType extends Type {
 	constructor(
-		/** The type operands for this product type keyed by the name */
+		/** The type operands for this record type keyed by the name */
 		public readonly operands: LinkedHashMap<string, Type>,
 		isAssignable: boolean = false
 	) {
@@ -124,7 +116,7 @@ export class ProductType extends Type {
 
 	public equivalent(type: Type): boolean {
 		if (type === this) return true;
-		if (!(type instanceof ProductType)) return false;
+		if (!(type instanceof RecordType)) return false;
 		if (type.operands.size !== this.operands.size) return false;
 		for (const name of type.operands.keys()) {
 			// Ensure that we also have a parameter with the same name
@@ -144,9 +136,71 @@ export class ProductType extends Type {
 
 	public get description(): string {
 		return (
-			(this.isAssignable ? "Ref" : "") +
+			(this.isAssignable ? "&" : "") +
 			"<" +
-			Array.from(this.operands.values())
+			Array.from(this.operands)
+				.map(operand => operand[0] + ": " + operand[1].description)
+				.join(", ") +
+			">"
+		);
+	}
+}
+
+/**
+ * A product of types represents an ordered list of unnamed types, as opposed
+ * to a RecordType which is an ordered list of named types
+ *
+ * Equivalence between two product types is determined by checking that
+ * both product types have the same number of operands with the same types
+ * in the same order
+ */
+export class ProductType extends Type {
+	constructor(
+		/** The type operands for this product type */
+		public readonly operands: Type[],
+		isAssignable: boolean = false
+	) {
+		super(isAssignable);
+	}
+
+	public equivalent(type: Type): boolean {
+		if (type === this) return true;
+		if (!(type instanceof ProductType)) return false;
+		if (type.operands.length !== this.operands.length) return false;
+		for (let i = 0; i < this.operands.length; i++) {
+			if (!this.operands[i].equivalent(type.operands[i])) return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Checks to see if this product type contains the same number of types and
+	 * the same ordering as another record type
+	 *
+	 * While product and record types are considered nonequivalent, a record type
+	 * is able to be satisfied by an appropriate product type for function
+	 * invocation
+	 *
+	 * @param type The record type to consider
+	 */
+	public satisfiesRecordType(type: RecordType): boolean {
+		// A product cannot satisfy a record if the lengths are different
+		if (type.operands.size !== this.operands.length) return false;
+		let i = 0;
+		for (const name of type.operands.keys()) {
+			const lhsType = this.operands[i];
+			const rhsType = type.operands.get(name)!;
+			if (!lhsType.equivalent(rhsType)) return false;
+			i++;
+		}
+		return true;
+	}
+
+	public get description(): string {
+		return (
+			(this.isAssignable ? "&" : "") +
+			"<" +
+			Array.from(this.operands)
 				.map(operand => operand.description)
 				.join(", ") +
 			">"
@@ -164,7 +218,7 @@ export class FunctionType extends Type {
 		/** Name of the function */
 		public readonly name: string,
 		/** Function parameters (domain) type */
-		public readonly parameters: ProductType,
+		public readonly parameters: RecordType,
 		/** Return value type (range type) */
 		public readonly returnType: Type
 	) {
@@ -218,18 +272,20 @@ export class CollectionType extends Type {
 
 	public get description(): string {
 		return (
-			(this.isAssignable ? "Ref<" : "") +
+			(this.isAssignable ? "&" : "") +
 			Collection[this.collection] +
 			"<" +
 			this.elementType.description +
-			">" +
-			(this.isAssignable ? ">" : "")
+			">"
 		);
 	}
 }
 
 /** Void type, for your convenience */
 export const Void = new PrimitiveType(Primitive.Void, false);
+export const Bool = new PrimitiveType(Primitive.Bool, false);
+export const Num = new PrimitiveType(Primitive.Num, false);
+export const Str = new PrimitiveType(Primitive.Str, false);
 
 /**
  * Construct a type instance from the specified type annotation array
@@ -298,7 +354,7 @@ export function constructFunctionType(info: FunctionInfo): FunctionType {
 		const type = constructType(annotation);
 		parameters.set(paramName, type);
 	}
-	const parametersType = new ProductType(parameters);
+	const parametersType = new RecordType(parameters);
 	const returnType = constructType(info.typeAnnotation);
 	const type = new FunctionType(info.name, parametersType, returnType);
 	return type;

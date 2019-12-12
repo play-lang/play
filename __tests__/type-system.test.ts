@@ -11,6 +11,7 @@ import {
 	Primitive,
 	PrimitiveType,
 	ProductType,
+	RecordType,
 	Type,
 	Void,
 } from "../src/language/types/type-system";
@@ -25,9 +26,9 @@ describe("type system", () => {
 		const num2 = new PrimitiveType(Primitive.Num, false);
 		const err1 = new ErrorType(true);
 		const err2 = new ErrorType(false);
-		expect(str1.description).toBe("Ref<Str>");
+		expect(str1.description).toBe("&Str");
 		expect(str2.description).toBe("Str");
-		expect(err1.description).toBe("Ref<ErrorType>");
+		expect(err1.description).toBe("&ErrorType");
 		expect(err2.description).toBe("ErrorType");
 		expect(str1.equivalent(str2)).toBe(true);
 		expect(str2.equivalent(str1)).toBe(true);
@@ -38,68 +39,105 @@ describe("type system", () => {
 		expect(err1.equivalent(str1)).toBe(false);
 		expect(str2.equivalent(err2)).toBe(false);
 	});
-	test("product type", () => {
-		const empty = new ProductType(new LinkedHashMap());
-		const prod1 = new ProductType(
+	test("record type", () => {
+		const empty = new RecordType(new LinkedHashMap());
+		const rec1 = new RecordType(
 			new LinkedHashMap<string, Type>([
 				["p1", constructType(["bool"])],
 				["p2", constructType(["num", "set"])],
 			]),
 			true
 		);
-		const prod2 = new ProductType(
+		const rec2 = new RecordType(
 			new LinkedHashMap<string, Type>([
 				["p1", constructType(["bool"])],
 				["p2", constructType(["num", "set"])],
 			])
 		);
-		const prod3 = new ProductType(
+		const rec3 = new RecordType(
 			new LinkedHashMap<string, Type>([
 				["p2", constructType(["num", "set"])],
 				["p1", constructType(["bool"])],
 			])
 		);
-		const prod4 = new ProductType(
+		const rec4 = new RecordType(
 			new LinkedHashMap<string, Type>([
 				["p2", constructType(["num", "set"])],
 				["p1", constructType(["str"])],
 			])
 		);
-		const prod5 = new ProductType(
+		const rec5 = new RecordType(
 			new LinkedHashMap<string, Type>([
 				["p2", constructType(["num", "set"])],
 				["p5", constructType(["bool"])],
 			])
 		);
-		const prod6 = new ProductType(
+		const rec6 = new RecordType(
 			new LinkedHashMap<string, Type>([
 				["p1", constructType(["str"])],
 				["p2", constructType(["num", "set"])],
 			])
 		);
-		expect(prod1.description).toBe("Ref<Bool, Set<Num>>");
-		expect(prod2.description).toBe("<Bool, Set<Num>>");
+		expect(rec1.description).toBe("&<p1: Bool, p2: Set<Num>>");
+		expect(rec2.description).toBe("<p1: Bool, p2: Set<Num>>");
 		const t1 = constructType(["Num"]);
+		expect(rec1.equivalent(rec1)).toBe(true);
+		expect(rec1.equivalent(rec2)).toBe(true);
+		expect(rec2.equivalent(rec1)).toBe(true);
+		expect(rec1.equivalent(empty)).toBe(false);
+		expect(empty.equivalent(rec1)).toBe(false);
+		expect(rec1.equivalent(rec3)).toBe(false);
+		expect(rec3.equivalent(rec1)).toBe(false);
+		expect(rec1.equivalent(rec4)).toBe(false);
+		expect(rec4.equivalent(rec1)).toBe(false);
+		expect(rec1.equivalent(t1)).toBe(false);
+		expect(rec1.equivalent(rec5)).toBe(false);
+		expect(rec5.equivalent(rec1)).toBe(false);
+		expect(rec1.equivalent(rec6)).toBe(false);
+		expect(rec6.equivalent(rec1)).toBe(false);
+		expect(t1.equivalent(rec1)).toBe(false);
+	});
+	test("product type", () => {
+		const prod1 = new ProductType([str, num], true);
+		const prod2 = new ProductType([str, num], false);
+		const prod3 = new ProductType([num, str], false);
+		const prod4 = new ProductType([num]);
 		expect(prod1.equivalent(prod1)).toBe(true);
 		expect(prod1.equivalent(prod2)).toBe(true);
-		expect(prod2.equivalent(prod1)).toBe(true);
-		expect(prod1.equivalent(empty)).toBe(false);
-		expect(empty.equivalent(prod1)).toBe(false);
+		expect(prod1.equivalent(str)).toBe(false);
 		expect(prod1.equivalent(prod3)).toBe(false);
 		expect(prod3.equivalent(prod1)).toBe(false);
 		expect(prod1.equivalent(prod4)).toBe(false);
 		expect(prod4.equivalent(prod1)).toBe(false);
-		expect(prod1.equivalent(t1)).toBe(false);
-		expect(prod1.equivalent(prod5)).toBe(false);
-		expect(prod5.equivalent(prod1)).toBe(false);
-		expect(prod1.equivalent(prod6)).toBe(false);
-		expect(prod6.equivalent(prod1)).toBe(false);
-		expect(t1.equivalent(prod1)).toBe(false);
+		expect(prod1.description).toBe("&<&Str, &Num>");
+		expect(prod2.description).toBe("<&Str, &Num>");
+
+		const rec1 = new RecordType(
+			new LinkedHashMap<string, Type>([
+				["p1", constructType(["str"])],
+				["p2", constructType(["num"])],
+			]),
+			true
+		);
+		const rec2 = new RecordType(
+			new LinkedHashMap<string, Type>([
+				["p1", constructType(["str"])],
+				["p2", constructType(["num", "list"])],
+			]),
+			true
+		);
+		const rec3 = new RecordType(
+			new LinkedHashMap<string, Type>([["p1", constructType(["str"])]]),
+			true
+		);
+		expect(prod1.satisfiesRecordType(rec1)).toBe(true);
+		expect(prod1.satisfiesRecordType(rec2)).toBe(false);
+		expect(prod1.satisfiesRecordType(rec3)).toBe(false);
 	});
 	test("function type", () => {
 		const fun1 = new FunctionType(
 			"fun1",
-			new ProductType(
+			new RecordType(
 				new LinkedHashMap([
 					["a", constructType(["str"])],
 					["b", constructType(["str"])],
@@ -110,7 +148,7 @@ describe("type system", () => {
 		expect(fun1.description).toBe("(fun1(Str, Str) -> Str)");
 		const fun2 = new FunctionType(
 			"fun1",
-			new ProductType(
+			new RecordType(
 				new LinkedHashMap([
 					["a", constructType(["str"])],
 					["b", constructType(["str"])],
@@ -120,7 +158,7 @@ describe("type system", () => {
 		);
 		const fun3 = new FunctionType(
 			"fun3",
-			new ProductType(
+			new RecordType(
 				new LinkedHashMap([
 					["a", constructType(["str"])],
 					["b", constructType(["str"])],
@@ -146,7 +184,7 @@ describe("type system", () => {
 			true
 		);
 		expect(list1.description).toBe("List<Bool>");
-		expect(list2.description).toBe("Ref<List<Bool>>");
+		expect(list2.description).toBe("&List<Bool>");
 		const list3 = new CollectionType(
 			Collection.List,
 			new PrimitiveType(Primitive.Str, false)
@@ -183,7 +221,7 @@ describe("type system", () => {
 				).equivalent(
 					new FunctionType(
 						"fun1",
-						new ProductType(new LinkedHashMap([["a", str]])),
+						new RecordType(new LinkedHashMap([["a", str]])),
 						str
 					)
 				)

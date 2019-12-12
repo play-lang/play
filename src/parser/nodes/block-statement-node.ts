@@ -11,7 +11,7 @@ export class BlockStatementNode extends Statement {
 		/** Block statements */
 		public readonly statements: Statement[],
 		/** True if the block represents a function block */
-		public readonly isActionBlock: boolean
+		public readonly isFunctionBlock: boolean
 	) {
 		super(start, end);
 	}
