@@ -6,7 +6,7 @@ import { AssignmentExpressionNode } from "./nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "./nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "./nodes/binary-logical-expression-node";
 import { FunctionReferenceNode } from "./nodes/function-reference-node";
-import { InvocationExpressionNode } from "./nodes/invocation-operator-parselet";
+import { InvocationExpressionNode } from "./nodes/invocation-expression-node";
 import { PostfixExpressionNode } from "./nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "./nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "./nodes/primitive-expression-node";
@@ -143,7 +143,7 @@ export class InvocationOperatorParselet implements InfixParselet {
 			end = parser.previous.end;
 		}
 
-		return new InvocationExpressionNode(lhs.start, end, lhs, args);
+		return new InvocationExpressionNode(token, lhs.start, end, lhs, args);
 	}
 	public get precedence(): number {
 		return Precedence.Primary;
