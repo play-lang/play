@@ -1,5 +1,6 @@
 import { LinkedHashMap } from "../../common/linked-hash-map";
 import { FunctionInfo } from "../function-info";
+import { Describable } from "../token";
 
 /**
  * Primitive types that can be represented with an instance of a PrimitiveType
@@ -20,7 +21,7 @@ export enum Collection {
 	Set,
 }
 
-export abstract class Type {
+export abstract class Type implements Describable {
 	constructor(
 		/**
 		 * True if the type is addressable and assignable
@@ -40,6 +41,9 @@ export abstract class Type {
 	 * otherwise
 	 */
 	public abstract equivalent(type: Type): boolean;
+
+	// MARK: Describable
+	public abstract get description(): string;
 }
 
 /** Represents an error type */
@@ -50,6 +54,14 @@ export class ErrorType extends Type {
 
 	public equivalent(type: Type): boolean {
 		return type === this || type instanceof ErrorType;
+	}
+
+	public get description(): string {
+		return (
+			(this.isAssignable ? "Ref<" : "") +
+			"ErrorType" +
+			(this.isAssignable ? ">" : "")
+		);
 	}
 }
 
@@ -71,6 +83,14 @@ export class PrimitiveType extends Type {
 		return (
 			type === this ||
 			(type instanceof PrimitiveType && type.primitive === this.primitive)
+		);
+	}
+
+	public get description(): string {
+		return (
+			(this.isAssignable ? "Ref<" : "") +
+			Primitive[this.primitive] +
+			(this.isAssignable ? ">" : "")
 		);
 	}
 }
@@ -121,6 +141,17 @@ export class ProductType extends Type {
 		}
 		return true;
 	}
+
+	public get description(): string {
+		return (
+			(this.isAssignable ? "Ref" : "") +
+			"<" +
+			Array.from(this.operands.values())
+				.map(operand => operand.description)
+				.join(", ") +
+			">"
+		);
+	}
 }
 
 /**
@@ -148,6 +179,21 @@ export class FunctionType extends Type {
 				this.parameters.equivalent(type.parameters))
 		);
 	}
+
+	public get description(): string {
+		return (
+			"(" +
+			this.name +
+			"(" +
+			Array.from(this.parameters.operands.values())
+				.map(operand => operand.description)
+				.join(", ") +
+			")" +
+			" -> " +
+			this.returnType.description +
+			")"
+		);
+	}
 }
 
 export class CollectionType extends Type {
@@ -167,6 +213,17 @@ export class CollectionType extends Type {
 			(type instanceof CollectionType &&
 				this.collection === type.collection &&
 				this.elementType.equivalent(type.elementType))
+		);
+	}
+
+	public get description(): string {
+		return (
+			(this.isAssignable ? "Ref<" : "") +
+			Collection[this.collection] +
+			"<" +
+			this.elementType.description +
+			">" +
+			(this.isAssignable ? ">" : "")
 		);
 	}
 }
