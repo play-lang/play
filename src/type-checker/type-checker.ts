@@ -18,6 +18,9 @@ import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
 
 import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { SemanticError } from "../language/semantic-error";
+import { TokenLike } from "../language/token";
+import { Type } from "../language/types/type-system";
+import { TypeCheckerError } from "./type-checker-error";
 
 export class TypeChecker extends Visitor {
 	/* Type checker errors encountered while checking types */
@@ -64,39 +67,29 @@ export class TypeChecker extends Visitor {
 	public visitReturnStatementNode(node: ReturnStatementNode): void {}
 	public visitExpressionStatementNode(node: ExpressionStatementNode): void {}
 
-	/**
-	 * Registers an error if the expected type is not equal to the encountered
-	 * type, otherwise does nothing
-	 * @param token The token where the type is expected
-	 * @param expectedType The expected type
-	 * @param encounteredType The encountered type
-	 * @returns True if the expected type is the encountered type, false if a type
-	 * error was found
-	 */
-	// public assertType(
-	// 	token: TokenLike,
-	// 	ruleset: TypeRuleset,
-	// 	type: TypeInfo
-	// ): boolean {
-	// 	if (type.satisfies(ruleset)) return true;
-	// 	const prettyExpectedType = ruleset.description;
-	// 	const prettyEncounteredType = type.description;
+	public reportTypeMismatch(
+		token: TokenLike,
+		expectedType: Type,
+		encounteredType: Type
+	): boolean {
+		const prettyExpectedType = expectedType.description;
+		const prettyEncounteredType = encounteredType.description;
 
-	// 	const prefix =
-	// 		"Type error in " +
-	// 		token.file.name +
-	// 		" at " +
-	// 		token.line +
-	// 		":" +
-	// 		token.column +
-	// 		" (" +
-	// 		token.pos +
-	// 		"): ";
-	// 	const hint = `${prefix} Expected ${token.lexeme} to have type ${prettyExpectedType} instead of ${prettyEncounteredType}`;
-	// 	const error = new TypeCheckerError(token, ruleset, type, hint);
-	// 	this.errors.push(error);
-	// 	return false;
-	// }
+		const prefix =
+			"Type error in " +
+			token.file.name +
+			" at " +
+			token.line +
+			":" +
+			token.column +
+			" (" +
+			token.pos +
+			"): ";
+		const hint = `${prefix} Expected ${token.lexeme} to have type ${prettyExpectedType} instead of ${prettyEncounteredType}`;
+		const error = new TypeCheckerError(token, hint);
+		this.errors.push(error);
+		return false;
+	}
 
 	/**
 	 * Report a semantic error to the type checker

@@ -25,6 +25,10 @@ describe("type system", () => {
 		const num2 = new PrimitiveType(Primitive.Num, false);
 		const err1 = new ErrorType(true);
 		const err2 = new ErrorType(false);
+		expect(str1.description).toBe("Ref<Str>");
+		expect(str2.description).toBe("Str");
+		expect(err1.description).toBe("Ref<ErrorType>");
+		expect(err2.description).toBe("ErrorType");
 		expect(str1.equivalent(str2)).toBe(true);
 		expect(str2.equivalent(str1)).toBe(true);
 		expect(str1.equivalent(num1)).toBe(false);
@@ -40,7 +44,8 @@ describe("type system", () => {
 			new LinkedHashMap<string, Type>([
 				["p1", constructType(["bool"])],
 				["p2", constructType(["num", "set"])],
-			])
+			]),
+			true
 		);
 		const prod2 = new ProductType(
 			new LinkedHashMap<string, Type>([
@@ -72,6 +77,8 @@ describe("type system", () => {
 				["p2", constructType(["num", "set"])],
 			])
 		);
+		expect(prod1.description).toBe("Ref<Bool, Set<Num>>");
+		expect(prod2.description).toBe("<Bool, Set<Num>>");
 		const t1 = constructType(["Num"]);
 		expect(prod1.equivalent(prod1)).toBe(true);
 		expect(prod1.equivalent(prod2)).toBe(true);
@@ -100,6 +107,7 @@ describe("type system", () => {
 			),
 			constructType(["str"])
 		);
+		expect(fun1.description).toBe("(fun1(Str, Str) -> Str)");
 		const fun2 = new FunctionType(
 			"fun1",
 			new ProductType(
@@ -134,8 +142,11 @@ describe("type system", () => {
 		);
 		const list2 = new CollectionType(
 			Collection.List,
-			new PrimitiveType(Primitive.Bool, false)
+			new PrimitiveType(Primitive.Bool, false),
+			true
 		);
+		expect(list1.description).toBe("List<Bool>");
+		expect(list2.description).toBe("Ref<List<Bool>>");
 		const list3 = new CollectionType(
 			Collection.List,
 			new PrimitiveType(Primitive.Str, false)
