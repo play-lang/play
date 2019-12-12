@@ -22,10 +22,10 @@ export abstract class Visitor {
 		node: VariableDeclarationNode
 	): void;
 	public abstract visitVariableReferenceNode(node: VariableReferenceNode): void;
-	public abstract visitActionDeclarationNode(
+	public abstract visitFunctionDeclarationNode(
 		node: FunctionDeclarationNode
 	): void;
-	public abstract visitActionReferenceNode(node: FunctionReferenceNode): void;
+	public abstract visitFunctionReferenceNode(node: FunctionReferenceNode): void;
 	public abstract visitPrefixExpressionNode(node: PrefixExpressionNode): void;
 	public abstract visitBinaryExpressionNode(node: BinaryExpressionNode): void;
 	public abstract visitBinaryLogicalExpressionNode(

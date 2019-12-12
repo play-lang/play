@@ -16,6 +16,8 @@ export class ReturnStatementNode extends Statement {
 		return this.expr ? this.expr.type(ast) : Void;
 	}
 
+	public validate(): void {}
+
 	public accept(visitor: Visitor): void {
 		visitor.visitReturnStatementNode(this);
 	}

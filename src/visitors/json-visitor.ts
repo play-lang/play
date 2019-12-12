@@ -66,7 +66,7 @@ export class JSONVisitor extends Visitor implements Describable {
 			type: "block",
 			start: node.start,
 			end: node.end,
-			isActionBlock: node.isActionBlock,
+			isFunctionBlock: node.isFunctionBlock,
 			statements,
 		});
 	}
@@ -98,7 +98,7 @@ export class JSONVisitor extends Visitor implements Describable {
 			variableName: node.variableName,
 		});
 	}
-	public visitActionDeclarationNode(node: FunctionDeclarationNode): void {
+	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
 		node.block!.accept(this);
 		const block = this.stack.pop();
 		const parameterTypes = Array.from(node.info.parameterTypes.entries());
@@ -112,7 +112,7 @@ export class JSONVisitor extends Visitor implements Describable {
 			block,
 		});
 	}
-	public visitActionReferenceNode(node: FunctionReferenceNode): void {
+	public visitFunctionReferenceNode(node: FunctionReferenceNode): void {
 		this.stack.push({
 			type: "function-ref",
 			start: node.start,

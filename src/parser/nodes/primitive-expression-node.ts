@@ -31,6 +31,8 @@ export class PrimitiveExpressionNode extends Expression {
 		return new ErrorType(false);
 	}
 
+	public validate(): void {}
+
 	// MARK: Visitor
 	public accept(visitor: Visitor): void {
 		visitor.visitPrimitiveExpressionNode(this);

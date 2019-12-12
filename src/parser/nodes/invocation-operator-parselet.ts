@@ -2,6 +2,7 @@ import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
 import { ErrorType, Type } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
+import { TypeChecker } from "../../type-checker/type-checker";
 import { FunctionReferenceNode } from "./function-reference-node";
 
 export class InvocationExpressionNode extends Expression {
@@ -26,14 +27,19 @@ export class InvocationExpressionNode extends Expression {
 		this.type = lhs.type;
 	}
 
-	public accept(visitor: Visitor): void {
-		visitor.visitInvocationExpressionNode(this);
-	}
-
 	public type(ast: AbstractSyntaxTree): Type {
 		if (this.lhs instanceof FunctionReferenceNode) {
 			return this.lhs.type(ast);
 		}
 		return new ErrorType(false);
+	}
+
+	public validate(tc: TypeChecker): void {
+		// const type = this.type(tc.ast);
+		// const params = new LinkedHashMap<
+	}
+
+	public accept(visitor: Visitor): void {
+		visitor.visitInvocationExpressionNode(this);
 	}
 }
