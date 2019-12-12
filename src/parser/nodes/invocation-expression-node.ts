@@ -1,6 +1,10 @@
 import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
-import { ErrorType, Type } from "../../language/types/type-system";
+import { TokenLike } from "../../language/token";
+import {
+	constructFunctionType,
+	ProductType,
+} from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 import { TypeChecker } from "../../type-checker/type-checker";
 import { FunctionReferenceNode } from "./function-reference-node";
@@ -14,6 +18,8 @@ export class InvocationExpressionNode extends Expression {
 	}
 
 	constructor(
+		/** Opening parenthesis token */
+		public readonly token: TokenLike,
 		/** Start position in the code */
 		start: number,
 		/** End position in the code */
@@ -24,19 +30,24 @@ export class InvocationExpressionNode extends Expression {
 		public readonly args: Expression[]
 	) {
 		super(start, end);
-		this.type = lhs.type;
 	}
 
-	public type(ast: AbstractSyntaxTree): Type {
-		if (this.lhs instanceof FunctionReferenceNode) {
-			return this.lhs.type(ast);
-		}
-		return new ErrorType(false);
+	public type(ast: AbstractSyntaxTree): ProductType {
+		return new ProductType(this.args.map(arg => arg.type(ast)));
 	}
 
 	public validate(tc: TypeChecker): void {
-		// const type = this.type(tc.ast);
-		// const params = new LinkedHashMap<
+		const type = this.type(tc.ast);
+		// TODO: Add better error handling for invalid action calls
+		if (this.functionName && tc.ast.functionTable.has(this.functionName)) {
+			const functionInfo = tc.ast.functionTable.get(this.functionName!)!;
+			const functionType = constructFunctionType(functionInfo);
+			if (type.satisfiesRecordType(functionType.parameters)) {
+				tc.mismatch(this.token, functionType.parameters, type);
+			}
+		} else {
+			// TODO: Semantic error here for unrecognized function
+		}
 	}
 
 	public accept(visitor: Visitor): void {

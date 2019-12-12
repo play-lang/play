@@ -5,7 +5,7 @@ import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "../parser/nodes/function-declaration-node";
 import { FunctionReferenceNode } from "../parser/nodes/function-reference-node";
-import { InvocationExpressionNode } from "../parser/nodes/invocation-operator-parselet";
+import { InvocationExpressionNode } from "../parser/nodes/invocation-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "../parser/nodes/primitive-expression-node";
