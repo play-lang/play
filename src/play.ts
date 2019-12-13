@@ -2,11 +2,13 @@ import { CompiledProgram } from "./compiler/compiled-program";
 import { Compiler } from "./compiler/compiler";
 import { Disassembler } from "./disassembler/disassembler";
 import { AbstractSyntaxTree } from "./language/abstract-syntax-tree";
+import { SemanticError } from "./language/semantic-error";
 import { TokenLike } from "./language/token";
 import { Lexer } from "./lexer/lexer";
 import { LinkedProgram } from "./linker/linked-program";
 import { Linker } from "./linker/linker";
 import { Parser } from "./parser/parser";
+import { TypeChecker } from "./type-checker/type-checker";
 import { JSONVisitor } from "./visitors/json-visitor";
 import { PrintVisitor } from "./visitors/print-visitor";
 import { VirtualMachine } from "./vm/virtual-machine";
@@ -41,6 +43,17 @@ export class Play {
 			throw new Error("Parsing failed");
 		}
 		return ast;
+	}
+
+	/**
+	 * Check the specified code string for errors
+	 * @param code The code to check
+	 */
+	public static check(code: string): SemanticError[] {
+		const ast = Play.parse(code);
+		const typeChecker = new TypeChecker(ast);
+		typeChecker.check();
+		return typeChecker.errors;
 	}
 
 	/**

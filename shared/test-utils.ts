@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import * as path from "path";
 import { AvlTree } from "../src/common/avl-tree";
+import { SemanticError } from "../src/language/semantic-error";
 import { SourceFile } from "../src/language/source-file";
 import { Play } from "../src/play";
 import { Preprocessor } from "../src/preprocessor/preprocessor";
@@ -53,6 +54,11 @@ export async function runFile(path: string): Promise<any> {
 	const finalCode = await preprocessFile(path);
 	const result = Play.run(finalCode);
 	return result.value.value;
+}
+
+export async function checkFile(path: string): Promise<SemanticError[]> {
+	const finalCode = await preprocessFile(path);
+	return Play.check(finalCode);
 }
 
 export async function disassembleFile(path: string): Promise<string> {

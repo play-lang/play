@@ -1,12 +1,8 @@
 import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
-import {
-	constructFunctionType,
-	ProductType,
-} from "../../language/types/type-system";
+import { ProductType } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
-import { TypeChecker } from "../../type-checker/type-checker";
 import { FunctionReferenceNode } from "./function-reference-node";
 
 export class InvocationExpressionNode extends Expression {

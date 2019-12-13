@@ -26,7 +26,7 @@ import { RuntimeType } from "../vm/runtime-type";
 import { RuntimeValue } from "../vm/runtime-value";
 import { CompiledProgram } from "./compiled-program";
 
-export class Compiler extends Visitor {
+export class Compiler implements Visitor {
 	/** Current bytecode context */
 	public get context(): Context {
 		return this.contexts.get(this.symbolTable)!;
@@ -65,7 +65,6 @@ export class Compiler extends Visitor {
 	private lastInstr: number = 0;
 
 	constructor(ast: AbstractSyntaxTree) {
-		super();
 		this.ast = ast;
 		this.symbolTable = ast.symbolTable;
 		this.globalScope = ast.symbolTable;

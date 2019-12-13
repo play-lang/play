@@ -19,13 +19,11 @@ import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
 import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
 
-export class PrintVisitor extends Visitor implements Describable {
+export class PrintVisitor implements Visitor, Describable {
 	private indent: number = 0;
 	private desc: string = "";
 
-	constructor(public readonly ast: AbstractSyntaxTree) {
-		super();
-	}
+	constructor(public readonly ast: AbstractSyntaxTree) {}
 
 	public print(): string {
 		this.desc = "";
