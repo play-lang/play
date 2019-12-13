@@ -18,11 +18,9 @@ export class ProgramNode extends Node {
 		return Void;
 	}
 
-	public validate(): void {}
-
 	public accept(visitor: Visitor): void {
 		// TODO: Infer type
 		// Make this analyze outer level return statements to infer return type
-		visitor.visitProgramNode(this);
+		visitor.visitProgramNode?.(this);
 	}
 }

@@ -4,7 +4,6 @@ import { Expression, Statement } from "../../language/node";
 import { TokenLike } from "../../language/token";
 import { constructType, Type } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
-import { TypeChecker } from "../../type-checker/type-checker";
 
 export class VariableDeclarationNode extends Statement
 	implements IdentifierSymbol {
@@ -40,19 +39,7 @@ export class VariableDeclarationNode extends Statement
 			: this.expr!.type(ast);
 	}
 
-	public validate(tc: TypeChecker): void {
-		if (this.expr && this.typeAnnotation) {
-			const type = this.type(tc.ast);
-			const exprType = this.expr.type(tc.ast);
-			if (!type.equivalent(exprType)) {
-				// Report mismatch between variable's assigned value and variable's
-				// expected value
-				tc.mismatch(this.token, type, exprType);
-			}
-		}
-	}
-
 	public accept(visitor: Visitor): void {
-		visitor.visitVariableDeclarationNode(this);
+		visitor.visitVariableDeclarationNode?.(this);
 	}
 }

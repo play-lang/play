@@ -2,7 +2,6 @@ import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
 import { Type } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
-import { TypeChecker } from "../../type-checker/type-checker";
 
 export class TernaryConditionalNode extends Expression {
 	constructor(
@@ -23,9 +22,7 @@ export class TernaryConditionalNode extends Expression {
 		return this.consequent.type(ast);
 	}
 
-	public validate(tc: TypeChecker): void {}
-
 	public accept(visitor: Visitor): void {
-		visitor.visitTernaryConditionalNode(this);
+		visitor.visitTernaryConditionalNode?.(this);
 	}
 }

@@ -32,6 +32,6 @@ export class VariableReferenceNode extends Expression {
 
 	// MARK: Visitor
 	public accept(visitor: Visitor): void {
-		visitor.visitVariableReferenceNode(this);
+		visitor.visitVariableReferenceNode?.(this);
 	}
 }

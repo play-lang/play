@@ -54,6 +54,6 @@ export class BinaryExpressionNode extends Expression {
 
 	// MARK: Visitor
 	public accept(visitor: Visitor): void {
-		visitor.visitBinaryExpressionNode(this);
+		visitor.visitBinaryExpressionNode?.(this);
 	}
 }

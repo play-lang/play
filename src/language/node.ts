@@ -1,10 +1,8 @@
 import { Type } from "../language/types/type-system";
-import { TypeCheckable } from "../type-checker/type-checkable";
-import { TypeChecker } from "../type-checker/type-checker";
 import { AbstractSyntaxTree } from "./abstract-syntax-tree";
 import { Visitor } from "./visitor";
 
-export abstract class Node implements TypeCheckable {
+export abstract class Node {
 	/** Type of the syntax tree node */
 	public get nodeName(): string {
 		return this.constructor.name;
@@ -20,9 +18,8 @@ export abstract class Node implements TypeCheckable {
 	/** Type of the node for use with type checking */
 	public abstract type(ast: AbstractSyntaxTree): Type;
 
+	/** Accept the specified visitor */
 	public abstract accept(visitor: Visitor): any;
-
-	public abstract validate(tc: TypeChecker): void;
 }
 
 export abstract class Expression extends Node {}

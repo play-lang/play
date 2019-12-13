@@ -45,6 +45,6 @@ export class AssignmentExpressionNode extends Expression {
 
 	// MARK: Visitor
 	public accept(visitor: Visitor): void {
-		visitor.visitAssignmentExpressionNode(this);
+		visitor.visitAssignmentExpressionNode?.(this);
 	}
 }
