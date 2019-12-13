@@ -93,10 +93,12 @@ export class Parser extends TokenParser {
 		// production to make
 		if (this.match(TokenType.Let, TokenType.Var)) {
 			return this.variableDeclaration();
-		} else if (this.match(TokenType.Id)) {
-			// Non-reserved identifier indicates an expression every time
-			return this.expression(0, this.previous);
-		} else if (this.match(TokenType.BraceOpen)) {
+		}
+		// else if (this.match(TokenType.Id)) {
+		// 	// Non-reserved identifier indicates an expression every time
+		// 	return this.expression(0, this.previous);
+		// }
+		else if (this.match(TokenType.BraceOpen)) {
 			// Match a block statement
 			return this.block();
 		} else if (this.match(TokenType.Function)) {
@@ -192,7 +194,7 @@ export class Parser extends TokenParser {
 		const start = this.previous.pos;
 		const isImmutable = this.previous.type === TokenType.Let;
 		const nameToken = this.consume(TokenType.Id, "Expected variable name");
-		let typeAnnotation: string[] = [];
+		let typeAnnotation: string[] | undefined;
 		if (this.match(TokenType.Colon)) {
 			// Expect a colon for a type annotation -> let x: num = 10
 			// Type annotation identifiers follow the colon:
@@ -208,6 +210,13 @@ export class Parser extends TokenParser {
 			expr = this.expression();
 			end = expr.end;
 		}
+		if (!typeAnnotation && !expr) {
+			throw this.error(
+				nameToken,
+				"Variable must have a type or an assigned value to infer a type from"
+			);
+		}
+		// TODO: Don't register types in the symbol table until type-check time
 		const node: VariableDeclarationNode = new VariableDeclarationNode(
 			nameToken,
 			start,
@@ -220,7 +229,7 @@ export class Parser extends TokenParser {
 		this.symbolTable.register({
 			token: nameToken,
 			name: nameToken.lexeme,
-			typeAnnotation,
+			typeAnnotation: typeAnnotation || [], // ! This is where the error is -- need to factor in expression type which can't be done at compile time
 			isImmutable,
 		});
 		return node;

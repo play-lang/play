@@ -34,8 +34,8 @@ export class VariableDeclarationNode extends Statement
 	}
 
 	public type(ast: AbstractSyntaxTree): Type {
-		return this.typeAnnotation
-			? constructType(this.typeAnnotation, false)
+		return this.annotation
+			? constructType(this.annotation, false)
 			: this.expr!.type(ast);
 	}
 
