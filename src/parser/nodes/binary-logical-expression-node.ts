@@ -18,6 +18,6 @@ export class BinaryLogicalExpressionNode extends Expression {
 	}
 
 	public accept(visitor: Visitor): void {
-		visitor.visitBinaryLogicalExpressionNode(this);
+		visitor.visitBinaryLogicalExpressionNode?.(this);
 	}
 }

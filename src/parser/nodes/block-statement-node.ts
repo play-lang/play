@@ -24,6 +24,6 @@ export class BlockStatementNode extends Statement {
 	}
 
 	public accept(visitor: Visitor): void {
-		visitor.visitBlockStatementNode(this);
+		visitor.visitBlockStatementNode?.(this);
 	}
 }

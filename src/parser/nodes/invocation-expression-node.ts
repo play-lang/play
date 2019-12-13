@@ -36,21 +36,7 @@ export class InvocationExpressionNode extends Expression {
 		return new ProductType(this.args.map(arg => arg.type(ast)));
 	}
 
-	public validate(tc: TypeChecker): void {
-		const type = this.type(tc.ast);
-		// TODO: Add better error handling for invalid action calls
-		if (this.functionName && tc.ast.functionTable.has(this.functionName)) {
-			const functionInfo = tc.ast.functionTable.get(this.functionName!)!;
-			const functionType = constructFunctionType(functionInfo);
-			if (type.satisfiesRecordType(functionType.parameters)) {
-				tc.mismatch(this.token, functionType.parameters, type);
-			}
-		} else {
-			// TODO: Semantic error here for unrecognized function
-		}
-	}
-
 	public accept(visitor: Visitor): void {
-		visitor.visitInvocationExpressionNode(this);
+		visitor.visitInvocationExpressionNode?.(this);
 	}
 }

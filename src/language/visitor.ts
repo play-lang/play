@@ -15,37 +15,21 @@ import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
 import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
 
-export abstract class Visitor {
-	public abstract visitProgramNode(node: ProgramNode): void;
-	public abstract visitBlockStatementNode(node: BlockStatementNode): void;
-	public abstract visitVariableDeclarationNode(
-		node: VariableDeclarationNode
-	): void;
-	public abstract visitVariableReferenceNode(node: VariableReferenceNode): void;
-	public abstract visitFunctionDeclarationNode(
-		node: FunctionDeclarationNode
-	): void;
-	public abstract visitFunctionReferenceNode(node: FunctionReferenceNode): void;
-	public abstract visitPrefixExpressionNode(node: PrefixExpressionNode): void;
-	public abstract visitBinaryExpressionNode(node: BinaryExpressionNode): void;
-	public abstract visitBinaryLogicalExpressionNode(
-		node: BinaryLogicalExpressionNode
-	): void;
-	public abstract visitPostfixExpressionNode(node: PostfixExpressionNode): void;
-	public abstract visitInvocationExpressionNode(
-		node: InvocationExpressionNode
-	): void;
-	public abstract visitPrimitiveExpressionNode(
-		node: PrimitiveExpressionNode
-	): void;
-	public abstract visitTernaryConditionalNode(
-		node: TernaryConditionalNode
-	): void;
-	public abstract visitAssignmentExpressionNode(
-		node: AssignmentExpressionNode
-	): void;
-	public abstract visitReturnStatementNode(node: ReturnStatementNode): void;
-	public abstract visitExpressionStatementNode(
-		node: ExpressionStatementNode
-	): void;
+export interface Visitor {
+	visitProgramNode?(node: ProgramNode): void;
+	visitBlockStatementNode?(node: BlockStatementNode): void;
+	visitVariableDeclarationNode?(node: VariableDeclarationNode): void;
+	visitVariableReferenceNode?(node: VariableReferenceNode): void;
+	visitFunctionDeclarationNode?(node: FunctionDeclarationNode): void;
+	visitFunctionReferenceNode?(node: FunctionReferenceNode): void;
+	visitPrefixExpressionNode?(node: PrefixExpressionNode): void;
+	visitBinaryExpressionNode?(node: BinaryExpressionNode): void;
+	visitBinaryLogicalExpressionNode?(node: BinaryLogicalExpressionNode): void;
+	visitPostfixExpressionNode?(node: PostfixExpressionNode): void;
+	visitInvocationExpressionNode?(node: InvocationExpressionNode): void;
+	visitPrimitiveExpressionNode?(node: PrimitiveExpressionNode): void;
+	visitTernaryConditionalNode?(node: TernaryConditionalNode): void;
+	visitAssignmentExpressionNode?(node: AssignmentExpressionNode): void;
+	visitReturnStatementNode?(node: ReturnStatementNode): void;
+	visitExpressionStatementNode?(node: ExpressionStatementNode): void;
 }

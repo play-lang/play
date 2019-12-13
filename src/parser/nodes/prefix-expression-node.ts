@@ -5,7 +5,6 @@ import { prefixTypeAnnotations, TokenType } from "../../language/token-type";
 import {
 	constructType,
 	ErrorType,
-	Num,
 	Type,
 } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
@@ -35,30 +34,10 @@ export class PrefixExpressionNode extends Expression {
 		return new ErrorType(rhsType.isAssignable);
 	}
 
-	public validate(tc: TypeChecker): void {
-		const type = this.type(tc.ast);
-		switch (this.operatorType) {
-			case TokenType.Bang:
-				return;
-			case TokenType.Plus:
-			case TokenType.Minus:
-				if (!type.equivalent(Num)) {
-					tc.mismatch(this.token, Num, type);
-				}
-				break;
-			case TokenType.PlusPlus:
-			case TokenType.MinusMinus:
-				if (!type.equivalent(Num)) {
-					tc.mismatch(this.token, Num, type);
-				}
-				if (!type.isAssignable) {
-					tc.badAssignment(this.token, type);
-				}
-		}
-	}
+	public validate(tc: TypeChecker): void {}
 
 	// MARK: Visitor
 	public accept(visitor: Visitor): void {
-		visitor.visitPrefixExpressionNode(this);
+		visitor.visitPrefixExpressionNode?.(this);
 	}
 }
