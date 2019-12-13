@@ -19,7 +19,7 @@ import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
 import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
 
-export class JSONVisitor extends Visitor implements Describable {
+export class JSONVisitor implements Visitor, Describable {
 	// MARK: Describable
 
 	public get description(): string {
@@ -30,9 +30,7 @@ export class JSONVisitor extends Visitor implements Describable {
 
 	private stack: object[] = [];
 
-	constructor(public readonly ast: AbstractSyntaxTree) {
-		super();
-	}
+	constructor(public readonly ast: AbstractSyntaxTree) {}
 
 	// MARK: Methods
 

@@ -115,7 +115,11 @@ export class TypeChecker implements Visitor {
 		}
 	}
 	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {}
-	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {}
+	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
+		node.lhs.accept(this);
+		node.rhs.accept(this);
+		// TODO: Fill this in
+	}
 	public visitBinaryLogicalExpressionNode(
 		node: BinaryLogicalExpressionNode
 	): void {}
@@ -124,7 +128,11 @@ export class TypeChecker implements Visitor {
 		node.consequent.accept(this);
 		node.alternate.accept(this);
 	}
-	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {}
+	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
+		node.lhs.accept(this);
+		node.rhs.accept(this);
+		// TODO: Fill this in
+	}
 	public visitReturnStatementNode(node: ReturnStatementNode): void {
 		if (node.expr) node.expr!.accept(this);
 	}
