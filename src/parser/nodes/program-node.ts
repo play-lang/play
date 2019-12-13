@@ -1,9 +1,11 @@
 import { Node } from "../../language/node";
+import { TokenLike } from "../../language/token";
 import { Type, Void } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
 export class ProgramNode extends Node {
 	constructor(
+		token: TokenLike,
 		/** Start position in the code */
 		start: number,
 		/** End position in the code */
@@ -11,7 +13,7 @@ export class ProgramNode extends Node {
 		/** Program statements */
 		public readonly statements: Node[]
 	) {
-		super(start, end);
+		super(token, start, end);
 	}
 
 	public type(): Type {
@@ -19,8 +21,6 @@ export class ProgramNode extends Node {
 	}
 
 	public accept(visitor: Visitor): void {
-		// TODO: Infer type
-		// Make this analyze outer level return statements to infer return type
 		visitor.visitProgramNode?.(this);
 	}
 }

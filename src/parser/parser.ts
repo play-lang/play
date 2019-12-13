@@ -84,7 +84,7 @@ export class Parser extends TokenParser {
 			statements.length < 1
 				? this.previous.end
 				: statements[statements.length - 1].end;
-		const root = new ProgramNode(start, end, statements);
+		const root = new ProgramNode(this.previous, start, end, statements);
 		return new AbstractSyntaxTree(root, this.symbolTable, this.functionTable);
 	}
 
@@ -116,6 +116,7 @@ export class Parser extends TokenParser {
 	 */
 	public block(isFunctionBlock: boolean = false): BlockStatementNode {
 		// Brace open has already been matched for us
+		const startToken = this.previous;
 		const start = this.previous.pos;
 		this.eatLines();
 		if (!isFunctionBlock) {
@@ -145,7 +146,13 @@ export class Parser extends TokenParser {
 			statements.length < 1
 				? this.previous.end
 				: statements[statements.length - 1].end;
-		return new BlockStatementNode(start, end, statements, isFunctionBlock);
+		return new BlockStatementNode(
+			startToken,
+			start,
+			end,
+			statements,
+			isFunctionBlock
+		);
 	}
 
 	/**
@@ -202,9 +209,9 @@ export class Parser extends TokenParser {
 			end = expr.end;
 		}
 		const node: VariableDeclarationNode = new VariableDeclarationNode(
+			nameToken,
 			start,
 			end,
-			nameToken,
 			isImmutable,
 			expr,
 			typeAnnotation
@@ -324,7 +331,7 @@ export class Parser extends TokenParser {
 		// Pop the scope for this function
 		this._symbolTables.pop();
 
-		const node = new FunctionDeclarationNode(start, info, block);
+		const node = new FunctionDeclarationNode(nameToken, start, info, block);
 		return node;
 	}
 

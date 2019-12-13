@@ -18,7 +18,7 @@ export class PrimitiveExpressionNode extends Expression {
 		/** Primitive token */
 		public readonly token: TokenLike
 	) {
-		super(token.pos, token.end);
+		super(token, token.pos, token.end);
 		this.primitiveType = token.type;
 		this.primitiveValue = token.lexeme;
 	}

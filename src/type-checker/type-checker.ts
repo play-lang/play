@@ -131,7 +131,11 @@ export class TypeChecker implements Visitor {
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
 		node.lhs.accept(this);
 		node.rhs.accept(this);
-		// TODO: Fill this in
+		const lhsType = node.lhs.type(this.ast);
+		const rhsType = node.rhs.type(this.ast);
+		if (lhsType.equivalent(rhsType)) {
+			this.mismatch(node.lhs.token, lhsType, rhsType);
+		}
 	}
 	public visitReturnStatementNode(node: ReturnStatementNode): void {
 		if (node.expr) node.expr!.accept(this);

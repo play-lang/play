@@ -1,9 +1,11 @@
 import { Statement } from "../../language/node";
+import { TokenLike } from "../../language/token";
 import { Type, Void } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
 export class BlockStatementNode extends Statement {
 	constructor(
+		token: TokenLike,
 		/** Start position in the code */
 		start: number,
 		/** End position in the code */
@@ -13,7 +15,7 @@ export class BlockStatementNode extends Statement {
 		/** True if the block represents a function block */
 		public readonly isFunctionBlock: boolean
 	) {
-		super(start, end);
+		super(token, start, end);
 	}
 
 	public type(): Type {

@@ -13,12 +13,12 @@ export class VariableDeclarationNode extends Statement
 	}
 
 	constructor(
+		/** Variable name token */
+		public readonly token: TokenLike,
 		/** Start position in the code */
 		start: number,
 		/** End position in the code */
 		end: number,
-		/** Variable name token */
-		public readonly token: TokenLike,
 		/** True if the value can't be reassigned another value */
 		public readonly isImmutable: boolean,
 		/** Value of the variable */
@@ -26,7 +26,7 @@ export class VariableDeclarationNode extends Statement
 		/** Type of the variable */
 		public readonly annotation?: string[]
 	) {
-		super(start, end);
+		super(token, start, end);
 	}
 
 	public get typeAnnotation(): string[] {

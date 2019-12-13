@@ -9,7 +9,7 @@ export class ExpressionStatementNode extends Expression {
 		/** Return value, if any */
 		public readonly expr: Expression
 	) {
-		super(token.pos, expr.end);
+		super(token, token.pos, expr.end);
 	}
 
 	public type(): Type {

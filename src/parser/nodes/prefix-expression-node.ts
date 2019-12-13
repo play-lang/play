@@ -20,7 +20,7 @@ export class PrefixExpressionNode extends Expression {
 		/** Right-hand side expression */
 		public readonly rhs: Expression
 	) {
-		super(token.pos, rhs.end);
+		super(token, token.pos, rhs.end);
 		this.operatorType = token.type;
 		this.rhs = rhs;
 	}

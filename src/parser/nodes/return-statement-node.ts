@@ -9,7 +9,7 @@ export class ReturnStatementNode extends Statement {
 		token: TokenLike /** Return value, if any */,
 		public readonly expr?: Expression
 	) {
-		super(token.pos, expr ? expr.end : token.end);
+		super(token, token.pos, expr ? expr.end : token.end);
 	}
 
 	public type(ast: AbstractSyntaxTree): Type {
