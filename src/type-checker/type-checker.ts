@@ -42,11 +42,13 @@ export class TypeChecker implements Visitor {
 			statement.accept(this);
 		}
 	}
+
 	public visitBlockStatementNode(node: BlockStatementNode): void {
 		for (const statement of node.statements) {
 			statement.accept(this);
 		}
 	}
+
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
 		// Visit the assignment expression that might follow a variable declaration:
 		if (node.expr) node.expr!.accept(this);
@@ -62,9 +64,13 @@ export class TypeChecker implements Visitor {
 			}
 		}
 	}
+
 	public visitVariableReferenceNode(node: VariableReferenceNode): void {}
+
 	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {}
+
 	public visitFunctionReferenceNode(node: FunctionReferenceNode): void {}
+
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
 		node.rhs.accept(this);
 		const type = node.type(this.ast);
@@ -87,6 +93,7 @@ export class TypeChecker implements Visitor {
 				}
 		}
 	}
+
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
 		node.lhs.accept(this);
 		const type = node.type(this.ast);
@@ -101,6 +108,7 @@ export class TypeChecker implements Visitor {
 				}
 		}
 	}
+
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
 		const type = node.type(this.ast);
 		// TODO: Add better error handling for invalid action calls
@@ -114,20 +122,25 @@ export class TypeChecker implements Visitor {
 			// TODO: Semantic error here for unrecognized function
 		}
 	}
+
 	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {}
+
 	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
 		node.lhs.accept(this);
 		node.rhs.accept(this);
 		// TODO: Fill this in
 	}
+
 	public visitBinaryLogicalExpressionNode(
 		node: BinaryLogicalExpressionNode
 	): void {}
+
 	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
 		node.predicate.accept(this);
 		node.consequent.accept(this);
 		node.alternate.accept(this);
 	}
+
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
 		node.lhs.accept(this);
 		node.rhs.accept(this);
@@ -137,10 +150,14 @@ export class TypeChecker implements Visitor {
 			this.mismatch(node.lhs.token, lhsType, rhsType);
 		}
 	}
+
 	public visitReturnStatementNode(node: ReturnStatementNode): void {
 		if (node.expr) node.expr!.accept(this);
 	}
-	public visitExpressionStatementNode(node: ExpressionStatementNode): void {}
+
+	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
+		node.expr.accept(this);
+	}
 
 	// MARK: Methods
 
