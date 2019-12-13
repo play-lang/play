@@ -67,7 +67,7 @@ export class TernaryConditionalParselet implements InfixParselet {
 			"Expected colon after conditional operator"
 		);
 		const alternate = parser.expression(this.precedence - 1);
-		return new TernaryConditionalNode(predicate, consequent, alternate);
+		return new TernaryConditionalNode(token, predicate, consequent, alternate);
 	}
 	public get precedence(): number {
 		return Precedence.Conditional;
@@ -105,7 +105,7 @@ export class BinaryOperatorParselet implements InfixParselet {
 		const rhs: Expression = parser.expression(
 			this.precedence - (this.isRightAssociative ? 1 : 0)
 		);
-		return new BinaryExpressionNode(token.type, lhs, rhs);
+		return new BinaryExpressionNode(token, token.type, lhs, rhs);
 	}
 }
 
@@ -115,7 +115,7 @@ export class BinaryLogicalOperatorParselet implements InfixParselet {
 		// We drop the precedence slightly for right associative operators
 		// so that another right associative operator will bind more tightly
 		const rhs: Expression = parser.expression(this.precedence);
-		return new BinaryLogicalExpressionNode(token.type, lhs, rhs);
+		return new BinaryLogicalExpressionNode(token, token.type, lhs, rhs);
 	}
 }
 

@@ -1,10 +1,12 @@
 import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
+import { TokenLike } from "../../language/token";
 import { Type } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
 export class TernaryConditionalNode extends Expression {
 	constructor(
+		token: TokenLike,
 		/** Expression to examine */
 		public readonly predicate: Expression,
 		/** Expression to evaluate if predicate is true */
@@ -12,7 +14,7 @@ export class TernaryConditionalNode extends Expression {
 		/** Expression to evaluate if predicate is false */
 		public readonly alternate: Expression
 	) {
-		super(predicate.start, alternate.end);
+		super(token, predicate.start, alternate.end);
 	}
 
 	public type(ast: AbstractSyntaxTree): Type {

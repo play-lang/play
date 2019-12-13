@@ -20,7 +20,7 @@ export class VariableReferenceNode extends Expression {
 		 */
 		public readonly typeAnnotation: string[]
 	) {
-		super(token.pos, token.end);
+		super(token, token.pos, token.end);
 		this.variableName = token.lexeme;
 	}
 

@@ -1,5 +1,6 @@
 import { Type } from "../language/types/type-system";
 import { AbstractSyntaxTree } from "./abstract-syntax-tree";
+import { TokenLike } from "./token";
 import { Visitor } from "./visitor";
 
 export abstract class Node {
@@ -9,6 +10,7 @@ export abstract class Node {
 	}
 
 	constructor(
+		public readonly token: TokenLike,
 		/** Start index of the node in the source */
 		public readonly start: number,
 		/** End index of the node in the source */

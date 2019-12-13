@@ -16,7 +16,7 @@ export class AssignmentExpressionNode extends Expression {
 		public readonly lhs: Expression,
 		public readonly rhs: Expression
 	) {
-		super(lhs.start, rhs.end);
+		super(token, lhs.start, rhs.end);
 	}
 
 	public type(ast: AbstractSyntaxTree): Type {

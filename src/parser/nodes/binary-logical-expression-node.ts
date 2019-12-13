@@ -1,15 +1,17 @@
 import { Expression } from "../../language/node";
+import { TokenLike } from "../../language/token";
 import { TokenType } from "../../language/token-type";
 import { constructType, Type } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
 export class BinaryLogicalExpressionNode extends Expression {
 	constructor(
+		token: TokenLike,
 		public readonly operatorType: TokenType,
 		public readonly lhs: Expression,
 		public readonly rhs: Expression
 	) {
-		super(lhs.start, rhs.end);
+		super(token, lhs.start, rhs.end);
 	}
 
 	public type(): Type {

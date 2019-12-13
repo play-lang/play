@@ -19,7 +19,7 @@ export class PostfixExpressionNode extends Expression {
 		/** Left-hand side expression */
 		public readonly lhs: Expression
 	) {
-		super(lhs.start, token.end);
+		super(token, lhs.start, token.end);
 		this.operatorType = token.type;
 		this.lhs = lhs;
 	}

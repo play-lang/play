@@ -25,7 +25,7 @@ export class InvocationExpressionNode extends Expression {
 		/** Function call invocation argument expressions */
 		public readonly args: Expression[]
 	) {
-		super(start, end);
+		super(token, start, end);
 	}
 
 	public type(ast: AbstractSyntaxTree): ProductType {

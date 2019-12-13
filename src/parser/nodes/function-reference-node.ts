@@ -21,7 +21,7 @@ export class FunctionReferenceNode extends Expression {
 		/** Function reference token */
 		public readonly token: TokenLike
 	) {
-		super(token.pos, token.end);
+		super(token, token.pos, token.end);
 	}
 
 	public type(ast: AbstractSyntaxTree): Type {
