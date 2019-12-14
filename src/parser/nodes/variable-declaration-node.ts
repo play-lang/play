@@ -1,12 +1,10 @@
 import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
-import { IdentifierSymbol } from "../../language/identifier-symbol";
 import { Expression, Statement } from "../../language/node";
 import { TokenLike } from "../../language/token";
 import { constructType, Type } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
-export class VariableDeclarationNode extends Statement
-	implements IdentifierSymbol {
+export class VariableDeclarationNode extends Statement {
 	/** Name of the variable */
 	public get name(): string {
 		return this.token.lexeme;

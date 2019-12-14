@@ -11,56 +11,56 @@ describe("simple function call", () => {
 		`;
 		const result = Play.describeAstAsJSON(code);
 		expect(result).toEqual({
-			type: "program",
+			end: 48,
 			start: 0,
-			end: 46,
 			statements: [
 				{
-					type: "function-decl",
-					start: 0,
-					end: 46,
-					typeAnnotation: ["str"],
-					parameters: [],
-					parameterTypes: [],
 					block: {
-						type: "block",
-						start: 25,
-						end: 46,
+						end: 48,
 						isFunctionBlock: true,
+						start: 27,
 						statements: [
 							{
-								type: "return",
-								start: 27,
-								end: 33,
+								end: 35,
+								start: 29,
+								type: "ReturnStatementNode",
 							},
 							{
-								type: "return-value",
-								start: 45,
-								end: 46,
+								end: 48,
+								start: 47,
+								type: "ReturnStatementNode",
 								value: {
-									type: "binary-expr",
-									start: 41,
-									end: 46,
+									end: 48,
 									lhs: {
-										type: "literal",
-										start: 41,
-										end: 42,
+										end: 44,
 										literalType: "Number",
 										literalValue: "3",
+										start: 43,
+										type: "PrimitiveExpressionNode",
 									},
 									rhs: {
-										type: "literal",
-										start: 45,
-										end: 46,
+										end: 48,
 										literalType: "Number",
 										literalValue: "4",
+										start: 47,
+										type: "PrimitiveExpressionNode",
 									},
+									start: 43,
+									type: "BinaryExpressionNode",
 								},
 							},
 						],
+						type: "BlockStatementNode",
 					},
+					end: 48,
+					parameterTypes: [],
+					parameters: [],
+					start: 0,
+					type: "FunctionDeclarationNode",
+					typeAnnotation: ["str"],
 				},
 			],
+			type: "ProgramNode",
 		});
 	});
 
@@ -80,6 +80,7 @@ describe("simple function call", () => {
 					return a + b
 				}
 			`;
+			console.log(Play.disassemble(code));
 			const result = Play.run(code);
 			expect(result.value.value).toBe(3);
 		});

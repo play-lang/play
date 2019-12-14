@@ -1,7 +1,7 @@
+import { IdentifierSymbol } from "../src/language/identifier-symbol";
 import { SourceFile } from "../src/language/source-file";
 import SymbolTable from "../src/language/symbol-table";
-import { Token } from "../src/language/token";
-import { VariableDeclarationNode } from "../src/parser/nodes/variable-declaration-node";
+import { Token, TokenLike } from "../src/language/token";
 
 let pos: number = 0;
 let end: number = 1;
@@ -28,13 +28,9 @@ describe("symbol table", () => {
 	});
 	test("should register ids", () => {
 		const t2 = fakeToken(); // b
-		globalScope.register(
-			new VariableDeclarationNode(t1, 0, 0, false, undefined, ["num"])
-		);
+		globalScope.register(makeIdSymbol(t1, false, ["num"]));
 		expect(globalScope.entries.has(t1.lexeme));
-		globalScope.register(
-			new VariableDeclarationNode(t2, 0, 0, false, undefined, ["str"])
-		);
+		globalScope.register(makeIdSymbol(t2, false, ["str"]));
 		expect(globalScope.entries.has(t2.lexeme));
 		expect(globalScope.description).toEqual(
 			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"]}'
@@ -48,12 +44,8 @@ describe("symbol table", () => {
 		s1 = globalScope.addScope();
 		const t3 = fakeToken(); // c
 		const t4 = fakeToken(); // d
-		s1.register(
-			new VariableDeclarationNode(t3, 0, 0, false, undefined, ["num"])
-		);
-		s1.register(
-			new VariableDeclarationNode(t4, 0, 0, false, undefined, ["str"])
-		);
+		s1.register(makeIdSymbol(t3, false, ["num"]));
+		s1.register(makeIdSymbol(t4, false, ["str"]));
 		expect(s1.idInScope("a")).toBeTruthy();
 		expect(s1.idInScope("b")).toBeTruthy();
 		expect(s1.idInScope("e")).toBeFalsy();
@@ -65,15 +57,12 @@ describe("symbol table", () => {
 			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"], "scopes": [{ "ids": ["Id(0, `c`, `num`)", "Id(1, `d`, `str`)"]}, { "ids": []}]}'
 		);
 		const t5 = fakeToken(); // e
-		s2.register(
-			new VariableDeclarationNode(t5, 0, 0, false, undefined, ["num"])
-		);
+		s2.register(makeIdSymbol(t5, false, ["num"]));
 	});
 	test("should perform lookups", () => {
 		expect(JSON.parse(JSON.stringify(globalScope.lookup("a")))).toEqual({
 			isImmutable: false,
-			end: 0,
-			start: 0,
+			name: "a",
 			token: {
 				column: 0,
 				file: {
@@ -90,10 +79,19 @@ describe("symbol table", () => {
 		});
 	});
 	test("should prevent duplicate id's from being registered", () => {
-		expect(
-			globalScope.register(
-				new VariableDeclarationNode(t1, 0, 0, false, undefined, ["num"])
-			)
-		).toBe(false);
+		expect(globalScope.register(makeIdSymbol(t1, false, ["num"]))).toBe(false);
 	});
 });
+
+function makeIdSymbol(
+	token: TokenLike,
+	isImmutable: boolean,
+	typeAnnotation: string[]
+): IdentifierSymbol {
+	return {
+		name: token.lexeme,
+		token,
+		typeAnnotation,
+		isImmutable,
+	};
+}
