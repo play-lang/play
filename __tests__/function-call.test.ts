@@ -72,7 +72,7 @@ describe("simple function call", () => {
 	describe("variable handling", () => {
 		test("should handle local variables", () => {
 			const code = str`
-				first(1, 2)
+				return first(1, 2)
 				function first(a: num, b: num): num {
 					return second(a, b)
 				}
@@ -80,7 +80,6 @@ describe("simple function call", () => {
 					return a + b
 				}
 			`;
-			console.log(Play.disassemble(code));
 			const result = Play.run(code);
 			expect(result.value.value).toBe(3);
 		});
@@ -89,7 +88,7 @@ describe("simple function call", () => {
 				function first(a: num, b: num): num {
 					return a + b
 				}
-				second(1, 2)
+				return second(1, 2)
 				function second(a: num, b: num): num {
 					return first(a, b)
 				}
