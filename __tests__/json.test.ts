@@ -7,56 +7,61 @@ describe("json tree printer", () => {
 			myNum`;
 		const json = Play.describeAstAsJSON(code);
 		expect(json).toEqual({
-			type: "program",
-			start: 0,
 			end: 35,
+			start: 0,
 			statements: [
 				{
-					type: "var-decl",
-					start: 0,
 					end: 29,
-					name: "myNum",
-					typeAnnotation: ["num"],
-					isImmutable: true,
 					expr: {
-						type: "binary-expr",
-						start: 17,
 						end: 29,
 						lhs: {
-							type: "binary-expr",
-							start: 17,
 							end: 24,
 							lhs: {
-								type: "literal",
-								start: 17,
 								end: 19,
 								literalType: "Number",
 								literalValue: "10",
+								start: 17,
+								type: "PrimitiveExpressionNode",
 							},
 							rhs: {
-								type: "literal",
-								start: 22,
 								end: 24,
 								literalType: "Number",
 								literalValue: "20",
+								start: 22,
+								type: "PrimitiveExpressionNode",
 							},
+							start: 17,
+							type: "BinaryExpressionNode",
 						},
 						rhs: {
-							type: "literal",
-							start: 27,
 							end: 29,
 							literalType: "Number",
 							literalValue: "30",
+							start: 27,
+							type: "PrimitiveExpressionNode",
 						},
+						start: 17,
+						type: "BinaryExpressionNode",
 					},
+					isImmutable: true,
+					name: "myNum",
+					start: 0,
+					type: "VariableDeclarationNode",
+					typeAnnotation: ["num"],
 				},
 				{
-					type: "variable-ref",
-					start: 30,
 					end: 35,
-					variableName: "myNum",
+					expr: {
+						end: 35,
+						start: 30,
+						type: "VariableReferenceNode",
+						variableName: "myNum",
+					},
+					start: 30,
+					type: "ExpressionStatementNode",
 				},
 			],
+			type: "ProgramNode",
 		});
 	});
 });
