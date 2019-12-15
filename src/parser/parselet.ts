@@ -41,9 +41,9 @@ export class IdParselet implements PrefixParselet {
 	public parse(parser: Parser, token: TokenLike): Expression {
 		const scope = parser.symbolTable.idInScope(token.lexeme);
 		if (scope) {
-			const type = scope.entries.get(token.lexeme)!.typeAnnotation;
-			return new VariableReferenceNode(token, type);
+			return new VariableReferenceNode(token);
 		}
+		// TODO: Add variable to a list of identifiers to be resolved in scope
 		// Todo: Look up in scope identifiers, not just functions
 		return new FunctionReferenceNode(token);
 	}

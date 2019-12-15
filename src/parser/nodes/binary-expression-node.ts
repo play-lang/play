@@ -1,7 +1,7 @@
-import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
 import { TokenType } from "../../language/token-type";
+import { Environment } from "../../language/types/environment";
 import {
 	constructType,
 	ErrorType,
@@ -19,7 +19,7 @@ export class BinaryExpressionNode extends Expression {
 		super(token, lhs.start, rhs.end);
 	}
 
-	public type(ast: AbstractSyntaxTree): Type {
+	public type(env: Environment): Type {
 		const bool = constructType(["bool"]);
 		const num = constructType(["num"]);
 		const str = constructType(["str"]);
@@ -38,8 +38,8 @@ export class BinaryExpressionNode extends Expression {
 				// We check for string concatenation by checking if the lhs and rhs
 				// are string types
 				if (
-					this.lhs.type(ast).equivalent(str) &&
-					this.rhs.type(ast).equivalent(str)
+					this.lhs.type(env).equivalent(str) &&
+					this.rhs.type(env).equivalent(str)
 				) {
 					return str;
 				}

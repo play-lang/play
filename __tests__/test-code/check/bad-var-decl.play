@@ -1,4 +1,4 @@
-let x: str = 10
-let y: num = "hello, world"
+// let x: str = 10
+// let y: num = "hello, world"
 let z = 10
 z = "hello"

@@ -1,6 +1,6 @@
-import { Type } from "../language/types/type-system";
-import { AbstractSyntaxTree } from "./abstract-syntax-tree";
+import { Type, Void } from "../language/types/type-system";
 import { TokenLike } from "./token";
+import { Environment } from "./types/environment";
 import { Visitor } from "./visitor";
 
 export abstract class Node {
@@ -18,7 +18,9 @@ export abstract class Node {
 	) {}
 
 	/** Type of the node for use with type checking */
-	public abstract type(ast: AbstractSyntaxTree): Type;
+	public type(env: Environment): Type {
+		return Void;
+	}
 
 	/** Accept the specified visitor */
 	public abstract accept(visitor: Visitor): any;

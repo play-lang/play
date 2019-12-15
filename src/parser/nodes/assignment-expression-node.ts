@@ -1,7 +1,7 @@
-import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
 import { TokenType } from "../../language/token-type";
+import { Environment } from "../../language/types/environment";
 import {
 	constructType,
 	ErrorType,
@@ -19,16 +19,16 @@ export class AssignmentExpressionNode extends Expression {
 		super(token, lhs.start, rhs.end);
 	}
 
-	public type(ast: AbstractSyntaxTree): Type {
+	public type(env: Environment): Type {
 		const str = constructType(["str"]);
 		const num = constructType(["num"]);
 		switch (this.assignmentType) {
 			case TokenType.Equal:
-				return this.lhs.type(ast);
+				return this.lhs.type(env);
 			case TokenType.PlusEqual:
 				if (
-					this.lhs.type(ast).equivalent(str) &&
-					this.rhs.type(ast).equivalent(str)
+					this.lhs.type(env).equivalent(str) &&
+					this.rhs.type(env).equivalent(str)
 				) {
 					return str;
 				}

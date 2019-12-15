@@ -3,7 +3,7 @@ import { BytecodeAddressResolver } from "../language/bytecode-address-resolver";
 import { Context } from "../language/context";
 import { FunctionInfo } from "../language/function-info";
 import { OpCode } from "../language/op-code";
-import SymbolTable from "../language/symbol-table";
+import { SymbolTable } from "../language/symbol-table";
 import { TokenType } from "../language/token-type";
 import { Visitor } from "../language/visitor";
 import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
@@ -107,7 +107,7 @@ export class Compiler implements Visitor {
 	}
 
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
-		if (!this.symbolTable.lookup(node.name)) {
+		if (!this.symbolTable.entries.has(node.name)) {
 			throw new Error(
 				"Fatal error: Can't find name " +
 					node.name +

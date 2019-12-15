@@ -1,6 +1,6 @@
 import { ProgramNode } from "../parser/nodes/program-node";
 import { FunctionInfo } from "./function-info";
-import SymbolTable from "./symbol-table";
+import { SymbolTable } from "./symbol-table";
 
 /**
  * Represents an abstract syntax tree and related information

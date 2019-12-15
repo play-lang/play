@@ -2,7 +2,7 @@ import { LinkedHashMap } from "../common/linked-hash-map";
 import { IdentifierSymbol } from "./identifier-symbol";
 import { Describable } from "./token";
 
-export default class SymbolTable implements Describable {
+export class SymbolTable implements Describable {
 	/** Parent scope, if any */
 	public readonly enclosingScope: SymbolTable | undefined;
 
@@ -56,7 +56,7 @@ export default class SymbolTable implements Describable {
 			return this;
 		}
 		if (!this.enclosingScope) return;
-		// Tail recursion lookup
+		// Tail recursion search
 		return this.enclosingScope.idInScope(id);
 	}
 
@@ -87,13 +87,17 @@ export default class SymbolTable implements Describable {
 	}
 
 	/**
-	 * Searches the symbol table for an identifier string but does NOT search
-	 * any ancestor symbol tables
+	 * Searches the symbol table and all of its ancestors for an identifier string
 	 * @param id The identifier to look up
 	 * @returns The corresponding identifier entry if the identifier was found
 	 */
 	public lookup(id: string): IdentifierSymbol | undefined {
-		return this.entries.get(id);
+		if (this.entries.has(id) && this.entries.ordinal(id)! < this.available) {
+			return this.entries.get(id);
+		}
+		if (!this.enclosingScope) return;
+		// Tail recursion lookup
+		return this.enclosingScope.lookup(id);
 	}
 
 	/**
