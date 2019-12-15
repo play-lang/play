@@ -102,6 +102,15 @@ export class SymbolTable implements Describable {
 
 	/**
 	 * Returns the stack position of the specified local variable for this scope
+	 *
+	 * Stack position does not include any offsets from variables in the global
+	 * scope
+	 *
+	 * This allows the VM to use the stack pos as an offset from the current
+	 * call frame
+	 *
+	 * Essentially, stack pos represents the position of the variable on the
+	 * stack relative to the current function
 	 * @param id The variable name to look up
 	 */
 	public stackPos(id: string): number | undefined {
