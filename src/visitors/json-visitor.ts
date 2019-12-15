@@ -73,7 +73,7 @@ export class JSONVisitor implements Visitor, Describable {
 			type: node.nodeName,
 			start: node.start,
 			end: node.end,
-			name: node.name,
+			name: node.variableName,
 			typeAnnotation: node.typeAnnotation,
 			isImmutable: node.isImmutable,
 		};

@@ -57,7 +57,7 @@ export class PrintVisitor implements Visitor, Describable {
 		this.desc +=
 			node.constructor.name +
 			"(`" +
-			node.name +
+			node.variableName +
 			"`, " +
 			node.typeAnnotation.join(" ") +
 			")\n";

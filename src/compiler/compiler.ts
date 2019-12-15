@@ -107,10 +107,10 @@ export class Compiler implements Visitor {
 	}
 
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
-		if (!this.symbolTable.entries.has(node.name)) {
+		if (!this.symbolTable.entries.has(node.variableName)) {
 			throw new Error(
 				"Fatal error: Can't find name " +
-					node.name +
+					node.variableName +
 					" in symbol table at scope depth" +
 					this.scopeDepth
 			);
