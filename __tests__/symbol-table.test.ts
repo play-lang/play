@@ -28,12 +28,12 @@ describe("symbol table", () => {
 	});
 	test("should register ids", () => {
 		const t2 = fakeToken(); // b
-		globalScope.register(makeIdSymbol(t1, false, ["num"]));
+		globalScope.register(makeIdSymbol(t1, false));
 		expect(globalScope.entries.has(t1.lexeme));
-		globalScope.register(makeIdSymbol(t2, false, ["str"]));
+		globalScope.register(makeIdSymbol(t2, false));
 		expect(globalScope.entries.has(t2.lexeme));
 		expect(globalScope.description).toEqual(
-			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"]}'
+			'{ "ids": ["Id(0, `a`)", "Id(1, `b`)"]}'
 		);
 	});
 	test("should recognize ids in immediate scope", () => {
@@ -44,22 +44,22 @@ describe("symbol table", () => {
 		s1 = globalScope.addScope();
 		const t3 = fakeToken(); // c
 		const t4 = fakeToken(); // d
-		s1.register(makeIdSymbol(t3, false, ["num"]));
-		s1.register(makeIdSymbol(t4, false, ["str"]));
+		s1.register(makeIdSymbol(t3, false));
+		s1.register(makeIdSymbol(t4, false));
 		expect(s1.idInScope("a")).toBeTruthy();
 		expect(s1.idInScope("b")).toBeTruthy();
 		expect(s1.idInScope("e")).toBeFalsy();
 		expect(globalScope.description).toEqual(
-			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"], "scopes": [{ "ids": ["Id(0, `c`, `num`)", "Id(1, `d`, `str`)"]}]}'
+			'{ "ids": ["Id(0, `a`)", "Id(1, `b`)"], "scopes": [{ "ids": ["Id(0, `c`)", "Id(1, `d`)"]}]}'
 		);
 		const s2 = globalScope.addScope();
 		expect(globalScope.description).toEqual(
-			'{ "ids": ["Id(0, `a`, `num`)", "Id(1, `b`, `str`)"], "scopes": [{ "ids": ["Id(0, `c`, `num`)", "Id(1, `d`, `str`)"]}, { "ids": []}]}'
+			'{ "ids": ["Id(0, `a`)", "Id(1, `b`)"], "scopes": [{ "ids": ["Id(0, `c`)", "Id(1, `d`)"]}, { "ids": []}]}'
 		);
 		const t5 = fakeToken(); // e
-		s2.register(makeIdSymbol(t5, false, ["num"]));
+		s2.register(makeIdSymbol(t5, false));
 	});
-	test("should perform lookups", () => {
+	test("should perform simple lookups", () => {
 		expect(JSON.parse(JSON.stringify(globalScope.lookup("a")))).toEqual({
 			isImmutable: false,
 			name: "a",
@@ -75,23 +75,49 @@ describe("symbol table", () => {
 				trivia: [],
 				type: 1,
 			},
-			typeAnnotation: ["num"],
 		});
+		const scope = globalScope.scopes[0];
+		expect(scope.lookup("c")).toBeTruthy();
+		expect(scope.lookup("x")).toBeUndefined();
 	});
 	test("should prevent duplicate id's from being registered", () => {
-		expect(globalScope.register(makeIdSymbol(t1, false, ["num"]))).toBe(false);
+		expect(globalScope.register(makeIdSymbol(t1, false))).toBe(false);
+	});
+	test("global scope recognition", () => {
+		const scope = globalScope.scopes[0];
+		expect(globalScope.isGlobalScope).toBe(true);
+		expect(globalScope.totalEntries).toBe(2);
+		expect(scope.isGlobalScope).toBe(false);
+		expect(scope.totalEntries).toBe(2);
+	});
+	test("stack position of scoped variables", () => {
+		const scope = globalScope.scopes[0];
+		const innerScope = scope.addScope();
+		const t6 = fakeToken(); // f
+		const t7 = fakeToken(); // g
+		innerScope.register(makeIdSymbol(t6, false));
+		innerScope.register(makeIdSymbol(t7, false));
+		// Vars in global scope
+		expect(scope.stackPos("a")).toBe(0);
+		expect(scope.stackPos("b")).toBe(1);
+		// Vars in a function scope reset back to 0 since their stack
+		// position represents an offset from the function call frame
+		// base pointer position
+		expect(scope.stackPos("c")).toBe(0);
+		expect(scope.stackPos("d")).toBe(1);
+		expect(innerScope.stackPos("f")).toBe(2);
+		expect(innerScope.stackPos("g")).toBe(3);
+		expect(globalScope.stackPos("x")).toBeUndefined();
 	});
 });
 
 function makeIdSymbol(
 	token: TokenLike,
-	isImmutable: boolean,
-	typeAnnotation: string[]
+	isImmutable: boolean
 ): IdentifierSymbol {
 	return {
 		name: token.lexeme,
 		token,
-		typeAnnotation,
 		isImmutable,
 	};
 }
