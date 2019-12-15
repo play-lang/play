@@ -29,7 +29,7 @@ export abstract class Type implements Describable {
 		 * Some addressable types, like constants, cannot be assigned to
 		 * This basically informs us of l-values in assignment expressions
 		 */
-		public readonly isAssignable: boolean
+		public isAssignable: boolean
 	) {}
 
 	/**
@@ -44,6 +44,9 @@ export abstract class Type implements Describable {
 
 	// MARK: Describable
 	public abstract get description(): string;
+
+	/** Create a copy of the type */
+	public abstract copy(): Type;
 }
 
 /** Represents an error type */
@@ -58,6 +61,10 @@ export class ErrorType extends Type {
 
 	public get description(): string {
 		return (this.isAssignable ? "&" : "") + "ErrorType";
+	}
+
+	public copy(): ErrorType {
+		return new ErrorType(this.isAssignable);
 	}
 }
 
@@ -84,6 +91,10 @@ export class PrimitiveType extends Type {
 
 	public get description(): string {
 		return (this.isAssignable ? "&" : "") + Primitive[this.primitive];
+	}
+
+	public copy(): PrimitiveType {
+		return new PrimitiveType(this.primitive, this.isAssignable);
 	}
 }
 
@@ -142,6 +153,13 @@ export class RecordType extends Type {
 				.map(operand => operand[0] + ": " + operand[1].description)
 				.join(", ") +
 			">"
+		);
+	}
+
+	public copy(): RecordType {
+		return new RecordType(
+			new LinkedHashMap<string, Type>(this.operands),
+			this.isAssignable
 		);
 	}
 }
@@ -206,6 +224,10 @@ export class ProductType extends Type {
 			">"
 		);
 	}
+
+	public copy(): ProductType {
+		return new ProductType([...this.operands], this.isAssignable);
+	}
 }
 
 /**
@@ -248,6 +270,14 @@ export class FunctionType extends Type {
 			")"
 		);
 	}
+
+	public copy(): FunctionType {
+		return new FunctionType(
+			this.name,
+			this.parameters.copy(),
+			this.returnType.copy()
+		);
+	}
 }
 
 export class CollectionType extends Type {
@@ -277,6 +307,14 @@ export class CollectionType extends Type {
 			"<" +
 			this.elementType.description +
 			">"
+		);
+	}
+
+	public copy(): Type {
+		return new CollectionType(
+			this.collection,
+			this.elementType.copy(),
+			this.isAssignable
 		);
 	}
 }

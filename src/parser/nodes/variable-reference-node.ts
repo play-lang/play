@@ -1,7 +1,7 @@
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
 import { Environment } from "../../language/types/environment";
-import { constructType, Type } from "../../language/types/type-system";
+import { Type } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
 /**
@@ -19,10 +19,7 @@ export class VariableReferenceNode extends Expression {
 	public type(env: Environment): Type {
 		// Todo: Refactor this to be an identifier reference
 		// resolved at type-checking time
-		return constructType(
-			env.symbolTable.lookup(this.variableName)!.typeAnnotation,
-			true
-		);
+		return env.symbolTable.lookup(this.variableName)!.type!;
 	}
 
 	public validate(): void {}

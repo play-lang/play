@@ -6,7 +6,7 @@ import { Visitor } from "../../language/visitor";
 
 export class VariableDeclarationNode extends Statement {
 	/** Name of the variable */
-	public get name(): string {
+	public get variableName(): string {
 		return this.token.lexeme;
 	}
 
@@ -32,9 +32,16 @@ export class VariableDeclarationNode extends Statement {
 	}
 
 	public type(env: Environment): Type {
-		return this.annotation
-			? constructType(this.annotation, false)
-			: this.expr!.type(env);
+		if (this.annotation) {
+			return constructType(this.annotation, !this.isImmutable);
+		} else {
+			// We must have an expression, so use its type as our type
+			// Basic type inference!
+			const exprType = this.expr!.type(env).copy();
+			// Variables can be assignable if we're not immutable
+			exprType.isAssignable = !this.isImmutable;
+			return exprType;
+		}
 	}
 
 	public accept(visitor: Visitor): void {

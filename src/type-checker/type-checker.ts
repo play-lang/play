@@ -30,31 +30,33 @@ import {
 import { TypeCheckError } from "./type-check-error";
 
 export class TypeChecker implements Visitor {
+	/** Current type checking environment */
+	public get env(): Environment {
+		return {
+			symbolTable: this.symbolTable,
+			functionTable: this.ast.functionTable,
+		};
+	}
 	/* Type checker errors encountered while checking types */
 	public errors: SemanticError[] = [];
+
+	/** Global scope */
+	private globalScope: SymbolTable;
+	/** Symbol table for the current scope */
+	private symbolTable: SymbolTable;
 
 	/** Index of the next child scope to visit for each scope level */
 	private childScopeIndices: number[] = [0];
 	/** Number of scopes deep we are--used as an index to childScopeIndices */
 	private scopeDepth: number = 0;
 
-	/** Symbol table for the current scope */
-	public get symbolTable(): SymbolTable {
-		return this.symbolTable.scopes[this.childScopeIndices[this.scopeDepth]];
-	}
-
-	/** Current type checking environment */
-	public get environment(): Environment {
-		return {
-			symbolTable: this.symbolTable,
-			functionTable: this.ast.functionTable,
-		};
-	}
-
 	constructor(
 		/** Abstract syntax tree to validate */
 		public readonly ast: AbstractSyntaxTree
-	) {}
+	) {
+		this.symbolTable = ast.symbolTable;
+		this.globalScope = ast.symbolTable;
+	}
 
 	// MARK: Methods
 
@@ -141,14 +143,16 @@ export class TypeChecker implements Visitor {
 
 	/** Enter the next child scope of the current symbol table */
 	public enterScope(): void {
-		this.childScopeIndices[this.scopeDepth++]++;
+		const childScopeIndex = this.childScopeIndices[this.scopeDepth++]++;
 		this.childScopeIndices.push(0);
+		this.symbolTable = this.symbolTable.scopes[childScopeIndex];
 	}
 
 	/** Exit the current scope */
 	public exitScope(): void {
 		this.scopeDepth--;
 		this.childScopeIndices.pop();
+		this.symbolTable = this.symbolTable.enclosingScope || this.globalScope;
 	}
 
 	// MARK: Visitor
@@ -159,19 +163,30 @@ export class TypeChecker implements Visitor {
 	}
 
 	public visitBlockStatementNode(node: BlockStatementNode): void {
+		this.enterScope();
 		for (const statement of node.statements) {
 			statement.accept(this);
 		}
+		this.exitScope();
 	}
 
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
+		const scope = this.symbolTable.idInScope(node.variableName);
+		if (!scope) {
+			this.report(
+				new SemanticError(node.token, "Variable not found in symbol table")
+			);
+			return;
+		}
 		// Visit the assignment expression that might follow a variable declaration:
 		if (node.expr) node.expr!.accept(this);
 		// If the node has an assigned value and a type assertion, make sure they
 		// are both the same type.
 		if (node.expr && node.typeAnnotation) {
-			const type = node.type(this.ast);
-			const exprType = node.expr.type(this.ast);
+			const type = node.type(this.env);
+			const exprType = node.expr.type(this.env);
+			const idSymbol = scope.lookup(node.variableName)!;
+			idSymbol.type = type;
 			if (!type.equivalent(exprType)) {
 				// Report mismatch between variable's assigned value and variable's
 				// expected value
@@ -180,15 +195,28 @@ export class TypeChecker implements Visitor {
 		}
 	}
 
-	public visitVariableReferenceNode(node: VariableReferenceNode): void {}
+	public visitVariableReferenceNode(node: VariableReferenceNode): void {
+		const scope = this.symbolTable.idInScope(node.variableName);
+		if (!scope) {
+			this.report(
+				new SemanticError(
+					node.token,
+					"Variable " + node.variableName + " referenced before declaration"
+				)
+			);
+			return;
+		}
+	}
 
-	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {}
+	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
+		node.block.accept(this);
+	}
 
 	public visitFunctionReferenceNode(node: FunctionReferenceNode): void {}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
 		node.rhs.accept(this);
-		const type = node.type(this.ast);
+		const type = node.type(this.env);
 		switch (node.operatorType) {
 			case TokenType.Bang:
 				return;
@@ -211,7 +239,7 @@ export class TypeChecker implements Visitor {
 
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
 		node.lhs.accept(this);
-		const type = node.type(this.ast);
+		const type = node.type(this.env);
 		switch (node.operatorType) {
 			case TokenType.PlusPlus:
 			case TokenType.MinusMinus:
@@ -225,7 +253,7 @@ export class TypeChecker implements Visitor {
 	}
 
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
-		const type = node.type(this.ast);
+		const type = node.type(this.env);
 		// TODO: Add better error handling for invalid action calls
 		if (node.functionName && this.ast.functionTable.has(node.functionName)) {
 			const functionInfo = this.ast.functionTable.get(node.functionName!)!;
@@ -259,9 +287,10 @@ export class TypeChecker implements Visitor {
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
 		node.lhs.accept(this);
 		node.rhs.accept(this);
-		const lhsType = node.lhs.type(this.ast);
-		const rhsType = node.rhs.type(this.ast);
-		if (lhsType.equivalent(rhsType)) {
+		const lhsType = node.lhs.type(this.env);
+		const rhsType = node.rhs.type(this.env);
+		console.log(lhsType.equivalent(rhsType));
+		if (!lhsType.equivalent(rhsType)) {
 			this.mismatch(node.lhs.token, lhsType, rhsType);
 		}
 	}

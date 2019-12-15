@@ -41,7 +41,7 @@ export class LinkedHashMap<K, V> implements Map<K, V>, Describable {
 	private _head?: LinkedMapNode<K>;
 	private _tail?: LinkedMapNode<K>;
 
-	constructor(items: Array<[K, V]> = []) {
+	constructor(items: Iterable<[K, V]> = []) {
 		for (const [key, value] of items) {
 			this.set(key, value);
 		}

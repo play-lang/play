@@ -229,7 +229,6 @@ export class Parser extends TokenParser {
 		this.symbolTable.register({
 			token: nameToken,
 			name: nameToken.lexeme,
-			typeAnnotation: typeAnnotation || [], // ! This is where the error is -- need to factor in expression type which can't be done at compile time
 			isImmutable,
 		});
 		return node;
@@ -329,7 +328,6 @@ export class Parser extends TokenParser {
 			this.symbolTable.register({
 				name: param,
 				token: paramTokens[i],
-				typeAnnotation: parameterTypes.get(param)!,
 				isImmutable: false,
 			});
 			i++;

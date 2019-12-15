@@ -143,15 +143,7 @@ export class SymbolTable implements Describable {
 		result += '{ "ids": [';
 		entries.forEach((entry, index) => {
 			const comma = index + 1 === entries.length ? "" : ", ";
-			result +=
-				'"Id(' +
-				String(index) +
-				", `" +
-				entry.name +
-				"`, `" +
-				entry.typeAnnotation.join(" ") +
-				'`)"' +
-				comma;
+			result += '"Id(' + String(index) + ", `" + entry.name + '`)"' + comma;
 		});
 		result += "]" + (this.scopes.length > 0 ? ', "scopes": [' : "");
 		for (const [index, scope] of this.scopes.entries()) {
