@@ -2,7 +2,7 @@ import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { FunctionInfo } from "../language/function-info";
 import { Expression, Statement } from "../language/node";
 import { infixParselets, prefixParselets } from "../language/operator-grammar";
-import SymbolTable from "../language/symbol-table";
+import { SymbolTable } from "../language/symbol-table";
 import { TokenLike } from "../language/token";
 import { TokenParser } from "../language/token-parser";
 import { TokenType } from "../language/token-type";
@@ -277,6 +277,7 @@ export class Parser extends TokenParser {
 					TokenType.Id,
 					"Expected parameter name"
 				);
+				const paramName = paramToken.lexeme;
 				paramTokens.push(paramToken);
 				this.consume(
 					TokenType.Colon,
@@ -284,9 +285,15 @@ export class Parser extends TokenParser {
 				);
 				// Attempt to match one or more parameters
 				const paramType = this.typeAnnotation();
+				if (parameterTypes.has(paramName)) {
+					throw this.error(
+						paramToken,
+						"Function cannot have parameters with duplicate names"
+					);
+				}
 				// Store the parameter information in the node
-				parameterTypes.set(paramToken.lexeme, paramType);
-				parameters.push(paramToken.lexeme);
+				parameterTypes.set(paramName, paramType);
+				parameters.push(paramName);
 			} while (this.match(TokenType.Comma));
 		}
 		this.match(TokenType.ParenClose);

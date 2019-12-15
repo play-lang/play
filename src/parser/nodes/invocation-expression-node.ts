@@ -1,6 +1,6 @@
-import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
+import { Environment } from "../../language/types/environment";
 import { ProductType } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 import { FunctionReferenceNode } from "./function-reference-node";
@@ -28,8 +28,8 @@ export class InvocationExpressionNode extends Expression {
 		super(token, start, end);
 	}
 
-	public type(ast: AbstractSyntaxTree): ProductType {
-		return new ProductType(this.args.map(arg => arg.type(ast)));
+	public type(env: Environment): ProductType {
+		return new ProductType(this.args.map(arg => arg.type(env)));
 	}
 
 	public accept(visitor: Visitor): void {

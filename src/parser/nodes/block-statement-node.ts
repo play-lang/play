@@ -1,5 +1,6 @@
 import { Statement } from "../../language/node";
 import { TokenLike } from "../../language/token";
+import { Environment } from "../../language/types/environment";
 import { Type, Void } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
@@ -18,7 +19,7 @@ export class BlockStatementNode extends Statement {
 		super(token, start, end);
 	}
 
-	public type(): Type {
+	public type(env: Environment): Type {
 		// Todo: Infer type
 		// Examine return statements in this block to figure out / enforce what
 		// the return type is

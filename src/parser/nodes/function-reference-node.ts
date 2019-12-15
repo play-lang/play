@@ -1,6 +1,6 @@
-import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
+import { Environment } from "../../language/types/environment";
 import {
 	constructType,
 	ErrorType,
@@ -24,8 +24,8 @@ export class FunctionReferenceNode extends Expression {
 		super(token, token.pos, token.end);
 	}
 
-	public type(ast: AbstractSyntaxTree): Type {
-		const info = ast.functionTable.get(this.functionName);
+	public type(env: Environment): Type {
+		const info = env.functionTable.get(this.functionName);
 		if (info) {
 			return constructType(info.typeAnnotation);
 		}

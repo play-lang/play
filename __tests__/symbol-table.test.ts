@@ -1,6 +1,6 @@
 import { IdentifierSymbol } from "../src/language/identifier-symbol";
 import { SourceFile } from "../src/language/source-file";
-import SymbolTable from "../src/language/symbol-table";
+import { SymbolTable } from "../src/language/symbol-table";
 import { Token, TokenLike } from "../src/language/token";
 
 let pos: number = 0;

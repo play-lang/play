@@ -1,7 +1,7 @@
-import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
 import { postfixTypeAnnotations, TokenType } from "../../language/token-type";
+import { Environment } from "../../language/types/environment";
 import {
 	constructType,
 	ErrorType,
@@ -24,8 +24,8 @@ export class PostfixExpressionNode extends Expression {
 		this.lhs = lhs;
 	}
 
-	public type(ast: AbstractSyntaxTree): Type {
-		const lhsType = this.lhs.type(ast);
+	public type(env: Environment): Type {
+		const lhsType = this.lhs.type(env);
 		const annotation = postfixTypeAnnotations.get(this.token.type);
 		if (annotation) {
 			return constructType(annotation, lhsType.isAssignable);

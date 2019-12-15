@@ -1,14 +1,13 @@
-import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
 import { prefixTypeAnnotations, TokenType } from "../../language/token-type";
+import { Environment } from "../../language/types/environment";
 import {
 	constructType,
 	ErrorType,
 	Type,
 } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
-import { TypeChecker } from "../../type-checker/type-checker";
 
 export class PrefixExpressionNode extends Expression {
 	/** Operator type */
@@ -25,16 +24,14 @@ export class PrefixExpressionNode extends Expression {
 		this.rhs = rhs;
 	}
 
-	public type(ast: AbstractSyntaxTree): Type {
-		const rhsType = this.rhs.type(ast);
+	public type(env: Environment): Type {
+		const rhsType = this.rhs.type(env);
 		const annotation = prefixTypeAnnotations.get(this.token.type);
 		if (annotation) {
 			return constructType(annotation, rhsType.isAssignable);
 		}
 		return new ErrorType(rhsType.isAssignable);
 	}
-
-	public validate(tc: TypeChecker): void {}
 
 	// MARK: Visitor
 	public accept(visitor: Visitor): void {

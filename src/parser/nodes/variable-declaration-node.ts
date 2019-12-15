@@ -1,6 +1,6 @@
-import { AbstractSyntaxTree } from "../../language/abstract-syntax-tree";
 import { Expression, Statement } from "../../language/node";
 import { TokenLike } from "../../language/token";
+import { Environment } from "../../language/types/environment";
 import { constructType, Type } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
@@ -31,10 +31,10 @@ export class VariableDeclarationNode extends Statement {
 		return this.annotation ? this.annotation : [];
 	}
 
-	public type(ast: AbstractSyntaxTree): Type {
+	public type(env: Environment): Type {
 		return this.annotation
 			? constructType(this.annotation, false)
-			: this.expr!.type(ast);
+			: this.expr!.type(env);
 	}
 
 	public accept(visitor: Visitor): void {

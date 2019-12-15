@@ -1,6 +1,7 @@
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
 import { primitiveTypeAnnotations, TokenType } from "../../language/token-type";
+import { Environment } from "../../language/types/environment";
 import {
 	constructType,
 	ErrorType,
@@ -23,7 +24,7 @@ export class PrimitiveExpressionNode extends Expression {
 		this.primitiveValue = token.lexeme;
 	}
 
-	public type(): Type {
+	public type(env: Environment): Type {
 		const annotation = primitiveTypeAnnotations.get(this.token.type);
 		if (annotation) {
 			return constructType(annotation);

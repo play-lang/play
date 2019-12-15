@@ -18,8 +18,10 @@ import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
 
 import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
 import { SemanticError } from "../language/semantic-error";
+import { SymbolTable } from "../language/symbol-table";
 import { TokenLike } from "../language/token";
 import { TokenType } from "../language/token-type";
+import { Environment } from "../language/types/environment";
 import {
 	constructFunctionType,
 	Num,
@@ -31,10 +33,123 @@ export class TypeChecker implements Visitor {
 	/* Type checker errors encountered while checking types */
 	public errors: SemanticError[] = [];
 
+	/** Index of the next child scope to visit for each scope level */
+	private childScopeIndices: number[] = [0];
+	/** Number of scopes deep we are--used as an index to childScopeIndices */
+	private scopeDepth: number = 0;
+
+	/** Symbol table for the current scope */
+	public get symbolTable(): SymbolTable {
+		return this.symbolTable.scopes[this.childScopeIndices[this.scopeDepth]];
+	}
+
+	/** Current type checking environment */
+	public get environment(): Environment {
+		return {
+			symbolTable: this.symbolTable,
+			functionTable: this.ast.functionTable,
+		};
+	}
+
 	constructor(
 		/** Abstract syntax tree to validate */
 		public readonly ast: AbstractSyntaxTree
 	) {}
+
+	// MARK: Methods
+
+	public check(): boolean {
+		// Reset everything
+		this.errors = [];
+		this.childScopeIndices = [0];
+		this.scopeDepth = 0;
+
+		// Compute function types before checking types
+		for (const key of this.ast.functionTable.keys()) {
+			const info = this.ast.functionTable.get(key)!;
+			if (!info.type) {
+				// Compute the type of the function
+				info.type = constructFunctionType(info);
+			}
+		}
+
+		this.ast.root.accept(this);
+		return this.errors.length < 1;
+	}
+
+	/**
+	 * Register a type mismatch error with the type checker
+	 * @param token The token where the error occurred
+	 * @param expectedType The expected type
+	 * @param encounteredType The encountered type
+	 */
+	public mismatch(
+		token: TokenLike,
+		expectedType: Type,
+		encounteredType: Type
+	): void {
+		const prettyExpectedType = expectedType.description;
+		const prettyEncounteredType = encounteredType.description;
+		const prefix = this.errorPrefix(token);
+		const hint = `${prefix} Expected ${token.lexeme} to have type ${prettyExpectedType} instead of ${prettyEncounteredType}`;
+		const error = new TypeCheckError(token, hint);
+		this.errors.push(error);
+	}
+
+	/**
+	 * Register an invalid assignment error with the type checker
+	 * @param token The token where the error occurred
+	 * @param expectedType The expected type
+	 * @param encounteredType The encountered type
+	 */
+	public badAssignment(token: TokenLike, expectedType: Type): void {
+		const pretty = expectedType.description;
+		const prefix = this.errorPrefix(token);
+		const hint = `${prefix} Invalid assignment—expected a variable reference to ${pretty}`;
+		const error = new SemanticError(token, hint);
+		this.errors.push(error);
+	}
+
+	/**
+	 * Report a semantic error to the type checker
+	 *
+	 * AST Nodes may call this when the TypeChecker calls `check` on them to
+	 * report semantic errors other than type errors
+	 * @param error The error to report
+	 */
+	public report(error: SemanticError): void {
+		this.errors.push(error);
+	}
+
+	/**
+	 * Describes a type error prefix string based on an error token
+	 * @param token The token where the error occurred
+	 */
+	public errorPrefix(token: TokenLike): string {
+		const prefix =
+			"Type error in " +
+			token.file.name +
+			" at " +
+			token.line +
+			":" +
+			token.column +
+			" (" +
+			token.pos +
+			"): ";
+		return prefix;
+	}
+
+	/** Enter the next child scope of the current symbol table */
+	public enterScope(): void {
+		this.childScopeIndices[this.scopeDepth++]++;
+		this.childScopeIndices.push(0);
+	}
+
+	/** Exit the current scope */
+	public exitScope(): void {
+		this.scopeDepth--;
+		this.childScopeIndices.pop();
+	}
 
 	// MARK: Visitor
 	public visitProgramNode(node: ProgramNode): void {
@@ -157,75 +272,5 @@ export class TypeChecker implements Visitor {
 
 	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
 		node.expr.accept(this);
-	}
-
-	// MARK: Methods
-
-	public check(): boolean {
-		this.errors = [];
-		this.ast.root.accept(this);
-		return this.errors.length < 1;
-	}
-
-	/**
-	 * Register a type mismatch error with the type checker
-	 * @param token The token where the error occurred
-	 * @param expectedType The expected type
-	 * @param encounteredType The encountered type
-	 */
-	public mismatch(
-		token: TokenLike,
-		expectedType: Type,
-		encounteredType: Type
-	): void {
-		const prettyExpectedType = expectedType.description;
-		const prettyEncounteredType = encounteredType.description;
-		const prefix = this.errorPrefix(token);
-		const hint = `${prefix} Expected ${token.lexeme} to have type ${prettyExpectedType} instead of ${prettyEncounteredType}`;
-		const error = new TypeCheckError(token, hint);
-		this.errors.push(error);
-	}
-
-	/**
-	 * Register an invalid assignment error with the type checker
-	 * @param token The token where the error occurred
-	 * @param expectedType The expected type
-	 * @param encounteredType The encountered type
-	 */
-	public badAssignment(token: TokenLike, expectedType: Type): void {
-		const pretty = expectedType.description;
-		const prefix = this.errorPrefix(token);
-		const hint = `${prefix} Invalid assignment—expected a variable reference to ${pretty}`;
-		const error = new SemanticError(token, hint);
-		this.errors.push(error);
-	}
-
-	/**
-	 * Report a semantic error to the type checker
-	 *
-	 * AST Nodes may call this when the TypeChecker calls `check` on them to
-	 * report semantic errors other than type errors
-	 * @param error The error to report
-	 */
-	public report(error: SemanticError): void {
-		this.errors.push(error);
-	}
-
-	/**
-	 * Describes a type error prefix string based on an error token
-	 * @param token The token where the error occurred
-	 */
-	public errorPrefix(token: TokenLike): string {
-		const prefix =
-			"Type error in " +
-			token.file.name +
-			" at " +
-			token.line +
-			":" +
-			token.column +
-			" (" +
-			token.pos +
-			"): ";
-		return prefix;
 	}
 }

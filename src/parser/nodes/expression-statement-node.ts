@@ -1,5 +1,6 @@
 import { Expression } from "../../language/node";
 import { TokenLike } from "../../language/token";
+import { Environment } from "../../language/types/environment";
 import { Type, Void } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
@@ -12,7 +13,7 @@ export class ExpressionStatementNode extends Expression {
 		super(token, token.pos, expr.end);
 	}
 
-	public type(): Type {
+	public type(env: Environment): Type {
 		// Expression results from expression statements are unused
 		return Void;
 	}

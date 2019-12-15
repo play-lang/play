@@ -1,5 +1,6 @@
 import { Node } from "../../language/node";
 import { TokenLike } from "../../language/token";
+import { Environment } from "../../language/types/environment";
 import { Type, Void } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
 
@@ -16,7 +17,7 @@ export class ProgramNode extends Node {
 		super(token, start, end);
 	}
 
-	public type(): Type {
+	public type(env: Environment): Type {
 		return Void;
 	}
 
