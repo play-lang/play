@@ -120,5 +120,20 @@ describe("simple function call", () => {
 			const result = await runFile("fib12.play");
 			expect(result).toBe(144);
 		});
+		test("should handle lots of variables", () => {
+			const code = str`
+				let a: num = 10
+				let b: num = 20
+				let c = a + b
+
+				return add(c, c) // 60
+
+				function add(a: num, b: num): num {
+					return a + b
+				}
+			`;
+			const result = Play.run(code);
+			expect(result.value.value).toBe(60);
+		});
 	});
 });
