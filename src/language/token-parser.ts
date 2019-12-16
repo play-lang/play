@@ -131,7 +131,7 @@ export class TokenParser {
 		hint = prepareHint(hint);
 		const message =
 			"Syntax error in " +
-			token.file +
+			token.file.name +
 			" at " +
 			token.line +
 			":" +
