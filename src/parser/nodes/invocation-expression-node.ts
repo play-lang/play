@@ -3,13 +3,13 @@ import { TokenLike } from "../../language/token";
 import { Environment } from "../../language/types/environment";
 import { ProductType } from "../../language/types/type-system";
 import { Visitor } from "../../language/visitor";
-import { FunctionReferenceNode } from "./function-reference-node";
+import { IdExpressionNode } from "./id-expression-node";
 
 export class InvocationExpressionNode extends Expression {
 	/** Name of the function to call */
 	public get functionName(): string | undefined {
-		if (this.lhs instanceof FunctionReferenceNode) {
-			return this.lhs.functionName;
+		if (this.lhs instanceof IdExpressionNode) {
+			return this.lhs.name;
 		}
 	}
 

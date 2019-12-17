@@ -6,6 +6,7 @@ import { SymbolTable } from "../language/symbol-table";
 import { TokenLike } from "../language/token";
 import { TokenParser } from "../language/token-parser";
 import { TokenType } from "../language/token-type";
+import { Environment } from "../language/types/environment";
 import { Lexer } from "../lexer/lexer";
 import { BlockStatementNode } from "./nodes/block-statement-node";
 import { ExpressionStatementNode } from "./nodes/expression-statement-node";
@@ -85,7 +86,8 @@ export class Parser extends TokenParser {
 				? this.previous.end
 				: statements[statements.length - 1].end;
 		const root = new ProgramNode(this.previous, start, end, statements);
-		return new AbstractSyntaxTree(root, this.symbolTable, this.functionTable);
+		const env = new Environment(this.symbolTable, this.functionTable);
+		return new AbstractSyntaxTree(root, env);
 	}
 
 	public statement(): Statement {

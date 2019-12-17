@@ -8,7 +8,7 @@ import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expr
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "../parser/nodes/function-declaration-node";
-import { FunctionReferenceNode } from "../parser/nodes/function-reference-node";
+import { IdExpressionNode } from "../parser/nodes/id-expression-node";
 import { InvocationExpressionNode } from "../parser/nodes/invocation-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
@@ -17,7 +17,6 @@ import { ProgramNode } from "../parser/nodes/program-node";
 import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
-import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
 
 export class JSONVisitor implements Visitor, Describable {
 	// MARK: Describable
@@ -88,12 +87,13 @@ export class JSONVisitor implements Visitor, Describable {
 		}
 		this.stack.push(obj);
 	}
-	public visitVariableReferenceNode(node: VariableReferenceNode): void {
+	public visitIdExpressionNode(node: IdExpressionNode): void {
 		this.stack.push({
 			type: node.nodeName,
 			start: node.start,
 			end: node.end,
-			variableName: node.variableName,
+			name: node.name,
+			usedAsFunction: node.usedAsFunction,
 		});
 	}
 	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
@@ -108,14 +108,6 @@ export class JSONVisitor implements Visitor, Describable {
 			parameterTypes,
 			parameters: [...node.info.parameters],
 			block,
-		});
-	}
-	public visitFunctionReferenceNode(node: FunctionReferenceNode): void {
-		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
-			functionName: node.functionName,
 		});
 	}
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {

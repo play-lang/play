@@ -8,7 +8,7 @@ import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expr
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "../parser/nodes/function-declaration-node";
-import { FunctionReferenceNode } from "../parser/nodes/function-reference-node";
+import { IdExpressionNode } from "../parser/nodes/id-expression-node";
 import { InvocationExpressionNode } from "../parser/nodes/invocation-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
@@ -17,7 +17,6 @@ import { ProgramNode } from "../parser/nodes/program-node";
 import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
-import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
 
 export class PrintVisitor implements Visitor, Describable {
 	private indent: number = 0;
@@ -59,7 +58,7 @@ export class PrintVisitor implements Visitor, Describable {
 			"(`" +
 			node.variableName +
 			"`, " +
-			node.typeAnnotation.join(" ") +
+			(node.typeAnnotation.join(" ") || "synth") +
 			")\n";
 		this.indent += 1;
 		if (node.expr) {
@@ -69,8 +68,13 @@ export class PrintVisitor implements Visitor, Describable {
 		this.indent -= 1;
 	}
 
-	public visitVariableReferenceNode(node: VariableReferenceNode): void {
-		this.desc += "VariableReference(" + node.variableName + ")\n";
+	public visitIdExpressionNode(node: IdExpressionNode): void {
+		this.desc +=
+			"IdExpression(" +
+			node.name +
+			", usedAsFunction=" +
+			node.usedAsFunction +
+			")\n";
 	}
 
 	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
@@ -96,10 +100,6 @@ export class PrintVisitor implements Visitor, Describable {
 			node.block.accept(this);
 		}
 		this.indent -= 1;
-	}
-
-	public visitFunctionReferenceNode(node: FunctionReferenceNode): void {
-		this.desc += "FunctionReference(" + node.functionName + ")\n";
 	}
 
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {

@@ -5,13 +5,12 @@ import { TokenType } from "../language/token-type";
 import { AssignmentExpressionNode } from "./nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "./nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "./nodes/binary-logical-expression-node";
-import { FunctionReferenceNode } from "./nodes/function-reference-node";
+import { IdExpressionNode } from "./nodes/id-expression-node";
 import { InvocationExpressionNode } from "./nodes/invocation-expression-node";
 import { PostfixExpressionNode } from "./nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "./nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "./nodes/primitive-expression-node";
 import { TernaryConditionalNode } from "./nodes/ternary-conditional-node";
-import { VariableReferenceNode } from "./nodes/variable-reference-node";
 import { Parser } from "./parser";
 
 export interface PrefixParselet {
@@ -39,13 +38,7 @@ export class PrimitiveParselet implements PrefixParselet {
 
 export class IdParselet implements PrefixParselet {
 	public parse(parser: Parser, token: TokenLike): Expression {
-		const scope = parser.symbolTable.idInScope(token.lexeme);
-		if (scope) {
-			return new VariableReferenceNode(token);
-		}
-		// TODO: Add variable to a list of identifiers to be resolved in scope
-		// Todo: Look up in scope identifiers, not just functions
-		return new FunctionReferenceNode(token);
+		return new IdExpressionNode(token);
 	}
 }
 
@@ -76,15 +69,6 @@ export class TernaryConditionalParselet implements InfixParselet {
 
 export class AssignmentParselet implements InfixParselet {
 	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
-		// Make sure that the left-hand side is a valid lvalue:
-		//
-		// if (!lhs.isAddressable) {
-		// 	throw parser.error(
-		// 		token,
-		// 		"Left-hand side of an expression must be addressable"
-		// 	);
-		// }
-		//
 		// Assignment is right-associative, so we drop precedence by 1:
 		const rhs: Expression = parser.expression(this.precedence - 1);
 		return new AssignmentExpressionNode(token, token.type, lhs, rhs);
@@ -130,6 +114,9 @@ export class PostfixOperatorParselet implements InfixParselet {
 
 export class InvocationOperatorParselet implements InfixParselet {
 	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
+		if (lhs instanceof IdExpressionNode) {
+			lhs.usedAsFunction = true;
+		}
 		const args: Expression[] = [];
 		let end: number = token.end;
 		if (!parser.match(TokenType.ParenClose)) {
@@ -142,7 +129,6 @@ export class InvocationOperatorParselet implements InfixParselet {
 			);
 			end = parser.previous.end;
 		}
-
 		return new InvocationExpressionNode(token, lhs.start, end, lhs, args);
 	}
 	public get precedence(): number {

@@ -51,13 +51,13 @@ export class SymbolTable implements Describable {
 	 *
 	 * @param id The identifier to check
 	 */
-	public idInScope(id: string): SymbolTable | undefined {
+	public findScope(id: string): SymbolTable | undefined {
 		if (this.entries.has(id) && this.entries.ordinal(id)! < this.available) {
 			return this;
 		}
 		if (!this.enclosingScope) return;
 		// Tail recursion search
-		return this.enclosingScope.idInScope(id);
+		return this.enclosingScope.findScope(id);
 	}
 
 	/**
