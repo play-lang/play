@@ -54,8 +54,9 @@ describe("json tree printer", () => {
 					expr: {
 						end: 35,
 						start: 30,
-						type: "VariableReferenceNode",
-						variableName: "myNum",
+						type: "IdExpressionNode",
+						name: "myNum",
+						usedAsFunction: false,
 					},
 					start: 30,
 					type: "ExpressionStatementNode",

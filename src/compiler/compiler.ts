@@ -12,7 +12,7 @@ import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expr
 import { BlockStatementNode } from "../parser/nodes/block-statement-node";
 import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "../parser/nodes/function-declaration-node";
-import { FunctionReferenceNode } from "../parser/nodes/function-reference-node";
+import { IdExpressionNode } from "../parser/nodes/id-expression-node";
 import { InvocationExpressionNode } from "../parser/nodes/invocation-expression-node";
 import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
@@ -21,7 +21,6 @@ import { ProgramNode } from "../parser/nodes/program-node";
 import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
-import { VariableReferenceNode } from "../parser/nodes/variable-reference-node";
 import { RuntimeType } from "../vm/runtime-type";
 import { RuntimeValue } from "../vm/runtime-value";
 import { CompiledProgram } from "./compiled-program";
@@ -66,8 +65,8 @@ export class Compiler implements Visitor {
 
 	constructor(ast: AbstractSyntaxTree) {
 		this.ast = ast;
-		this.symbolTable = ast.symbolTable;
-		this.globalScope = ast.symbolTable;
+		this.symbolTable = ast.env.symbolTable;
+		this.globalScope = ast.env.symbolTable;
 		this.contexts.set(
 			this.symbolTable,
 			this.createContext(
@@ -77,7 +76,7 @@ export class Compiler implements Visitor {
 				this.symbolTable.totalEntries
 			)
 		);
-		this.functionTable = ast.functionTable;
+		this.functionTable = ast.env.functionTable;
 	}
 
 	// MARK: Visitor
@@ -138,19 +137,6 @@ export class Compiler implements Visitor {
 		this.symbolTable.available++;
 	}
 
-	public visitVariableReferenceNode(node: VariableReferenceNode): void {
-		const scope = this.symbolTable.idInScope(node.variableName);
-		if (!scope) {
-			throw new Error("Invalid variable name `" + node.variableName + "`");
-		}
-		// Emit the proper instruction to push a copy of the variable's value
-		// lower in the stack to the top of the stack
-		this.emit(
-			scope.isGlobalScope ? OpCode.GetGlobal : OpCode.Get,
-			this.symbolTable.stackPos(node.variableName)!
-		);
-	}
-
 	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
 		this.enterScope(node.info.name);
 		this.symbolTable.available += node.info.parameters.length;
@@ -161,19 +147,39 @@ export class Compiler implements Visitor {
 		this.exitScope();
 	}
 
-	public visitFunctionReferenceNode(node: FunctionReferenceNode): void {
-		// Register a function load address to be patched later
-		const offset = this.emit(OpCode.Load, -1) - 1;
-		this.patcher.registerContextAddress(
-			this.context,
-			offset,
-			node.functionName
-		);
+	public visitIdExpressionNode(node: IdExpressionNode): void {
+		if (node.usedAsFunction) {
+			if (this.functionTable.has(node.name)) {
+				// Register a function load address to be patched later
+				const offset = this.emit(OpCode.Load, -1) - 1;
+				this.patcher.registerContextAddress(this.context, offset, node.name);
+			} else {
+				throw new Error("Cannot compile non-existent function: " + node.name);
+			}
+		} else {
+			// Node represents a variable reference
+			const scope = this.symbolTable.findScope(node.name);
+			if (!scope) {
+				throw new Error(
+					"Cannot compile non-existent variable reference `" + node.name + "`"
+				);
+			}
+			// Emit the proper instruction to push a copy of the variable's value
+			// lower in the stack to the top of the stack
+			const stackPos = this.symbolTable.stackPos(node.name)!;
+			this.emit(scope.isGlobalScope ? OpCode.GetGlobal : OpCode.Get, stackPos);
+		}
 	}
 
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
-		if (!(node.lhs instanceof FunctionReferenceNode)) {
-			throw new Error("Can't invoke something that isn't a function");
+		if (
+			!(node.lhs instanceof IdExpressionNode) ||
+			!this.functionTable.has(node.lhs.name)
+		) {
+			throw new Error(
+				"Can't compile non-existent function invocation of " +
+					node.lhs.token.lexeme
+			);
 		}
 		// Arguments given to function go onto the stack
 		for (const arg of node.args) {
@@ -327,12 +333,15 @@ export class Compiler implements Visitor {
 	}
 
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
-		const lhs = node.lhs;
-		if (lhs instanceof VariableReferenceNode) {
-			const stackPos = this.symbolTable.stackPos(lhs.variableName)!;
+		node.rhs.accept(this);
+		// TODO: Handle subscripts for collections
+		if (node.lhs instanceof IdExpressionNode) {
+			const stackPos = this.symbolTable.stackPos(node.lhs.name)!;
 			this.emit(OpCode.Set, stackPos);
 		} else {
-			throw new Error("Can't emit assignment to a non-variable");
+			throw new Error(
+				"Can't compile assignment of non-variable " + node.token.lexeme
+			);
 		}
 	}
 
@@ -351,7 +360,9 @@ export class Compiler implements Visitor {
 		// result to the stack, so this is safe
 		// Even functions without a return value still return nil
 		node.expr.accept(this);
-		this.emit(OpCode.Pop);
+		// Pop unused expression result off, unless its an assignment
+		// which doesn't require a pop
+		if (!(node.expr instanceof AssignmentExpressionNode)) this.emit(OpCode.Pop);
 	}
 
 	// MARK: Compiler Methods

@@ -138,16 +138,17 @@ describe("simple function call", () => {
 		test("nested scopes", () => {
 			const code = str`
 				return add(1, 2)
-				function add(a: num, b: num) {
-					let x = 3
+				function add(p1: num, p2: num) {
+					let a = 3
 					{
-						let y = 4
+						let b = 4
 						{
-							let z = 5
-							let aa = 10
+							let c = 5
+							b = b + c // b = 9
 						}
+						a = a + b // 9 + 3
 					}
-					return x + y + z + a + b // 12 + a + b
+					return a + p1 + p2 // 12 + 3
 				}
 			`;
 			const result = Play.run(code);

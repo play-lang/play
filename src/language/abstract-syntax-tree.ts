@@ -1,6 +1,5 @@
 import { ProgramNode } from "../parser/nodes/program-node";
-import { FunctionInfo } from "./function-info";
-import { SymbolTable } from "./symbol-table";
+import { Environment } from "./types/environment";
 
 /**
  * Represents an abstract syntax tree and related information
@@ -9,8 +8,12 @@ import { SymbolTable } from "./symbol-table";
 export class AbstractSyntaxTree {
 	constructor(
 		public readonly root: ProgramNode,
-		public readonly symbolTable: SymbolTable,
-		public readonly functionTable: Map<string, FunctionInfo>
+		/**
+		 * Type checking environment containing the resolved symbol table
+		 * and function table which contain variable and function types,
+		 * respectively
+		 */
+		public readonly env: Environment
 	) {}
 
 	public get json(): string {
