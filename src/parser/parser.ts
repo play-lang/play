@@ -215,7 +215,7 @@ export class Parser extends TokenParser {
 		if (!typeAnnotation && !expr) {
 			throw this.error(
 				nameToken,
-				"Variable must have a type or an assigned value to infer a type from"
+				"Variable must have a type or an assigned value to synthesize a type from"
 			);
 		}
 		// TODO: Don't register types in the symbol table until type-check time
