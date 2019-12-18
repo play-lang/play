@@ -20,7 +20,7 @@ export class BlockStatementNode extends Statement {
 	}
 
 	public type(env: Environment): Type {
-		// Todo: Infer type
+		// Todo: synthesize type
 		// Examine return statements in this block to figure out / enforce what
 		// the return type is
 		return Void;
