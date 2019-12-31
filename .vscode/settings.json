@@ -1,3 +1,16 @@
 {
-	"typescript.tsdk": "./node_modules/typescript/lib"
+	"typescript.tsdk": "./node_modules/typescript/lib",
+	"cSpell.words": [
+		"GETGLOBAL",
+		"GREATERTHAN",
+		"GREATERTHANEQUAL",
+		"JUMPFALSE",
+		"JUMPFALSEPOP",
+		"JUMPTRUE",
+		"JUMPTRUEPOP",
+		"LESSTHAN",
+		"LESSTHANEQUAL",
+		"SETGLOBAL",
+		"bytecode"
+	]
 }
