@@ -22,7 +22,7 @@ export class BytecodeAddressResolver {
 	constructor(
 		/** Map of addresses for patching later */
 		public readonly addresses: Map<Context, BytecodeAddressEntry[]> = new Map()
-	) {}
+	) { }
 
 	/**
 	 * Initializes the specified context so that addresses may be
@@ -52,11 +52,11 @@ export class BytecodeAddressResolver {
 	): void {
 		if (!this.addresses.has(context)) this.prepare(context);
 		const addresses = this.addresses.get(context)!;
-		addresses.push({
+		addresses.push(new BytecodeAddressEntry(
 			offset,
-			type: BytecodeAddressType.Contextual,
+			BytecodeAddressType.Contextual,
 			dest,
-		});
+		));
 	}
 
 	/**
@@ -70,11 +70,11 @@ export class BytecodeAddressResolver {
 	public registerAddress(context: Context, offset: number, dest: number): void {
 		if (!this.addresses.has(context)) this.prepare(context);
 		const addresses = this.addresses.get(context)!;
-		addresses.push({
+		addresses.push(new BytecodeAddressEntry(
 			offset,
-			type: BytecodeAddressType.Offset,
+			BytecodeAddressType.Offset,
 			dest,
-		});
+		));
 	}
 
 	/**
