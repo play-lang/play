@@ -74,9 +74,9 @@ export class Play {
 	 * @returns The linked program object
 	 */
 	public static link(code: string): LinkedProgram {
-		const compiledProgram = Play.compile(code);
-		const linker = new Linker(compiledProgram);
-		return linker.link();
+		const program = Play.compile(code);
+		const linker = new Linker();
+		return linker.link(program);
 	}
 
 	/**
