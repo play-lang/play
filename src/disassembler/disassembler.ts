@@ -47,13 +47,15 @@ export class Disassembler {
 	private instructions(): string {
 		let str = "\n";
 		this.p = 0;
-		while (this.p < this.program.bytecode.length) {
+		const bytecode = this.program.bytecode;
+		const constantPool = this.program.constantPool;
+		while (this.p < bytecode.length) {
 			this.ip = this.p;
-			const instr = this.program.bytecode[this.p++];
+			const instr = bytecode[this.p++];
 			switch (instr) {
 				// Special case - look up constant in data pool and show it
 				case OpCode.Constant: {
-					const index = this.program.bytecode[this.p++];
+					const index = bytecode[this.p++];
 					str +=
 						this.ipn +
 						"\t" +
@@ -61,7 +63,7 @@ export class Disassembler {
 						"\t(" +
 						index +
 						")\t= " +
-						this.program.constantPool[index].value +
+						constantPool[index].value +
 						"\n";
 					break;
 				}
@@ -104,7 +106,7 @@ export class Disassembler {
 				case OpCode.JumpTrue:
 				case OpCode.JumpTruePop:
 				case OpCode.JumpFalsePop: {
-					const arg = this.program.bytecode[this.p++];
+					const arg = bytecode[this.p++];
 					str += this.ipn + "\t" + this.instr(instr) + "\t" + arg + "\n";
 					break;
 				}

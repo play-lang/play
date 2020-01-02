@@ -6,13 +6,16 @@ import { LinkedProgram } from "./linked-program";
 // together into one context and jumps spanning between contexts
 // need to be back-patched accordingly
 export class Linker {
-	constructor(public readonly compiledProgram: CompiledProgram) {}
-
-	public link(): LinkedProgram {
-		const contexts = this.compiledProgram.contexts;
-		const constantPool = this.compiledProgram.constantPool;
+	/**
+	 * Links the compiled bytecode contexts contained in the compiled program
+	 * together to result in one final, combined bytecode sequence
+	 * @param program The compiled program
+	 */
+	public link(program: CompiledProgram): LinkedProgram {
+		const contexts = program.contexts;
+		const constantPool = program.constantPool;
 		// "Globals" are just locals in the "main" scope
-		const numLocals = this.compiledProgram.numGlobals;
+		const numLocals = program.numGlobals;
 		// Map context names to their start instruction offset in the final
 		// linked code
 		const contextMap: Map<string, number> = new Map();
@@ -28,16 +31,15 @@ export class Linker {
 
 		// Update and resolve all the addresses now that the bytecode
 		// has been chained together
-		this.compiledProgram.addressResolver.resolve(
-			bytecode,
-			contexts,
-			contextMap
-		);
+		program.addressResolver.resolve(bytecode, contexts, contextMap);
 
 		return new LinkedProgram(
-			new LoadedProgram(constantPool, bytecode, numLocals),
+			constantPool,
+			bytecode,
+			numLocals,
 			contexts,
-			contextMap
+			contextMap,
+			program.addressResolver
 		);
 	}
 }

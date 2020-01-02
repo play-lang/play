@@ -1,5 +1,6 @@
+import { BytecodeAddressResolver } from "src/language/bytecode-address-resolver";
+import { RuntimeValue } from "src/vm/runtime-value";
 import { Context } from "../language/context";
-import { LoadedProgram } from "../language/loaded-program";
 
 /**
  * Linker output creates a LinkedProgram, which is given to the Patcher
@@ -7,18 +8,23 @@ import { LoadedProgram } from "../language/loaded-program";
  */
 export class LinkedProgram {
 	constructor(
+		/** Constant pool preceding the code */
+		public readonly constantPool: RuntimeValue[],
+		/** Bytecode instructions, packed together */
+		public readonly bytecode: number[],
 		/**
-		 * The loaded program containing the constant pool and combined
-		 * bytecode instructions of all of the contexts used to create
-		 * the program
+		 * Number of local variables in the main scope (globals) to drop when the
+		 * program is finished
 		 */
-		public readonly program: LoadedProgram,
+		public readonly numGlobals: number,
 		/** Array of all bytecode contexts in the linked program */
 		public readonly contexts: Context[],
 		/**
 		 * Maps context names to their instruction start offset number in the
 		 * linked bytecode
 		 */
-		public readonly contextMap: Map<string, number>
+		public readonly contextMap: Map<string, number>,
+		/** Jump patcher containing registered jump destinations */
+		public readonly addressResolver: BytecodeAddressResolver
 	) {}
 }
