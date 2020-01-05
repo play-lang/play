@@ -1,5 +1,5 @@
 # Play
-A programming language and virtual machine which can be easily embedded in TypeScript/JavaScript environments with easy-to-use extensibility API's.
+A statically typed programming language with type synthesis including a preprocessor, type-checker, bytecode compiler, disassembler, and virtual machine which can be easily embedded in TypeScript/JavaScript environments with easy-to-use extensibility API's.
 
 *Play has zero production dependencies* and all of its various components are written in TypeScript, with a large amount of test coverage provided using simple [Jest](https://jestjs.io/) tests.
 

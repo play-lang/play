@@ -14,7 +14,8 @@
         "LESSTHAN",
         "LESSTHANEQUAL",
         "SETGLOBAL",
-        "bytecode"
+        "bytecode",
+        "josephessin"
     ],
     "editor.codeActionsOnSave": {
         "source.fixAll.tslint": true
