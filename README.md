@@ -19,6 +19,8 @@ Install development dependencies:
 npm install
 ```
 
+**Important**: In VSCode, open any `*.ts` file in the `src/` directory and run the command `TypeScript: Select TypeScript Version...` and specify the locally installed version. This prevents glitches with TypeScript autocomplete, particularly when refactoring imports. 
+
 Code can be automatically formatted if you have the [TSLint extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin) installed in VSCode. You will get this functionality for free since [Prettier](https://prettier.io/) is installed locally and configured as a TSLint plugin.
 
 Run the tests:
