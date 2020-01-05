@@ -1,5 +1,4 @@
 import { CompiledProgram } from "../compiler/compiled-program";
-import { LoadedProgram } from "../language/loaded-program";
 import { LinkedProgram } from "./linked-program";
 
 // Multiple compiled "contexts" (one per function) need to be "linked"
