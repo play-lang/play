@@ -1,11 +1,11 @@
 # Play
-A programming language and virtual machine which can be easily embedded in TypeScript/JavaScript environments with easy extensibility API's.
+A programming language and virtual machine which can be easily embedded in TypeScript/JavaScript environments with easy-to-use extensibility API's.
 
-Play has zero production dependencies and all of its various components are written in TypeScript, with a large amount of test coverage using [Jest](https://jestjs.io/).
+*Play has zero production dependencies* and all of its various components are written in TypeScript, with a large amount of test coverage provided using simple [Jest](https://jestjs.io/) tests.
 
 ## Contributing
 
-The project is designed to be edited in VSCode.
+The project is designed to be edited in [VSCode](https://code.visualstudio.com/).
 
 Clone the project:
 
@@ -21,22 +21,32 @@ npm install
 
 Code can be automatically formatted if you have the [TSLint extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin) installed in VSCode. You will get this functionality for free since [Prettier](https://prettier.io/) is installed locally and configured as a TSLint plugin.
 
-Now that you're setup, you might want to run some tests:
+Run the tests:
 
 ```sh
 npm run test
 ```
 
-To see test coverage:
+See test coverage:
 
 ```sh
 npm run coverage
 ```
 
-Or build the project:
+Build the project:
 
 ```sh
 npm run build
 ```
 
 You can see all of the commands available in the `package.json` file.
+
+### How to Make a Pull Request
+
+Write a new test for your pull request or fix an existing one.
+
+You can easily debug an open test file in VSCode by selecting "Debug Current Jest Test" in the Debug pane at the top if the test file is selected in the editor. The debug configuration is provided with the project.
+
+This is typically how changes get made to Play.
+
+Once your changes and tests are working the way you like, submit a pull request. Please be as thorough as you can when writing tests.
