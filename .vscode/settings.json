@@ -1,19 +1,26 @@
 {
-	"typescript.tsdk": "./node_modules/typescript/lib",
-	"cSpell.words": [
-		"GETGLOBAL",
-		"GREATERTHAN",
-		"GREATERTHANEQUAL",
-		"JUMPFALSE",
-		"JUMPFALSEPOP",
-		"JUMPTRUE",
-		"JUMPTRUEPOP",
-		"LESSTHAN",
-		"LESSTHANEQUAL",
-		"SETGLOBAL",
-		"bytecode"
-	],
-	"editor.codeActionsOnSave": {
-		"source.fixAll.tslint": true
-	}
+    "[markdown]": {
+        "editor.wordWrap": "bounded"
+    },
+    "cSpell.words": [
+        "GETGLOBAL",
+        "GREATERTHAN",
+        "GREATERTHANEQUAL",
+        "JUMPFALSE",
+        "JUMPFALSEPOP",
+        "JUMPTRUE",
+        "JUMPTRUEPOP",
+        "LESSTHAN",
+        "LESSTHANEQUAL",
+        "SETGLOBAL",
+        "bytecode"
+    ],
+    "editor.codeActionsOnSave": {
+        "source.fixAll.tslint": true
+    },
+    "editor.rulers": [
+        80
+    ],
+    "editor.wordWrap": "bounded",
+    "typescript.tsdk": "./node_modules/typescript/lib"
 }
