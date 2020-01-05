@@ -47,7 +47,7 @@ You can see all of the commands available in the `package.json` file.
 
 Write a new test for your pull request or fix an existing one.
 
-You can easily debug an open test file in VSCode by selecting "Debug Current Jest Test" in the Debug pane at the top if the test file is selected in the editor. The debug configuration is provided with the project.
+**Important**: You can easily debug an open test file in VSCode by selecting `Debug Current Jest Test` in the Debug pane at the top **if and only if** the test file is selected in the editor. The debug configuration is provided with the project.
 
 This is typically how changes get made to Play.
 
