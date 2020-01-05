@@ -1,6 +1,7 @@
 import { BytecodeAddressResolver } from "src/language/bytecode-address-resolver";
+import { Context } from "src/language/context";
+import { LoadedProgram } from "src/language/loaded-program";
 import { RuntimeValue } from "src/vm/runtime-value";
-import { Context } from "../language/context";
 
 /**
  * Linker output creates a LinkedProgram, which is given to the Patcher
@@ -27,4 +28,9 @@ export class LinkedProgram {
 		/** Jump patcher containing registered jump destinations */
 		public readonly addressResolver: BytecodeAddressResolver
 	) {}
+
+	/** Loaded program represented by the linker output */
+	public get program(): LoadedProgram {
+		return new LoadedProgram(this.constantPool, this.bytecode, this.numGlobals);
+	}
 }
