@@ -5,7 +5,10 @@ A statically typed programming language with type synthesis including a preproce
 
 ## Contributing
 
+Contributions are greatly appreciated!
+
 The project is designed to be edited in [VSCode](https://code.visualstudio.com/).
+
 
 Clone the project:
 
@@ -52,3 +55,24 @@ Write a new test for your pull request or fix an existing one.
 This is typically how changes get made to Play.
 
 Once your changes and tests are working the way you like, submit a pull request. Please be as thorough as you can when writing tests.
+
+### Coding Style
+
+Play code is designed to be as easy to read as possible and uses as much academic terminology in the code as possible when implementing programming language features/algorithms to make the barrier-to-entry as low as possible.
+
+Play code is relatively performant and this is achieved by being mindful of time complexity and picking appropriate data structures.
+
+For example, instead of  looping through a table of files to find which file a character originates in every time a character is scanned, the lexer reads the start index of files in an [AVL Tree](https://en.wikipedia.org/wiki/AVL_tree) and is able to very quickly determine which file a token began in when given a preprocessed file.
+
+The author has no formal background in programming languages (took a single class in college and self taught past that) so there may be discrepancies throughout the code base.
+
+## Credits
+
+Play would not be possible without the following resources
+- *[Writing an Interpreter in Go](https://www.amazon.com/Writing-Interpreter-Go-Thorsten-Ball/dp/3982016118/)* by Thorsten Ball
+- *[Writing a Compiler in Go](https://www.amazon.com/Writing-Compiler-Go-Thorsten-Ball/dp/398201610X/)* by Thorsten Ball
+- *Compilers: Principles, Techniques, and Tools* by Alfred V. Aho, Ravi Sethi, and Jeffrey D. Ullman (The Dragon Book—both editions were consulted, but the first was more useful for type checking)
+- *[Modern Compiler Implementation in Java](https://www.amazon.com/Modern-Compiler-Implementation-Andrew-Appel/dp/052182060X)* by Andrew W. Appel
+- *[Crafting Interpreters](https://craftinginterpreters.com/)* by Bob Nystrom
+- *[Pratt Parsing: Expression Parsing Made Easy](https://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/)* by Bob Nystrom
+- *[Lecture 7: Type Checking](http://www.cse.chalmers.se/edu/year/2015/course/DAT150/lectures/proglang-07.html)* by Aarne Ranta
