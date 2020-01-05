@@ -4,6 +4,7 @@
     },
     "cSpell.words": [
         "API's",
+        "Aarne",
         "GETGLOBAL",
         "GREATERTHAN",
         "GREATERTHANEQUAL",
@@ -13,9 +14,16 @@
         "JUMPTRUEPOP",
         "LESSTHAN",
         "LESSTHANEQUAL",
+        "Nystrom",
+        "Ranta",
+        "Ravi",
         "SETGLOBAL",
+        "Sethi",
+        "Thorsten",
+        "Ullman",
         "bytecode",
-        "josephessin"
+        "josephessin",
+        "performant"
     ],
     "editor.codeActionsOnSave": {
         "source.fixAll.tslint": true
