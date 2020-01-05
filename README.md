@@ -68,7 +68,8 @@ The author has no formal background in programming languages (took a single clas
 
 ## Credits
 
-Play would not be possible without the following resources
+Play would not be possible without the following resources:
+
 - *[Writing an Interpreter in Go](https://www.amazon.com/Writing-Interpreter-Go-Thorsten-Ball/dp/3982016118/)* by Thorsten Ball
 - *[Writing a Compiler in Go](https://www.amazon.com/Writing-Compiler-Go-Thorsten-Ball/dp/398201610X/)* by Thorsten Ball
 - *Compilers: Principles, Techniques, and Tools* by Alfred V. Aho, Ravi Sethi, and Jeffrey D. Ullman (The Dragon Book—both editions were consulted, but the first was more useful for type checking)
