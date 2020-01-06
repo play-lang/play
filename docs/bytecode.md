@@ -2,7 +2,6 @@
 | Bytecode         | Parameters | Description                                                  |
 |------------------|------------|--------------------------------------------------------------|
 | RETURN           |            | Returns the top value of the stack                           |
-| LOAD             | fnAddr     | Push the specified function address onto the stack           |
 | CONSTANT         | index      | Push constant from pool with the specified index onto stack  |
 | POP              |            | Remove the top item from the stack and discard it            |
 | DROP             | nItems     | Discard the specified number of items from top of the stack  |
@@ -36,4 +35,5 @@
 | JUMPTRUE         | addr       | Jump to specified address if top of the stack is true        |
 | JUMPFALSEPOP     | addr       | Jump to specified address and pop if top is false            |
 | JUMPTRUEPOP      | addr       | Jump to specified address and pop if top is true             |
+| LOAD             | fnAddr     | Push the specified function address onto the stack           |
 | CALL             | numLocals  | Call address on top with specified number of local variables |
