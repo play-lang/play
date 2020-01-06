@@ -1,4 +1,4 @@
-import { BytecodeAddressResolver } from "src/language/bytecode-address-resolver";
+import { BytecodeAddressResolver } from "src/assembler/bytecode-address-resolver";
 import { Context } from "src/language/context";
 import { LoadedProgram } from "src/language/loaded-program";
 import { RuntimeValue } from "src/vm/runtime-value";
