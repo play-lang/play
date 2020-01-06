@@ -26,6 +26,7 @@
         "bytecode",
         "josephessin",
         "performant",
+        "quotemark",
         "subtrees"
     ],
     "editor.codeActionsOnSave": {
@@ -35,7 +36,7 @@
         80
     ],
     "editor.wordWrapColumn": 80,
-    "editor.wordWrap": "bounded",
+    "editor.wordWrap": "off",
     "typescript.preferences.importModuleSpecifier": "non-relative",
     "typescript.tsdk": "./node_modules/typescript/lib"
 }

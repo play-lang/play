@@ -1,114 +1,66 @@
 {
-	"extends": [
-		"tslint:recommended",
-		"tslint-config-prettier",
-    "tslint-plugin-prettier"
-	],
-	"linterOptions": {
-		"exclude": [
-			"dist/",
-			"node_modules/"
-		]
-	},
-	"jsRules": {
-		"indent": [
-			true,
-			"tabs"
-		],
-		"quotemark": [
-			true,
-			"double",
-			"avoid-escape"
-		],
-		"curly": [
-			true,
-			"ignore-same-line"
-		],
-		"one-line": [
-			true,
-			"check-catch",
-			"check-finally",
-			"check-else",
-			"check-open-brace"
-		],
-		"semicolon": [
-			true,
-			"always"
-		],
-		"no-switch-case-fall-through": true,
-		"no-trailing-whitespace": [
-			true,
-			"ignore-blank-lines"
-		],
-		"no-consecutive-blank-lines": [
-			true,
-			2
-		],
-		"object-literal-sort-keys": false
-	},
-	"rules": {
-		"prettier": true,
-		"no-switch-case-fall-through": true,
-		"no-empty": false,
-		"member-access": true,
-		"variable-name": false,
-		"no-console": false,
-		"file-name-casing": [
-			true,
-			"kebab-case"
-		],
-		"prefer-method-signature": true,
-		"prefer-while": true,
-		"one-variable-per-declaration": false,
-		"object-literal-key-quotes": false,
-		"max-classes-per-file": false,
-		"no-var-keyword": true,
-		"ordered-imports": [
-			true,
-			{
-				"import-sources-order": "lowercase-first",
-				"named-imports-order": "lowercase-first"
-			}
-		],
-		"typedef": [
-			true,
-			"call-signature",
-			"parameter",
-			"member-variable-declaration"
-		],
-		"no-inferrable-types": false,
-		"interface-name": false,
-		"import-spacing": false,
-		"no-empty-interface": false,
-		"no-conditional-assignment": true,
-		"no-shadowed-variable": false,
-		"radix": false,
-		"object-literal-sort-keys": false,
-		"no-trailing-whitespace": [
-			true,
-			"ignore-blank-lines"
-		],
-		"no-consecutive-blank-lines": [
-			true,
-			2
-		],
-		"quotemark": [
-			true,
-			"double",
-			"avoid-escape"
-		],
-		"curly": [true, "ignore-same-line"],
-		"one-line": [
-			true,
-			"check-catch",
-			"check-finally",
-			"check-open-brace"
-		],
-		"semicolon": [
-			true,
-			"always"
-		],
-		"no-unused-expression": false,
-		"unified-signatures": false
-	}
+    "extends": [
+        "tslint:latest",
+        "tslint-config-prettier",
+        "tslint-plugin-prettier"
+    ],
+    "jsRules": {
+        "curly": [
+            true,
+            "ignore-same-line"
+        ],
+        "no-switch-case-fall-through": true,
+        "object-literal-sort-keys": false
+    },
+    "linterOptions": {
+        "exclude": [
+            "dist/",
+            "node_modules/"
+        ]
+    },
+    "rules": {
+        "curly": [
+            true,
+            "ignore-same-line"
+        ],
+        "file-name-casing": [
+            true,
+            "kebab-case"
+        ],
+        "import-spacing": false,
+        "interface-name": false,
+        "max-classes-per-file": false,
+        "member-access": true,
+        "no-conditional-assignment": true,
+        "no-console": false,
+        "no-empty": false,
+        "no-empty-interface": false,
+        "no-inferrable-types": false,
+        "no-shadowed-variable": false,
+        "no-switch-case-fall-through": true,
+        "no-unused-expression": false,
+        "no-var-keyword": true,
+        "object-literal-key-quotes": false,
+        "object-literal-sort-keys": false,
+        "one-variable-per-declaration": false,
+        "ordered-imports": [
+            true,
+            {
+                "import-sources-order": "lowercase-first",
+                "named-imports-order": "lowercase-first"
+            }
+        ],
+        "prefer-method-signature": true,
+        "prefer-while": true,
+        "prettier": true,
+        "radix": false,
+        "typedef": [
+            true,
+            "call-signature",
+            "parameter",
+            "member-variable-declaration"
+        ],
+        "unified-signatures": false,
+        "variable-name": false
+    }
 }
