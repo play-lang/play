@@ -39,7 +39,12 @@ export class Compiler implements Visitor {
 	 * Maps constant values to their index in the constant pool to prevent duplicate entries
 	 */
 	public readonly constants: Map<any, number> = new Map();
-	/** Contains the list of all compiled contexts after compilation */
+	/**
+	 * Contains the list of all compiled contexts after compilation
+	 *
+	 * The first instruction in the first context represents the program's
+	 * entry point
+	 */
 	public readonly allContexts: Context[] = [];
 	/** Maps symbol table instances to their respective bytecode context */
 	public readonly contexts: Map<SymbolTable, Context> = new Map();
@@ -69,12 +74,7 @@ export class Compiler implements Visitor {
 		this.globalScope = ast.env.symbolTable;
 		this.contexts.set(
 			this.symbolTable,
-			this.createContext(
-				"main",
-				this.constantPool,
-				this.constants,
-				this.symbolTable.totalEntries
-			)
+			this.createContext("main", this.symbolTable.totalEntries)
 		);
 		this.functionTable = ast.env.functionTable;
 	}
@@ -244,7 +244,7 @@ export class Compiler implements Visitor {
 				return;
 		}
 		// Add the literal to the data section of the current context
-		const index = this.context.constant(new RuntimeValue(type, value));
+		const index = this.constant(new RuntimeValue(type, value));
 		// Have the machine push the value of the data at the specified data index
 		// to the top of the stack when this instruction is encountered
 		this.emit(OpCode.Constant, index);
@@ -464,12 +464,7 @@ export class Compiler implements Visitor {
 			this.symbolTable,
 			contextName === ""
 				? context
-				: this.createContext(
-						contextName,
-						this.constantPool,
-						this.constants,
-						this.symbolTable.totalEntries
-				  )
+				: this.createContext(contextName, this.symbolTable.totalEntries)
 		);
 	}
 
@@ -493,20 +488,28 @@ export class Compiler implements Visitor {
 	 * @param constantPool Shared constant pool
 	 * @param constants Shared constants look-up map for avoiding duplicates
 	 */
-	private createContext(
-		contextName: string,
-		constantPool: RuntimeValue[],
-		constants: Map<any, number>,
-		numLocals: number
-	): Context {
-		const context = new Context(
-			contextName,
-			constantPool,
-			constants,
-			numLocals
-		);
+	private createContext(contextName: string, numLocals: number): Context {
+		const context = new Context(contextName, numLocals, []);
 		this.allContexts.push(context);
 		this.patcher.prepare(this.context);
 		return context;
+	}
+
+	/**
+	 * Creates a new data constant for a literal and adds it to the
+	 * constant pool
+	 *
+	 * @returns The index to the constant in the constant pool
+	 * @param value The constant's runtime value
+	 */
+	private constant(value: RuntimeValue): number {
+		if (this.constants.has(value.value)) {
+			return this.constants.get(value.value)!;
+		} else {
+			// Unique, new constant
+			this.constantPool.push(value);
+			this.constants.set(value.value, this.constantPool.length - 1);
+			return this.constantPool.length - 1;
+		}
 	}
 }
