@@ -4,6 +4,7 @@ module.exports = {
 	collectCoverageFrom: [
 		"src/**/*.ts"
 	],
+	// Thanks to https://stackoverflow.com/a/50863753/4615448
 	roots: [
 		"<rootDir>",
 	],
