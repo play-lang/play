@@ -10,7 +10,8 @@
 		"test": "jest --passWithNoTests --config=jest.config.js --verbose",
 		"build": "tsc",
 		"start": "npm run build && node dist/index.js",
-		"cloc": "sh ./cloc.sh"
+		"cloc": "sh ./cloc.sh",
+		"tslint-check": "tslint-config-prettier-check ./tslint.json"
 	},
 	"author": "Joseph Essin",
 	"repository": {
