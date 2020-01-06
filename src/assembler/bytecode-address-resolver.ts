@@ -66,7 +66,10 @@ export class BytecodeAddressResolver {
 
 	constructor(
 		/** Map of addresses for patching later */
-		public readonly addresses: Map<Context, BytecodeAddressEntry[]> = new Map(),
+		public readonly addresses: Map<
+			Context,
+			BytecodeAddressEntry[]
+		> = new Map(),
 		/** Map of destination labels keyed by context */
 		public readonly labels: Map<
 			Context,
@@ -91,7 +94,7 @@ export class BytecodeAddressResolver {
 	 * context specified by its name (in case it hasn't been created yet)
 	 *
 	 * @param context The context registering the address
-	 * @param offset The instruction offset of the address to be patched
+	 * @param index The instruction index of the address to be patched
 	 * @param dest The name of the context the address refers to
 	 * Since the name of the context can be predicted at write time this is
 	 * sufficient for later patching since the context can be looked up by
@@ -99,17 +102,21 @@ export class BytecodeAddressResolver {
 	 */
 	public registerContextAddress(
 		context: Context,
-		offset: number,
+		index: number,
 		dest: string
 	): void {
 		if (!this.addresses.has(context)) this.prepare(context);
 		const addresses = this.addresses.get(context)!;
 		const labels = this.labels.get(context)!;
-		addresses.push(new BytecodeAddressEntry(offset));
-		if (!labels.has(offset)) {
+		addresses.push(new BytecodeAddressEntry(index));
+		if (!labels.has(index)) {
 			labels.set(
-				offset,
-				new BytecodeLabel(this.numLabels++, BytecodeLabelType.Contextual, dest)
+				index,
+				new BytecodeLabel(
+					this.numLabels++,
+					BytecodeLabelType.Contextual,
+					dest
+				)
 			);
 		}
 	}
@@ -122,7 +129,11 @@ export class BytecodeAddressResolver {
 	 * @param offset The instruction offset of the address to patch
 	 * @param dest The offset inside the context to point to
 	 */
-	public registerAddress(context: Context, offset: number, dest: number): void {
+	public registerAddress(
+		context: Context,
+		offset: number,
+		dest: number
+	): void {
 		if (!this.addresses.has(context)) this.prepare(context);
 		const addresses = this.addresses.get(context)!;
 		const labels = this.labels.get(context)!;
@@ -130,7 +141,11 @@ export class BytecodeAddressResolver {
 		if (!labels.has(offset)) {
 			labels.set(
 				offset,
-				new BytecodeLabel(this.numLabels++, BytecodeLabelType.Offset, dest)
+				new BytecodeLabel(
+					this.numLabels++,
+					BytecodeLabelType.Offset,
+					dest
+				)
 			);
 		}
 	}
@@ -168,14 +183,19 @@ export class BytecodeAddressResolver {
 				if (label.type === BytecodeLabelType.Contextual) {
 					// Resolve address to a destination context
 					if (!contextMap.has(label.dest as string)) {
-						throw new Error("Can't find destination context in linker output");
+						throw new Error(
+							"Can't find destination context in linker output"
+						);
 					}
 
-					const destPos: number = contextMap.get(label.dest as string)!;
+					const destPos: number = contextMap.get(
+						label.dest as string
+					)!;
 					bytecode[addressPos] = destPos;
 				} else if (label.type === BytecodeLabelType.Offset) {
 					// Resolve address within a context
-					const destPos: number = contextOffset + (label.dest as number);
+					const destPos: number =
+						contextOffset + (label.dest as number);
 					bytecode[addressPos] = destPos;
 				}
 			} // for address of addresses

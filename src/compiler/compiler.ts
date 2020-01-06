@@ -66,7 +66,9 @@ export class Compiler implements Visitor {
 	/** Registers labels and patches jumps between contexts */
 	private patcher: BytecodeAddressResolver = new BytecodeAddressResolver();
 	/** Address of the last instruction */
-	private lastInstr: number = 0;
+	private get lastInstr(): number {
+		return this.context.lastInstr;
+	}
 
 	constructor(ast: AbstractSyntaxTree) {
 		this.ast = ast;
@@ -151,23 +153,34 @@ export class Compiler implements Visitor {
 		if (node.usedAsFunction) {
 			if (this.functionTable.has(node.name)) {
 				// Register a function load address to be patched later
-				const offset = this.emit(OpCode.Load, -1) - 1;
-				this.patcher.registerContextAddress(this.context, offset, node.name);
+				const index = this.emit(OpCode.Load, -1) - 1;
+				this.patcher.registerContextAddress(
+					this.context,
+					index,
+					node.name
+				);
 			} else {
-				throw new Error("Cannot compile non-existent function: " + node.name);
+				throw new Error(
+					"Cannot compile non-existent function: " + node.name
+				);
 			}
 		} else {
 			// Node represents a variable reference
 			const scope = this.symbolTable.findScope(node.name);
 			if (!scope) {
 				throw new Error(
-					"Cannot compile non-existent variable reference `" + node.name + "`"
+					"Cannot compile non-existent variable reference `" +
+						node.name +
+						"`"
 				);
 			}
 			// Emit the proper instruction to push a copy of the variable's value
 			// lower in the stack to the top of the stack
 			const stackPos = this.symbolTable.stackPos(node.name)!;
-			this.emit(scope.isGlobalScope ? OpCode.GetGlobal : OpCode.Get, stackPos);
+			this.emit(
+				scope.isGlobalScope ? OpCode.GetGlobal : OpCode.Get,
+				stackPos
+			);
 		}
 	}
 
@@ -304,17 +317,25 @@ export class Compiler implements Visitor {
 		switch (node.operatorType) {
 			// Binary logical operators
 			case TokenType.And: {
-				const skipJump = this.jumpIfFalse();
+				const addr = this.jumpIfFalse();
 				this.emit(OpCode.Pop);
 				node.rhs.accept(this);
-				this.patch(this.context, skipJump, this.context.bytecode.length);
+				this.patch(
+					this.context,
+					addr,
+					this.context.bytecode.length - addr - 1
+				);
 				break;
 			}
 			case TokenType.Or: {
-				const skipJump = this.jumpIfTrue();
+				const addr = this.jumpIfTrue();
 				this.emit(OpCode.Pop);
 				node.rhs.accept(this);
-				this.patch(this.context, skipJump, this.context.bytecode.length);
+				this.patch(
+					this.context,
+					addr,
+					this.context.bytecode.length - addr - 1
+				);
 				break;
 			}
 		}
@@ -324,12 +345,20 @@ export class Compiler implements Visitor {
 	// Compiler ternary operator: true ? a : b
 	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
 		node.predicate.accept(this);
-		const falseJump = this.jumpIfFalseAndPop();
+		const falseAddr = this.jumpIfFalseAndPop();
 		node.consequent.accept(this);
-		const jump = this.jump();
-		this.patch(this.context, falseJump, this.context.bytecode.length);
+		const jumpAddr = this.jump();
+		this.patch(
+			this.context,
+			falseAddr,
+			this.context.bytecode.length - falseAddr - 1
+		);
 		node.alternate.accept(this);
-		this.patch(this.context, jump, this.context.bytecode.length);
+		this.patch(
+			this.context,
+			jumpAddr,
+			this.context.bytecode.length - jumpAddr - 1
+		);
 	}
 
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
@@ -362,7 +391,9 @@ export class Compiler implements Visitor {
 		node.expr.accept(this);
 		// Pop unused expression result off, unless its an assignment
 		// which doesn't require a pop
-		if (!(node.expr instanceof AssignmentExpressionNode)) this.emit(OpCode.Pop);
+		if (!(node.expr instanceof AssignmentExpressionNode)) {
+			this.emit(OpCode.Pop);
+		}
 	}
 
 	// MARK: Compiler Methods
@@ -405,46 +436,42 @@ export class Compiler implements Visitor {
 	 * context of the compiler based on scope
 	 */
 	public emit(
-		opcode: number,
+		opcode: OpCode,
 		param?: number,
 		context: Context = this.context
 	): number {
-		if (typeof param !== "undefined") {
-			context.bytecode.push(opcode, param);
-			this.lastInstr = context.bytecode.length - 2;
-		} else {
-			context.bytecode.push(opcode);
-			this.lastInstr = context.bytecode.length - 1;
-		}
-		return context.bytecode.length - 1;
+		return context.emit(opcode, param);
 	}
 
 	public jump(): number {
-		return this.emit(OpCode.Jump, 0) - 1;
+		return this.emit(OpCode.Jump, 0);
 	}
 
 	public jumpIfFalse(): number {
-		return this.emit(OpCode.JumpFalse, 0) - 1;
+		return this.emit(OpCode.JumpFalse, 0);
 	}
 
 	public jumpIfTrue(): number {
-		return this.emit(OpCode.JumpTrue, 0) - 1;
+		return this.emit(OpCode.JumpTrue, 0);
 	}
 
 	public jumpIfFalseAndPop(): number {
-		return this.emit(OpCode.JumpFalsePop, 0) - 1;
+		return this.emit(OpCode.JumpFalsePop, 0);
 	}
 
 	public jumpIfTrueAndPop(): number {
-		return this.emit(OpCode.JumpTruePop, 0) - 1;
+		return this.emit(OpCode.JumpTruePop, 0);
 	}
 
-	public patch(context: Context, jumpOffset: number, destOffset: number): void {
-		// This will actually get overwritten by the jump patcher when the linker
-		// runs if there is more than one context to compile
-		context.bytecode[jumpOffset + 1] = destOffset;
-		// Register the jump so that it can get patched later if necessary
-		this.patcher.registerAddress(this.context, jumpOffset, destOffset);
+	/**
+	 * Patches a bytecode address reference in the specified context
+	 * @param context The context to patch the specified address in
+	 * @param addr The index of the address in the bytecode to replace
+	 * @param offset The jump's destination as an offset to the current
+	 * number
+	 */
+	public patch(context: Context, addr: number, offset: number): void {
+		context.bytecode[addr] = offset;
 	}
 
 	/**

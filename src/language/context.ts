@@ -1,3 +1,5 @@
+import { OpCode } from "src/language/op-code";
+
 /**
  * A chunk of bytecode, including literal data and source maps
  *
@@ -7,6 +9,9 @@
 export class Context {
 	/** Source map: maps bytecode offsets to original source code positions */
 	public readonly sourceMap: any = undefined;
+
+	/** Index of the last instruction emitted */
+	public lastInstr: number = -1;
 
 	constructor(
 		/** Context name */
@@ -19,4 +24,22 @@ export class Context {
 		/** Bytecode instructions, packed together */
 		public readonly bytecode: number[]
 	) {}
+
+	/**
+	 * Emit a bytecode opcode and an optional parameter,
+	 * returning the index of the last emitted byte
+	 *
+	 * @param opcode The instruction to emit
+	 * @param param A numeric parameter, if any, to emit for the instruction
+	 */
+	public emit(opcode: OpCode, param?: number): number {
+		if (typeof param !== "undefined") {
+			this.bytecode.push(opcode, param);
+			this.lastInstr = this.bytecode.length - 2;
+		} else {
+			this.bytecode.push(opcode);
+			this.lastInstr = this.bytecode.length - 1;
+		}
+		return this.bytecode.length - 1;
+	}
 }
