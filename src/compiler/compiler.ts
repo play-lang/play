@@ -1,5 +1,5 @@
+import { BytecodeAddressResolver } from "../assembler/bytecode-address-resolver";
 import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
-import { BytecodeAddressResolver } from "../language/bytecode-address-resolver";
 import { Context } from "../language/context";
 import { FunctionInfo } from "../language/function-info";
 import { OpCode } from "../language/op-code";
