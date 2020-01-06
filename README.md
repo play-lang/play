@@ -26,6 +26,8 @@ npm install
 
 Code can be automatically formatted if you have the [TSLint extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin) installed in VSCode. You will get this functionality for free since [Prettier](https://prettier.io/) is installed locally and configured as a TSLint plugin.
 
+[Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) is used to prevent misspellings in the codebase. The default keybinding to fix misspellings when the cursor is on a misspelled word is `Cmd + Period`. A number of additional dictionary words have been added to the vscode settings in the `.vscode/settings.json` file.
+
 Run the tests:
 
 ```sh
