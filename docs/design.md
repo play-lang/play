@@ -8,9 +8,9 @@ Since Play does not support first class functions *by design* and is statically 
 
 ### No dependencies!
 
-**Play doesn't have a single production dependency**. Only the code in the repository is required for the language to run. Play is also platform agnostic, so it doesn't know if it's running in Node or in the browser. Instead, it provides hooks for you to provide files to it for preprocessing and execution.
+**Play has zero production dependencies**. Only the code in the repository is required for the language to run. Play is also platform agnostic, so it doesn't know if it's running in Node or in the browser. Instead, it provides hooks for you to provide files to it for preprocessing and execution.
 
-Play integrators can rest easy knowing that Play doesn't bring in any untested or insecure modules into their web environment or create unneeded bloat, and is easy to implement.
+Play doesn't bring in any untested or insecure modules into the environment or create unneeded bloat.
 
 ### Bytecode
 
@@ -52,7 +52,21 @@ The parser is responsible for generating an abstract syntax tree. The data struc
 
 ## Type Checker
 
-The type checker, when implemented, will walk the AST and verify that the program is correct by checking types (as its name implies) and searching for other easy-to-detect errors, such as unreachable code or expressions that will always evaluate to true or false.
+The type checker visits the AST nodes and verifies that the program is correct by checking types (as its name implies) and searching for other easy-to-detect errors, such as unreachable code or expressions that will always evaluate to true or false.
+
+The type checker uses the structural equivalence algorithm specified in the first edition of the Dragon Book for Compilers. Types are considered equivalent if their subtrees represent the same types. Because the types in Play are relatively simple, the type checker is itself trivial.
+
+The type checker supports *type synthesis*, the ability to infer a variable's type from the assigned expression instead of specifying a type annotation, as in the example below:
+
+```play
+let someStr = "Hello, " + "world."
+```
+
+Whereas specifying the type annotation simply makes the code longer:
+
+```play
+let someStr: str = "Hello, " + "world."
+```
 
 ## Preprocessor
 
@@ -78,7 +92,7 @@ The compiler, upon successful compilation, creates an object that contains a lis
 
 ## Linker
 
-The linker is responsible for taking the compiled bytecode contexts from the compiler and chaining them together to create one long single sequence of bytecode that represents the user program.
+The linker is responsible for taking the compiled bytecode objects from the compiler and chaining them together to create a single sequence of bytecode that represents the user's program.
 
 To properly sequence the code together, the linker must resolve bytecode addresses in the contexts that refer to bytecode later in its own context or in other contexts. The linker is provided this information by the output of the compiler which includes the address resolver containing the table of addresses referred to by the bytecode in the contexts.
 
@@ -87,6 +101,10 @@ While linking the context bytecode arrays together, the linker constructs a *con
 Once all the bytecode has been linked together into one array of bytecode, the context map is given to the address resolver so that it can resolve the addresses in the final bytecode.
 
 The linker, if successful, produces an object containing the list of contexts, the context map, and a loaded program object which itself consists of a constant pool, the combined bytecode, and the number of variables in the main scope.
+
+## Assembler
+
+The assembler takes the compiled objects from the compiler and resolves the addresses and labels contained inside by replacing labels with actual bytecode addresses and patching the jump and call statements as necessary.
 
 ## Disassembler
 

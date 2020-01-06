@@ -1,8 +1,8 @@
 {
     "[markdown]": {
         "editor.wordWrap": "bounded",
-        "editor.rulers": [120],
-        "editor.wordWrapColumn": 120,
+        "editor.rulers": [100],
+        "editor.wordWrapColumn": 100,
     },
     "cSpell.words": [
         "API's",
@@ -25,7 +25,8 @@
         "Ullman",
         "bytecode",
         "josephessin",
-        "performant"
+        "performant",
+        "subtrees"
     ],
     "editor.codeActionsOnSave": {
         "source.fixAll.tslint": true
