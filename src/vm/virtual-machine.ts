@@ -63,14 +63,13 @@ export class VirtualMachine {
 							"Invalid instruction encountered: " + instruction
 						);
 					case OpCode.Return: {
-						// Grab the return value so that we can clean up the locals
-						// below it
-						const returnValue = this.stack.length > 0 ? this.pop() : Zero;
-						// if (this.frame.numLocals > 0) {
-						// Clean up locals (or globals) created for this call frame
-						// this.drop(this.frame.numLocals);
+						// Grab the return value so that we can clean up the
+						// locals below it
+						const returnValue =
+							this.stack.length > 0 ? this.pop() : Zero;
+						// Clean up locals (or globals) created for this call
+						// frame
 						this.dropTo(this.frame.basePointer);
-						// }
 						if (this.frames.length === 1) {
 							if (this.stack.length > 0) {
 								throw new RuntimeError(
@@ -82,17 +81,15 @@ export class VirtualMachine {
 						} else {
 							// Push the return value back on to the stack
 							this.stack.push(returnValue);
-							// Pop the call frame and resume execution at the previous ip
+							// Pop the call frame and resume execution at the
+							// previous ip
 							this.frames.pop();
 						}
 						break;
 					}
-					case OpCode.Load: {
-						this.push(new RuntimeValue(RuntimeType.Number, this.readCode()));
-						break;
-					}
 					case OpCode.Constant: {
-						// Read a data value from the data section and push it to the stack
+						// Read a data value from the data section and push it
+						// to the stack
 						this.push(this.readData());
 						break;
 					}
@@ -149,37 +146,49 @@ export class VirtualMachine {
 					case OpCode.Add: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(new RuntimeValue(rhs.type, lhs.value + rhs.value));
+						this.push(
+							new RuntimeValue(rhs.type, lhs.value + rhs.value)
+						);
 						break;
 					}
 					case OpCode.Sub: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(new RuntimeValue(rhs.type, lhs.value - rhs.value));
+						this.push(
+							new RuntimeValue(rhs.type, lhs.value - rhs.value)
+						);
 						break;
 					}
 					case OpCode.Mul: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(new RuntimeValue(rhs.type, lhs.value * rhs.value));
+						this.push(
+							new RuntimeValue(rhs.type, lhs.value * rhs.value)
+						);
 						break;
 					}
 					case OpCode.Div: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(new RuntimeValue(rhs.type, lhs.value / rhs.value));
+						this.push(
+							new RuntimeValue(rhs.type, lhs.value / rhs.value)
+						);
 						break;
 					}
 					case OpCode.Remain: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(new RuntimeValue(rhs.type, lhs.value % rhs.value));
+						this.push(
+							new RuntimeValue(rhs.type, lhs.value % rhs.value)
+						);
 						break;
 					}
 					case OpCode.Exp: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(new RuntimeValue(rhs.type, lhs.value ** rhs.value));
+						this.push(
+							new RuntimeValue(rhs.type, lhs.value ** rhs.value)
+						);
 						break;
 					}
 					case OpCode.LessThan: {
@@ -244,6 +253,7 @@ export class VirtualMachine {
 						this.push(False);
 						break;
 					}
+					// Jumps
 					case OpCode.Jump: {
 						this.ip = this.readCode();
 						break;
@@ -266,6 +276,15 @@ export class VirtualMachine {
 					case OpCode.JumpTruePop: {
 						const dest = this.readCode();
 						if (this.isTruthy(this.pop())) this.ip = dest;
+						break;
+					}
+					case OpCode.Load: {
+						this.push(
+							new RuntimeValue(
+								RuntimeType.Number,
+								this.readCode()
+							)
+						);
 						break;
 					}
 					case OpCode.Call: {
