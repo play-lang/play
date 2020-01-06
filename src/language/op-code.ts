@@ -3,11 +3,6 @@ export enum OpCode {
 
 	/** Return instruction */
 	Return = 1,
-	/**
-	 * Push a function call bytecode address offset onto the stack for
-	 * later consumption with CALL
-	 */
-	Load,
 	/** Push constant from constant pool */
 	Constant,
 	/** Discard the top of the stack */
@@ -87,8 +82,14 @@ export enum OpCode {
 	JumpFalsePop,
 	/** Jump if true (and pop stack) */
 	JumpTruePop,
+
 	// Function calls
 
+	/**
+	 * Push a function call bytecode address offset onto the stack for
+	 * later consumption with CALL
+	 */
+	Load,
 	/** Call a function */
 	Call,
 }

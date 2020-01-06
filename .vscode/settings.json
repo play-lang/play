@@ -1,6 +1,8 @@
 {
     "[markdown]": {
-        "editor.wordWrap": "bounded"
+        "editor.wordWrap": "bounded",
+        "editor.rulers": [120],
+        "editor.wordWrapColumn": 120,
     },
     "cSpell.words": [
         "API's",
@@ -31,6 +33,7 @@
     "editor.rulers": [
         80
     ],
+    "editor.wordWrapColumn": 80,
     "editor.wordWrap": "bounded",
     "typescript.preferences.importModuleSpecifier": "non-relative",
     "typescript.tsdk": "./node_modules/typescript/lib"
