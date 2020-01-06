@@ -255,27 +255,28 @@ export class VirtualMachine {
 					}
 					// Jumps
 					case OpCode.Jump: {
-						this.ip = this.readCode();
+						const dest = this.readCode();
+						this.ip += dest;
 						break;
 					}
 					case OpCode.JumpFalse: {
 						const dest = this.readCode();
-						if (!this.isTruthy(this.top)) this.ip = dest;
+						if (!this.isTruthy(this.top)) this.ip += dest;
 						break;
 					}
 					case OpCode.JumpTrue: {
 						const dest = this.readCode();
-						if (this.isTruthy(this.top)) this.ip = dest;
+						if (this.isTruthy(this.top)) this.ip += dest;
 						break;
 					}
 					case OpCode.JumpFalsePop: {
 						const dest = this.readCode();
-						if (!this.isTruthy(this.pop())) this.ip = dest;
+						if (!this.isTruthy(this.pop())) this.ip += dest;
 						break;
 					}
 					case OpCode.JumpTruePop: {
 						const dest = this.readCode();
-						if (this.isTruthy(this.pop())) this.ip = dest;
+						if (this.isTruthy(this.pop())) this.ip += dest;
 						break;
 					}
 					case OpCode.Load: {
