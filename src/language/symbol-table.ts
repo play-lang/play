@@ -1,6 +1,6 @@
-import { LinkedHashMap } from "../common/linked-hash-map";
-import { IdentifierSymbol } from "./identifier-symbol";
-import { Describable } from "./token";
+import { LinkedHashMap } from "src/common/linked-hash-map";
+import { IdentifierSymbol } from "src/language/identifier-symbol";
+import { Describable } from "src/language/token";
 
 export class SymbolTable implements Describable {
 	/** Parent scope, if any */

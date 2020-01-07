@@ -1,9 +1,9 @@
-import { Expression } from "../../language/node";
-import { TokenLike } from "../../language/token";
-import { TokenType } from "../../language/token-type";
-import { Environment } from "../../language/types/environment";
-import { constructType, Type } from "../../language/types/type-system";
-import { Visitor } from "../../language/visitor";
+import { Expression } from "src/language/node";
+import { TokenLike } from "src/language/token";
+import { TokenType } from "src/language/token-type";
+import { Environment } from "src/language/types/environment";
+import { constructType, Type } from "src/language/types/type-system";
+import { Visitor } from "src/language/visitor";
 
 export class BinaryLogicalExpressionNode extends Expression {
 	constructor(

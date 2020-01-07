@@ -1,4 +1,4 @@
-import { Describable } from "../language/token";
+import { Describable } from "src/language/token";
 
 /**
  * Exception class

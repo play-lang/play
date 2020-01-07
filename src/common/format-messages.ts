@@ -1,4 +1,4 @@
-import { ErrorToken, TokenLike } from "../language/token";
+import { ErrorToken, TokenLike } from "src/language/token";
 
 /**
  * Ensures that the hint has no leading/trailing spaces and ends with a

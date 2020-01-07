@@ -1,18 +1,18 @@
-import { CompiledProgram } from "./compiler/compiled-program";
-import { Compiler } from "./compiler/compiler";
-import { Disassembler } from "./disassembler/disassembler";
-import { AbstractSyntaxTree } from "./language/abstract-syntax-tree";
-import { SemanticError } from "./language/semantic-error";
-import { TokenLike } from "./language/token";
-import { Lexer } from "./lexer/lexer";
-import { LinkedProgram } from "./linker/linked-program";
-import { Linker } from "./linker/linker";
-import { Parser } from "./parser/parser";
-import { TypeChecker } from "./type-checker/type-checker";
-import { JSONVisitor } from "./visitors/json-visitor";
-import { PrintVisitor } from "./visitors/print-visitor";
-import { VirtualMachine } from "./vm/virtual-machine";
-import { VMResult } from "./vm/vm-result";
+import { CompiledProgram } from "src/compiler/compiled-program";
+import { Compiler } from "src/compiler/compiler";
+import { Disassembler } from "src/disassembler/disassembler";
+import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
+import { SemanticError } from "src/language/semantic-error";
+import { TokenLike } from "src/language/token";
+import { Lexer } from "src/lexer/lexer";
+import { LinkedProgram } from "src/linker/linked-program";
+import { Linker } from "src/linker/linker";
+import { Parser } from "src/parser/parser";
+import { TypeChecker } from "src/type-checker/type-checker";
+import { JSONVisitor } from "src/visitors/json-visitor";
+import { PrintVisitor } from "src/visitors/print-visitor";
+import { VirtualMachine } from "src/vm/virtual-machine";
+import { VMResult } from "src/vm/vm-result";
 
 /**
  * Play programming language

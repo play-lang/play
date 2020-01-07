@@ -1,5 +1,5 @@
-import { SemanticError } from "../language/semantic-error";
-import { TokenLike } from "../language/token";
+import { SemanticError } from "src/language/semantic-error";
+import { TokenLike } from "src/language/token";
 
 export class TypeCheckError extends SemanticError {
 	constructor(

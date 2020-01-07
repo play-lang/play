@@ -1,5 +1,5 @@
-import { FunctionInfo } from "../function-info";
-import { SymbolTable } from "../symbol-table";
+import { FunctionInfo } from "src/language/function-info";
+import { SymbolTable } from "src/language/symbol-table";
 
 export class Environment {
 	constructor(

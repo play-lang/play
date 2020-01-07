@@ -1,4 +1,4 @@
-import { directory, filename } from "../common/path-utility";
+import { directory, filename } from "src/common/path-utility";
 
 export class SourceFile {
 	constructor(

@@ -1,4 +1,4 @@
-import { Describable } from "../language/token";
+import { Describable } from "src/language/token";
 
 class Entry<K, V> {
 	constructor(public value: V, public readonly node: LinkedMapNode<K>) {}

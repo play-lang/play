@@ -1,8 +1,8 @@
-import { prepareHint } from "../common/format-messages";
-import { Lexer } from "../lexer/lexer";
-import { ParseError } from "../parser/parse-error";
-import { TokenLike } from "./token";
-import { TokenType } from "./token-type";
+import { prepareHint } from "src/common/format-messages";
+import { TokenLike } from "src/language/token";
+import { TokenType } from "src/language/token-type";
+import { Lexer } from "src/lexer/lexer";
+import { ParseError } from "src/parser/parse-error";
 
 /**
  * Basic parsing and error handling functionality is provided in this class

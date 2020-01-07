@@ -1,11 +1,11 @@
-import { LoadedProgram } from "../language/loaded-program";
-import { OpCode } from "../language/op-code";
-import { Frame } from "./frame";
-import { RuntimeError } from "./runtime-error";
-import { RuntimeType } from "./runtime-type";
-import { RuntimeValue } from "./runtime-value";
-import { VMResult } from "./vm-result";
-import { VMStatus } from "./vm-status";
+import { LoadedProgram } from "src/language/loaded-program";
+import { OpCode } from "src/language/op-code";
+import { Frame } from "src/vm/frame";
+import { RuntimeError } from "src/vm/runtime-error";
+import { RuntimeType } from "src/vm/runtime-type";
+import { RuntimeValue } from "src/vm/runtime-value";
+import { VMResult } from "src/vm/vm-result";
+import { VMStatus } from "src/vm/vm-status";
 
 // Make constants for zero values since they are so widely used
 const Nil: RuntimeValue = new RuntimeValue(RuntimeType.Object, null);

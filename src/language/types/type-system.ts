@@ -1,6 +1,6 @@
-import { LinkedHashMap } from "../../common/linked-hash-map";
-import { FunctionInfo } from "../function-info";
-import { Describable } from "../token";
+import { LinkedHashMap } from "src/common/linked-hash-map";
+import { FunctionInfo } from "src/language/function-info";
+import { Describable } from "src/language/token";
 
 /**
  * Primitive types that can be represented with an instance of a PrimitiveType

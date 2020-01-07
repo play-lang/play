@@ -1,4 +1,4 @@
-import { RuntimeValue } from "../vm/runtime-value";
+import { RuntimeValue } from "src/vm/runtime-value";
 
 export class LoadedProgram {
 	constructor(

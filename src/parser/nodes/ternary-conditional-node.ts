@@ -1,8 +1,8 @@
-import { Expression } from "../../language/node";
-import { TokenLike } from "../../language/token";
-import { Environment } from "../../language/types/environment";
-import { Type } from "../../language/types/type-system";
-import { Visitor } from "../../language/visitor";
+import { Expression } from "src/language/node";
+import { TokenLike } from "src/language/token";
+import { Environment } from "src/language/types/environment";
+import { Type } from "src/language/types/type-system";
+import { Visitor } from "src/language/visitor";
 
 export class TernaryConditionalNode extends Expression {
 	constructor(
