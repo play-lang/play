@@ -51,7 +51,11 @@ export class GroupParselet implements PrefixParselet {
 }
 
 export class TernaryConditionalParselet implements InfixParselet {
-	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
+	public parse(
+		parser: Parser,
+		lhs: Expression,
+		token: TokenLike
+	): Expression {
 		const predicate = lhs;
 		// Since ternary is right associative, we must subtract one from precedence
 		const consequent = parser.expression(this.precedence - 1);
@@ -60,7 +64,12 @@ export class TernaryConditionalParselet implements InfixParselet {
 			"Expected colon after conditional operator"
 		);
 		const alternate = parser.expression(this.precedence - 1);
-		return new TernaryConditionalNode(token, predicate, consequent, alternate);
+		return new TernaryConditionalNode(
+			token,
+			predicate,
+			consequent,
+			alternate
+		);
 	}
 	public get precedence(): number {
 		return Precedence.Conditional;
@@ -68,7 +77,11 @@ export class TernaryConditionalParselet implements InfixParselet {
 }
 
 export class AssignmentParselet implements InfixParselet {
-	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
+	public parse(
+		parser: Parser,
+		lhs: Expression,
+		token: TokenLike
+	): Expression {
 		// Assignment is right-associative, so we drop precedence by 1:
 		const rhs: Expression = parser.expression(this.precedence - 1);
 		return new AssignmentExpressionNode(token, token.type, lhs, rhs);
@@ -83,7 +96,11 @@ export class BinaryOperatorParselet implements InfixParselet {
 		public readonly precedence: number,
 		public readonly isRightAssociative: boolean
 	) {}
-	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
+	public parse(
+		parser: Parser,
+		lhs: Expression,
+		token: TokenLike
+	): Expression {
 		// We drop the precedence slightly for right associative operators
 		// so that another right associative operator will bind more tightly
 		const rhs: Expression = parser.expression(
@@ -95,7 +112,11 @@ export class BinaryOperatorParselet implements InfixParselet {
 
 export class BinaryLogicalOperatorParselet implements InfixParselet {
 	constructor(public readonly precedence: number) {}
-	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
+	public parse(
+		parser: Parser,
+		lhs: Expression,
+		token: TokenLike
+	): Expression {
 		// We drop the precedence slightly for right associative operators
 		// so that another right associative operator will bind more tightly
 		const rhs: Expression = parser.expression(this.precedence);
@@ -104,7 +125,11 @@ export class BinaryLogicalOperatorParselet implements InfixParselet {
 }
 
 export class PostfixOperatorParselet implements InfixParselet {
-	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
+	public parse(
+		parser: Parser,
+		lhs: Expression,
+		token: TokenLike
+	): Expression {
 		return new PostfixExpressionNode(token, lhs);
 	}
 	public get precedence(): number {
@@ -113,7 +138,11 @@ export class PostfixOperatorParselet implements InfixParselet {
 }
 
 export class InvocationOperatorParselet implements InfixParselet {
-	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
+	public parse(
+		parser: Parser,
+		lhs: Expression,
+		token: TokenLike
+	): Expression {
 		if (lhs instanceof IdExpressionNode) {
 			lhs.usedAsFunction = true;
 		}

@@ -107,14 +107,17 @@ export class Disassembler {
 				case OpCode.JumpTruePop:
 				case OpCode.JumpFalsePop: {
 					const arg = bytecode[this.p++];
-					str += this.ipn + "\t" + this.instr(instr) + "\t" + arg + "\n";
+					str +=
+						this.ipn + "\t" + this.instr(instr) + "\t" + arg + "\n";
 					break;
 				}
 				default: {
 					throw new Error(
 						"Unrecognized instruction code: " +
 							instr +
-							(OpCode[instr] ? " (could be " + OpCode[instr] + ")" : "")
+							(OpCode[instr]
+								? " (could be " + OpCode[instr] + ")"
+								: "")
 					);
 				}
 			}

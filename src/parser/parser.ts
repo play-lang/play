@@ -67,7 +67,9 @@ export class Parser extends TokenParser {
 						"Include preprocessor command expected"
 					);
 					this.consume(TokenType.String, "Include filename expected");
-					this.consumeEndOfStatement("Expected end of preprocessor statement");
+					this.consumeEndOfStatement(
+						"Expected end of preprocessor statement"
+					);
 					this.eatLines();
 				}
 				// A program consists of a series of statements
@@ -167,7 +169,12 @@ export class Parser extends TokenParser {
 		// Colon has already been matched for us
 		const typeAnnotation: string[] = [];
 		if (
-			this.match(TokenType.Id, TokenType.Str, TokenType.Num, TokenType.Bool)
+			this.match(
+				TokenType.Id,
+				TokenType.Str,
+				TokenType.Num,
+				TokenType.Bool
+			)
 		) {
 			typeAnnotation.push(this.previous.lexeme);
 		} else {

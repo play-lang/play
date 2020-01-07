@@ -31,6 +31,10 @@ export class LinkedProgram {
 
 	/** Loaded program represented by the linker output */
 	public get program(): LoadedProgram {
-		return new LoadedProgram(this.constantPool, this.bytecode, this.numGlobals);
+		return new LoadedProgram(
+			this.constantPool,
+			this.bytecode,
+			this.numGlobals
+		);
 	}
 }
