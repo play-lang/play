@@ -19,8 +19,6 @@ describe("compiler/vm", () => {
 		expect(await run("return 10 > 11")).toBe(false);
 	});
 	test("should compute ternary conditional operator", async () => {
-		const dis = Play.disassemble("return true ? 2+3 : 4+5");
-		console.log(dis);
 		expect(await run("return true ? 2+3 : 4+5")).toBe(5);
 		expect(await run("return false ? 2+3 : 4+5")).toBe(9);
 		// Ensure that nested ternary operators evaluate correctly

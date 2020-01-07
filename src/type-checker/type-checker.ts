@@ -107,7 +107,7 @@ export class TypeChecker implements Visitor {
 	public badAssignment(token: TokenLike, expectedType: Type): void {
 		const pretty = expectedType.description;
 		const prefix = this.errorPrefix(token);
-		const hint = `${prefix} Invalid assignment—expected a variable reference to ${pretty}`;
+		const hint = `${prefix} Invalid assignmentï¿½expected a variable reference to ${pretty}`;
 		const error = new SemanticError(token, hint);
 		this.errors.push(error);
 	}
@@ -174,7 +174,10 @@ export class TypeChecker implements Visitor {
 		const scope = this.symbolTable.findScope(node.variableName);
 		if (!scope) {
 			this.report(
-				new SemanticError(node.token, "Variable not found in symbol table")
+				new SemanticError(
+					node.token,
+					"Variable not found in symbol table"
+				)
 			);
 			return;
 		}
@@ -204,7 +207,9 @@ export class TypeChecker implements Visitor {
 				this.report(
 					new SemanticError(
 						node.token,
-						"Variable " + node.name + " referenced before declaration"
+						"Variable " +
+							node.name +
+							" referenced before declaration"
 					)
 				);
 				return;
@@ -291,7 +296,6 @@ export class TypeChecker implements Visitor {
 		node.rhs.accept(this);
 		const lhsType = node.lhs.type(this.env);
 		const rhsType = node.rhs.type(this.env);
-		console.log(lhsType.equivalent(rhsType));
 		if (!lhsType.equivalent(rhsType)) {
 			this.mismatch(node.lhs.token, lhsType, rhsType);
 		}
