@@ -1,20 +1,20 @@
-import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
-import { FunctionInfo } from "../language/function-info";
-import { Expression, Statement } from "../language/node";
-import { infixParselets, prefixParselets } from "../language/operator-grammar";
-import { SymbolTable } from "../language/symbol-table";
-import { TokenLike } from "../language/token";
-import { TokenParser } from "../language/token-parser";
-import { TokenType } from "../language/token-type";
-import { Environment } from "../language/types/environment";
-import { Lexer } from "../lexer/lexer";
-import { BlockStatementNode } from "./nodes/block-statement-node";
-import { ExpressionStatementNode } from "./nodes/expression-statement-node";
-import { FunctionDeclarationNode } from "./nodes/function-declaration-node";
-import { ProgramNode } from "./nodes/program-node";
-import { ReturnStatementNode } from "./nodes/return-statement-node";
-import { VariableDeclarationNode } from "./nodes/variable-declaration-node";
-import { InfixParselet } from "./parselet";
+import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
+import { FunctionInfo } from "src/language/function-info";
+import { Expression, Statement } from "src/language/node";
+import { infixParselets, prefixParselets } from "src/language/operator-grammar";
+import { SymbolTable } from "src/language/symbol-table";
+import { TokenLike } from "src/language/token";
+import { TokenParser } from "src/language/token-parser";
+import { TokenType } from "src/language/token-type";
+import { Environment } from "src/language/types/environment";
+import { Lexer } from "src/lexer/lexer";
+import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
+import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
+import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
+import { ProgramNode } from "src/parser/nodes/program-node";
+import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
+import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
+import { InfixParselet } from "src/parser/parselet";
 
 export class Parser extends TokenParser {
 	/** Global scope symbol table */

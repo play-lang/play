@@ -1,6 +1,6 @@
-import { describeErrorToken } from "../common/format-messages";
-import { SourceFile } from "./source-file";
-import { TokenType } from "./token-type";
+import { describeErrorToken } from "src/common/format-messages";
+import { SourceFile } from "src/language/source-file";
+import { TokenType } from "src/language/token-type";
 
 export interface Position {
 	pos: number;

@@ -1,33 +1,33 @@
-import { Visitor } from "../language/visitor";
-import { AssignmentExpressionNode } from "../parser/nodes/assignment-expression-node";
-import { BinaryExpressionNode } from "../parser/nodes/binary-expression-node";
-import { BinaryLogicalExpressionNode } from "../parser/nodes/binary-logical-expression-node";
-import { BlockStatementNode } from "../parser/nodes/block-statement-node";
-import { ExpressionStatementNode } from "../parser/nodes/expression-statement-node";
-import { FunctionDeclarationNode } from "../parser/nodes/function-declaration-node";
-import { InvocationExpressionNode } from "../parser/nodes/invocation-expression-node";
-import { PostfixExpressionNode } from "../parser/nodes/postfix-expression-node";
-import { PrefixExpressionNode } from "../parser/nodes/prefix-expression-node";
-import { PrimitiveExpressionNode } from "../parser/nodes/primitive-expression-node";
-import { ProgramNode } from "../parser/nodes/program-node";
-import { ReturnStatementNode } from "../parser/nodes/return-statement-node";
-import { TernaryConditionalNode } from "../parser/nodes/ternary-conditional-node";
-import { VariableDeclarationNode } from "../parser/nodes/variable-declaration-node";
+import { Visitor } from "src/language/visitor";
+import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression-node";
+import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
+import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
+import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
+import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
+import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
+import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
+import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
+import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
+import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
+import { ProgramNode } from "src/parser/nodes/program-node";
+import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
+import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
+import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
 
-import { AbstractSyntaxTree } from "../language/abstract-syntax-tree";
-import { FunctionInfo } from "../language/function-info";
-import { SemanticError } from "../language/semantic-error";
-import { SymbolTable } from "../language/symbol-table";
-import { TokenLike } from "../language/token";
-import { TokenType } from "../language/token-type";
-import { Environment } from "../language/types/environment";
+import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
+import { FunctionInfo } from "src/language/function-info";
+import { SemanticError } from "src/language/semantic-error";
+import { SymbolTable } from "src/language/symbol-table";
+import { TokenLike } from "src/language/token";
+import { TokenType } from "src/language/token-type";
+import { Environment } from "src/language/types/environment";
 import {
 	constructFunctionType,
 	Num,
 	Type,
-} from "../language/types/type-system";
-import { IdExpressionNode } from "../parser/nodes/id-expression-node";
-import { TypeCheckError } from "./type-check-error";
+} from "src/language/types/type-system";
+import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
+import { TypeCheckError } from "src/type-checker/type-check-error";
 
 export class TypeChecker implements Visitor {
 	/** Current type checking environment */

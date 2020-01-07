@@ -1,16 +1,16 @@
-import { AvlTree } from "../common/avl-tree";
-import { prepareHint } from "../common/format-messages";
+import { AvlTree } from "src/common/avl-tree";
+import { prepareHint } from "src/common/format-messages";
 import {
 	isDigit,
 	isValidIdChar,
 	isValidIdStart,
 	isWhitespace,
-} from "../language/character-mappings";
-import { lexerTrie } from "../language/lexer-trie";
-import { SourceFile } from "../language/source-file";
-import { stringEscapes } from "../language/string-escapes";
-import { ErrorToken, Position, Token, TokenLike } from "../language/token";
-import { idTokenTypes, TokenType } from "../language/token-type";
+} from "src/language/character-mappings";
+import { lexerTrie } from "src/language/lexer-trie";
+import { SourceFile } from "src/language/source-file";
+import { stringEscapes } from "src/language/string-escapes";
+import { ErrorToken, Position, Token, TokenLike } from "src/language/token";
+import { idTokenTypes, TokenType } from "src/language/token-type";
 
 export class Lexer {
 	/**

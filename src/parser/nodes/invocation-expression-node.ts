@@ -1,9 +1,9 @@
-import { Expression } from "../../language/node";
-import { TokenLike } from "../../language/token";
-import { Environment } from "../../language/types/environment";
-import { ProductType } from "../../language/types/type-system";
-import { Visitor } from "../../language/visitor";
-import { IdExpressionNode } from "./id-expression-node";
+import { Expression } from "src/language/node";
+import { TokenLike } from "src/language/token";
+import { Environment } from "src/language/types/environment";
+import { ProductType } from "src/language/types/type-system";
+import { Visitor } from "src/language/visitor";
+import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
 
 export class InvocationExpressionNode extends Expression {
 	/** Name of the function to call */

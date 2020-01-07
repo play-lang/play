@@ -1,17 +1,17 @@
-import { Expression } from "../language/node";
-import { Precedence } from "../language/precedence";
-import { TokenLike } from "../language/token";
-import { TokenType } from "../language/token-type";
-import { AssignmentExpressionNode } from "./nodes/assignment-expression-node";
-import { BinaryExpressionNode } from "./nodes/binary-expression-node";
-import { BinaryLogicalExpressionNode } from "./nodes/binary-logical-expression-node";
-import { IdExpressionNode } from "./nodes/id-expression-node";
-import { InvocationExpressionNode } from "./nodes/invocation-expression-node";
-import { PostfixExpressionNode } from "./nodes/postfix-expression-node";
-import { PrefixExpressionNode } from "./nodes/prefix-expression-node";
-import { PrimitiveExpressionNode } from "./nodes/primitive-expression-node";
-import { TernaryConditionalNode } from "./nodes/ternary-conditional-node";
-import { Parser } from "./parser";
+import { Expression } from "src/language/node";
+import { Precedence } from "src/language/precedence";
+import { TokenLike } from "src/language/token";
+import { TokenType } from "src/language/token-type";
+import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression-node";
+import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
+import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
+import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
+import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
+import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
+import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
+import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
+import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
+import { Parser } from "src/parser/parser";
 
 export interface PrefixParselet {
 	parse(parser: Parser, token: TokenLike): Expression;

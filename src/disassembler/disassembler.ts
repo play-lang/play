@@ -1,7 +1,7 @@
-import { LoadedProgram } from "../language/loaded-program";
-import { OpCode } from "../language/op-code";
-import { RuntimeType } from "../vm/runtime-type";
-import { RuntimeValue } from "../vm/runtime-value";
+import { LoadedProgram } from "src/language/loaded-program";
+import { OpCode } from "src/language/op-code";
+import { RuntimeType } from "src/vm/runtime-type";
+import { RuntimeValue } from "src/vm/runtime-value";
 
 export class Disassembler {
 	/** Formatted version of the instruction pointer */

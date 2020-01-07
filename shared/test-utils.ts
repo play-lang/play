@@ -42,7 +42,7 @@ export async function run(code: string): Promise<any> {
 			if (path === "test.play") {
 				return code;
 			}
-			return await fileProvider(path);
+			return fileProvider(path);
 		}
 	);
 	const finalCode = await pp.preprocess();
@@ -74,7 +74,11 @@ export async function disassembleFile(path: string): Promise<string> {
 
 export async function preprocessFile(path: string): Promise<string> {
 	const fileProvider = createFileProvider();
-	const pp = new Preprocessor(path, async (path: string) => path, fileProvider);
+	const pp = new Preprocessor(
+		path,
+		async (path: string) => path,
+		fileProvider
+	);
 	const finalCode = await pp.preprocess();
 	return finalCode;
 }
@@ -138,7 +142,7 @@ export function createFakeFileProvider(
 export function createFileProvider(): (path: string) => Promise<string> {
 	return async (p: string): Promise<string> => {
 		const filePath = path.join("test-code", p);
-		return await readFile(filePath);
+		return readFile(filePath);
 	};
 }
 

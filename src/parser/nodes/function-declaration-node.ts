@@ -1,10 +1,10 @@
-import { FunctionInfo } from "../../language/function-info";
-import { Statement } from "../../language/node";
-import { TokenLike } from "../../language/token";
-import { Environment } from "../../language/types/environment";
-import { constructFunctionType, Type } from "../../language/types/type-system";
-import { Visitor } from "../../language/visitor";
-import { BlockStatementNode } from "./block-statement-node";
+import { FunctionInfo } from "src/language/function-info";
+import { Statement } from "src/language/node";
+import { TokenLike } from "src/language/token";
+import { Environment } from "src/language/types/environment";
+import { constructFunctionType, Type } from "src/language/types/type-system";
+import { Visitor } from "src/language/visitor";
+import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
 
 export class FunctionDeclarationNode extends Statement {
 	constructor(

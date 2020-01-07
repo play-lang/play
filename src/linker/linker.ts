@@ -1,5 +1,5 @@
-import { CompiledProgram } from "../compiler/compiled-program";
-import { LinkedProgram } from "./linked-program";
+import { CompiledProgram } from "src/compiler/compiled-program";
+import { LinkedProgram } from "src/linker/linked-program";
 
 // Multiple compiled "contexts" (one per function) need to be "linked"
 // together into one context and jumps spanning between contexts

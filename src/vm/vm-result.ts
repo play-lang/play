@@ -1,5 +1,5 @@
-import { RuntimeValue } from "./runtime-value";
-import { VMStatus } from "./vm-status";
+import { RuntimeValue } from "src/vm/runtime-value";
+import { VMStatus } from "src/vm/vm-status";
 
 export class VMResult {
 	constructor(

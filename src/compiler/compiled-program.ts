@@ -1,6 +1,6 @@
-import { BytecodeAddressResolver } from "../assembler/bytecode-address-resolver";
-import { Context } from "../language/context";
-import { RuntimeValue } from "../vm/runtime-value";
+import { BytecodeAddressResolver } from "src/assembler/bytecode-address-resolver";
+import { Context } from "src/language/context";
+import { RuntimeValue } from "src/vm/runtime-value";
 
 export class CompiledProgram {
 	constructor(

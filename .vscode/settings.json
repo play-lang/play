@@ -17,6 +17,7 @@
         "LESSTHAN",
         "LESSTHANEQUAL",
         "Nystrom",
+        "Parselets",
         "Ranta",
         "Ravi",
         "SETGLOBAL",
@@ -25,6 +26,7 @@
         "Ullman",
         "bytecode",
         "josephessin",
+        "parselet",
         "performant",
         "quotemark",
         "subtrees"

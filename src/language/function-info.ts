@@ -1,4 +1,4 @@
-import { Type } from "./types/type-system";
+import { Type } from "src/language/types/type-system";
 
 /**
  * Holds information about a parsed function

@@ -1,4 +1,4 @@
-import { Context } from "../language/context";
+import { Context } from "src/language/context";
 
 /**
  * Represents a bytecode address inside a context

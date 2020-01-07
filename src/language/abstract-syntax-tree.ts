@@ -1,5 +1,5 @@
-import { ProgramNode } from "../parser/nodes/program-node";
-import { Environment } from "./types/environment";
+import { Environment } from "src/language/types/environment";
+import { ProgramNode } from "src/parser/nodes/program-node";
 
 /**
  * Represents an abstract syntax tree and related information

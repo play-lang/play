@@ -1,7 +1,7 @@
-import { Type, Void } from "../language/types/type-system";
-import { TokenLike } from "./token";
-import { Environment } from "./types/environment";
-import { Visitor } from "./visitor";
+import { TokenLike } from "src/language/token";
+import { Environment } from "src/language/types/environment";
+import { Type, Void } from "src/language/types/type-system";
+import { Visitor } from "src/language/visitor";
 
 export abstract class Node {
 	/** Type of the syntax tree node */

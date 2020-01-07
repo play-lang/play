@@ -1,5 +1,5 @@
-import { TokenLike } from "./token";
-import { Type } from "./types/type-system";
+import { TokenLike } from "src/language/token";
+import { Type } from "src/language/types/type-system";
 
 /** Represents an entry in a symbol table */
 export interface IdentifierSymbol {
