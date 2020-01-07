@@ -68,7 +68,10 @@ export const infixParselets: Map<TokenType, InfixParselet> = new Map<
 		TokenType.EqualEqual,
 		new BinaryOperatorParselet(Precedence.Equality, false),
 	],
-	[TokenType.BangEqual, new BinaryOperatorParselet(Precedence.Equality, false)],
+	[
+		TokenType.BangEqual,
+		new BinaryOperatorParselet(Precedence.Equality, false),
+	],
 	// Relational operators
 	[
 		TokenType.LessThan,

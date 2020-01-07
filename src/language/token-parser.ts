@@ -75,7 +75,10 @@ export class TokenParser {
 			if (this.check(TokenType.Line)) {
 				this.skip();
 			} else {
-				this.error(this.peek, "Expected end of line after line continuation");
+				this.error(
+					this.peek,
+					"Expected end of line after line continuation"
+				);
 			}
 		}
 		return this.previous;

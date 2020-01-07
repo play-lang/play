@@ -79,7 +79,7 @@ export class Preprocessor {
 		// Do the pre-processing
 		this.contents = "";
 		this.fileSet.clear();
-		return await this._preprocess(this.startingFilename);
+		return this._preprocess(this.startingFilename);
 	}
 
 	/**
@@ -116,7 +116,10 @@ export class Preprocessor {
 			);
 			const filename = filenameToken.lexeme;
 			if (!filename) {
-				throw parser.error(filenameToken, "Must provide a valid filename");
+				throw parser.error(
+					filenameToken,
+					"Must provide a valid filename"
+				);
 			}
 			parser.consumeEndOfStatement();
 			// Recursively include files
@@ -136,6 +139,6 @@ export class Preprocessor {
 	}
 
 	private async getFileContents(filename: string): Promise<string> {
-		return await this.fileProvider(filename);
+		return this.fileProvider(filename);
 	}
 }
