@@ -183,17 +183,20 @@ export class Disassembler {
 				case OpCode.JumpFalsePop:
 				case OpCode.JumpTruePop: {
 					const offset = bytecode[p++];
-					const destIp = p - startOffset + offset;
-					if (context && context.labels.has(destIp)) {
+					const labelIp = p - startOffset + offset;
+					const absoluteIndex = startOffset + labelIp;
+					if (context && context.labels.has(labelIp)) {
 						out += this.jump(
 							op,
 							ip,
 							offset,
-							destIp,
-							context.labels.get(destIp)!
+							absoluteIndex,
+							context.labels.get(labelIp)!
 						);
 					} else {
-						throw new Error("Can't find label for index " + destIp);
+						throw new Error(
+							"Can't find label for index " + absoluteIndex
+						);
 					}
 					break;
 				}
