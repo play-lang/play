@@ -58,6 +58,13 @@ This is typically how changes get made to Play.
 
 Once your changes and tests are working the way you like, submit a pull request. Please be as thorough as you can when writing tests.
 
+*Note*: If you want to collect coverage or run a single test (but not debug it), you can run one of the following commands:
+
+```sh
+npm run test -- partial-test-name
+npm run coverage -- partial-test-name
+```
+
 ### Coding Style
 
 Play code is designed to be as easy to read as possible and uses as much academic terminology in the code as possible when implementing programming language features/algorithms to make the barrier-to-entry as low as possible.
