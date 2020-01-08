@@ -81,7 +81,9 @@ export class Disassembler {
 		// Display the context's label
 		out +=
 			this.label(context.labelId) +
-			`: ; (CONTEXT) ${context.numLocals} LOCAL \n`;
+			`: ; CONTEXT ${context.name}, ${context.numLocals} ` +
+			(context.numLocals === 1 ? "LOCAL" : "LOCALS") +
+			"\n";
 		out += this.disassembleBytecode(
 			bytecode,
 			context.bytecode.length,
@@ -210,8 +212,19 @@ export class Disassembler {
 					const addr = bytecode[p++];
 					const destContext = contextTree.get(addr) || undefined;
 					if (destContext) {
-						out += this.load(op, ip, destContext.labelId);
+						// The linker has been run, as seen by the existence of entries
+						// in the context tree which is populated from the context map
+						// that the linker produces
+						out += this.load(
+							op,
+							ip,
+							addr,
+							destContext.labelId,
+							destContext.name
+						);
 					} else {
+						// Linker hasn't run, look up the context name in the context labels
+						// that will be given to the linker
 						if (contextLabels.has(context)) {
 							const contextRefs = contextLabels.get(context)!;
 							if (contextRefs.has(relIp)) {
@@ -219,6 +232,7 @@ export class Disassembler {
 								out += this.loadWithNoInfo(
 									op,
 									ip,
+									addr,
 									destContextName
 								);
 								break;
@@ -256,7 +270,13 @@ export class Disassembler {
 	 */
 	private instrParam(op: OpCode, ip: number, param: number): string {
 		return (
-			"\t" + this.format(ip) + "\t" + this.op(op) + "\t" + param + "\n"
+			"\t" +
+			this.format(ip) +
+			"\t" +
+			this.op(op) +
+			"\t" +
+			this.format(param) +
+			"\n"
 		);
 	}
 
@@ -282,38 +302,24 @@ export class Disassembler {
 			this.format(offset) +
 			"\t(INSTR " +
 			this.format(destIp) +
-			")\t" +
+			")\t(" +
 			this.label(labelId) +
-			"\n"
+			")\n"
 		);
 	}
 	/**
 	 * Outputs a function load instruction
 	 * @param op The instruction to output
 	 * @param ip The bytecode instruction index
+	 * @param addr The address of the context to load
 	 * @param labelId The destination label of the jump
-	 */
-	private load(op: OpCode, ip: number, destContextLabelId: number): string {
-		return (
-			"\t" +
-			this.format(ip) +
-			"\t" +
-			this.op(op) +
-			"\t" +
-			this.label(destContextLabelId) +
-			" ; (CONTEXT)" +
-			"\n"
-		);
-	}
-	/**
-	 * Outputs a function load instruction with no jump information
-	 * @param op The instruction to output
-	 * @param ip The bytecode instruction index
 	 * @param contextName Name of the context to load the address of
 	 */
-	private loadWithNoInfo(
+	private load(
 		op: OpCode,
 		ip: number,
+		addr: number,
+		destContextLabelId: number,
 		contextName: string
 	): string {
 		return (
@@ -321,9 +327,38 @@ export class Disassembler {
 			this.format(ip) +
 			"\t" +
 			this.op(op) +
-			"\t[CONTEXT " +
+			"\t" +
+			this.format(addr) +
+			"\t(" +
+			this.label(destContextLabelId) +
+			")\t; (CONTEXT " +
 			contextName +
-			"]\n"
+			")\n"
+		);
+	}
+	/**
+	 * Outputs a function load instruction with no jump information
+	 * @param op The instruction to output
+	 * @param ip The bytecode instruction index
+	 * @param addr The address of the context to load
+	 * @param contextName Name of the context to load the address of
+	 */
+	private loadWithNoInfo(
+		op: OpCode,
+		ip: number,
+		addr: number,
+		contextName: string
+	): string {
+		return (
+			"\t" +
+			this.format(ip) +
+			"\t" +
+			this.op(op) +
+			"\t" +
+			this.format(addr) +
+			"\t(CONTEXT " +
+			contextName +
+			")\n"
 		);
 	}
 
@@ -346,10 +381,10 @@ export class Disassembler {
 			"\t" +
 			this.op(op) +
 			"\t" +
-			index +
-			"\t[VALUE " +
+			this.format(index) +
+			"\t(VALUE " +
 			constantPool[index].value +
-			"]\n"
+			")\n"
 		);
 	}
 
@@ -358,7 +393,7 @@ export class Disassembler {
 	 * @param num The number to format
 	 */
 	private format(num: number): string {
-		return String(num).padStart(4, "0");
+		return (num < 0 ? "-" : " ") + String(Math.abs(num)).padStart(4, "0");
 	}
 
 	/**
