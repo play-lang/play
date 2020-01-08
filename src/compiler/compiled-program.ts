@@ -1,5 +1,5 @@
-import { BytecodeAddressResolver } from "src/assembler/bytecode-address-resolver";
 import { Context } from "src/language/context";
+import { ContextLabels } from "src/language/context-labels";
 import { ObjectCode } from "src/language/object-code";
 import { RuntimeValue } from "src/vm/runtime-value";
 
@@ -12,6 +12,6 @@ export class CompiledProgram implements ObjectCode {
 		/** Number of globals to clean up when program is finished */
 		public readonly numGlobals: number,
 		/** Jump patcher containing registered jump destinations */
-		public readonly addressResolver: BytecodeAddressResolver
+		public readonly contextLabels: ContextLabels
 	) {}
 }

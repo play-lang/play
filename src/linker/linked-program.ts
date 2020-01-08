@@ -1,5 +1,5 @@
-import { BytecodeAddressResolver } from "src/assembler/bytecode-address-resolver";
 import { Context } from "src/language/context";
+import { ContextLabels } from "src/language/context-labels";
 import { LoadedProgram } from "src/language/loaded-program";
 import { ObjectCode } from "src/language/object-code";
 import { RuntimeValue } from "src/vm/runtime-value";
@@ -27,7 +27,7 @@ export class LinkedProgram implements ObjectCode {
 		 */
 		public readonly contextMap: Map<string, number>,
 		/** Jump patcher containing registered jump destinations */
-		public readonly addressResolver: BytecodeAddressResolver
+		public readonly contextLabels: ContextLabels
 	) {}
 
 	/** Loaded program represented by the linker output */
