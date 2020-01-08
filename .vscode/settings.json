@@ -3,6 +3,7 @@
         "editor.wordWrap": "bounded",
         "editor.rulers": [100],
         "editor.wordWrapColumn": 100,
+        "editor.formatOnSave": true
     },
     "cSpell.words": [
         "API's",
