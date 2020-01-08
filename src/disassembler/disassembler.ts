@@ -79,11 +79,12 @@ export class Disassembler {
 		// Output string:
 		let out: string = "";
 		// Display the context's label
+		out += `; Context ${context.name}\n`;
 		out +=
-			this.label(context.labelId) +
-			`: ; CONTEXT ${context.name}, ${context.numLocals} ` +
-			(context.numLocals === 1 ? "LOCAL" : "LOCALS") +
+			`; ${context.numLocals} ` +
+			(context.numLocals === 1 ? "local" : "locals") +
 			"\n";
+		out += this.label(context.labelId) + ":\n";
 		out += this.disassembleBytecode(
 			bytecode,
 			context.bytecode.length,
@@ -300,11 +301,12 @@ export class Disassembler {
 			this.op(op) +
 			"\t" +
 			this.format(offset) +
-			"\t(INSTR " +
-			this.format(destIp) +
-			")\t(" +
+			"\t; " +
 			this.label(labelId) +
-			")\n"
+			" (instr " +
+			this.format(destIp) +
+			") " +
+			"\n"
 		);
 	}
 	/**
@@ -329,11 +331,11 @@ export class Disassembler {
 			this.op(op) +
 			"\t" +
 			this.format(addr) +
-			"\t(" +
+			"\t; " +
 			this.label(destContextLabelId) +
-			")\t; (CONTEXT " +
+			" context " +
 			contextName +
-			")\n"
+			"\n"
 		);
 	}
 	/**
@@ -355,10 +357,10 @@ export class Disassembler {
 			"\t" +
 			this.op(op) +
 			"\t" +
-			this.format(addr) +
-			"\t(CONTEXT " +
+			addr +
+			"\t; context " +
 			contextName +
-			")\n"
+			"\n"
 		);
 	}
 
@@ -382,9 +384,9 @@ export class Disassembler {
 			this.op(op) +
 			"\t" +
 			this.format(index) +
-			"\t(VALUE " +
+			"\t; value " +
 			constantPool[index].value +
-			")\n"
+			"\n"
 		);
 	}
 
@@ -393,7 +395,7 @@ export class Disassembler {
 	 * @param num The number to format
 	 */
 	private format(num: number): string {
-		return (num < 0 ? "-" : " ") + String(Math.abs(num)).padStart(4, "0");
+		return String(Math.abs(num)).padStart(4, "0");
 	}
 
 	/**
@@ -401,12 +403,14 @@ export class Disassembler {
 	 * @param op Operation code to format
 	 */
 	private op(op: OpCode): string {
-		return String(OpCode[op].toUpperCase()).padStart(20, " ");
+		return String(OpCode[op].toLowerCase()).padStart(20, " ");
 	}
 
 	/** Describe a runtime value */
 	private value(value: RuntimeValue): string {
-		return RuntimeType[value.type] + "\t" + value.value + "\n";
+		return (
+			RuntimeType[value.type].toLowerCase() + "\t" + value.value + "\n"
+		);
 	}
 
 	/**
@@ -414,6 +418,6 @@ export class Disassembler {
 	 * @param labelId The label id
 	 */
 	private label(labelId: number): string {
-		return "LABEL_" + this.format(labelId) + "";
+		return "label_" + this.format(labelId) + "";
 	}
 }
