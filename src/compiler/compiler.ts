@@ -262,7 +262,7 @@ export class Compiler implements Visitor {
 		const index = this.constant(new RuntimeValue(type, value));
 		// Have the machine push the value of the data at the specified data index
 		// to the top of the stack when this instruction is encountered
-		this.emit(OpCode.Constant, index);
+		this.emit(OpCode.Const, index);
 	}
 	// Compile a binary operator expression
 	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
@@ -290,23 +290,23 @@ export class Compiler implements Visitor {
 				break;
 			// Binary relational operators
 			case TokenType.LessThan:
-				this.emit(OpCode.LessThan);
+				this.emit(OpCode.Less);
 				break;
 			case TokenType.LessThanEqual:
-				this.emit(OpCode.LessThanEqual);
+				this.emit(OpCode.LessEqual);
 				break;
 			case TokenType.GreaterThan:
-				this.emit(OpCode.GreaterThan);
+				this.emit(OpCode.Greater);
 				break;
 			case TokenType.GreaterThanEqual:
-				this.emit(OpCode.GreaterThanEqual);
+				this.emit(OpCode.GreaterEqual);
 				break;
 			// Binary comparison operators
 			case TokenType.EqualEqual:
-				this.emit(OpCode.Equality);
+				this.emit(OpCode.Equal);
 				break;
 			case TokenType.BangEqual:
-				this.emit(OpCode.Inequality);
+				this.emit(OpCode.Unequal);
 				break;
 		}
 	}
@@ -439,23 +439,23 @@ export class Compiler implements Visitor {
 	}
 
 	public jump(): number {
-		return this.emit(OpCode.Jump, 0);
+		return this.emit(OpCode.Jmp, 0);
 	}
 
 	public jumpIfFalse(): number {
-		return this.emit(OpCode.JumpFalse, 0);
+		return this.emit(OpCode.JmpFalse, 0);
 	}
 
 	public jumpIfTrue(): number {
-		return this.emit(OpCode.JumpTrue, 0);
+		return this.emit(OpCode.JmpTrue, 0);
 	}
 
 	public jumpIfFalseAndPop(): number {
-		return this.emit(OpCode.JumpFalsePop, 0);
+		return this.emit(OpCode.JmpFalsePop, 0);
 	}
 
 	public jumpIfTrueAndPop(): number {
-		return this.emit(OpCode.JumpTruePop, 0);
+		return this.emit(OpCode.JmpTruePop, 0);
 	}
 
 	/**
