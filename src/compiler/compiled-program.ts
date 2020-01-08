@@ -11,7 +11,7 @@ export class CompiledProgram implements ObjectCode {
 		public readonly constantPool: RuntimeValue[],
 		/** Number of globals to clean up when program is finished */
 		public readonly numGlobals: number,
-		/** Jump patcher containing registered jump destinations */
+		/** Mappings of context references inside the code */
 		public readonly contextLabels: ContextLabels
 	) {}
 }

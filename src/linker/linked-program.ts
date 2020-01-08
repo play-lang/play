@@ -26,7 +26,7 @@ export class LinkedProgram implements ObjectCode {
 		 * linked bytecode
 		 */
 		public readonly contextMap: Map<string, number>,
-		/** Jump patcher containing registered jump destinations */
+		/** Mappings of context references inside the code */
 		public readonly contextLabels: ContextLabels
 	) {}
 
