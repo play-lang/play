@@ -28,6 +28,8 @@ Code can be automatically formatted if you have the [TSLint extension](https://m
 
 [Code Spell Checker](https://marketplace.visualstudio.com/items?itemName=streetsidesoftware.code-spell-checker) is used to prevent misspellings in the codebase. The default keybinding to fix misspellings when the cursor is on a misspelled word is `Cmd + Period`. A number of additional dictionary words have been added to the vscode settings in the `.vscode/settings.json` file.
 
+[Markdown Table Formatter](https://marketplace.visualstudio.com/items?itemName=fcrespo82.markdown-table-formatter) is used to format tables inside markdown files automatically upon save. The `.vscode/settings.json` file enables this for markdown files.
+
 Run the tests:
 
 ```sh
