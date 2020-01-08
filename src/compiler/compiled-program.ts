@@ -1,8 +1,9 @@
 import { BytecodeAddressResolver } from "src/assembler/bytecode-address-resolver";
 import { Context } from "src/language/context";
+import { ObjectCode } from "src/language/object-code";
 import { RuntimeValue } from "src/vm/runtime-value";
 
-export class CompiledProgram {
+export class CompiledProgram implements ObjectCode {
 	constructor(
 		/** List of contexts used in the program */
 		public readonly contexts: Context[],

@@ -104,6 +104,19 @@ export class Play {
 	}
 
 	/**
+	 * Disassembles the specified code by describing the compiled, linked
+	 * instructions and constant pool in a more human-friendly string
+	 * representation
+	 * @param code The code to disassemble
+	 * @returns The string describing the compiled instructions and constant pool
+	 */
+	public static disassembleFinal(code: string): string {
+		const program = this.link(code);
+		const disassembler = new Disassembler();
+		return disassembler.disassemble(program);
+	}
+
+	/**
 	 * Describes the abstract syntax tree for the specified code as
 	 * a human-friendly tree representation string for convenient
 	 * console output

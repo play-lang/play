@@ -1,13 +1,14 @@
 import { BytecodeAddressResolver } from "src/assembler/bytecode-address-resolver";
 import { Context } from "src/language/context";
 import { LoadedProgram } from "src/language/loaded-program";
+import { ObjectCode } from "src/language/object-code";
 import { RuntimeValue } from "src/vm/runtime-value";
 
 /**
  * Linker output creates a LinkedProgram, which is given to the Patcher
  * to back-patch jumps between contexts
  */
-export class LinkedProgram {
+export class LinkedProgram implements ObjectCode {
 	constructor(
 		/** Constant pool preceding the code */
 		public readonly constantPool: RuntimeValue[],

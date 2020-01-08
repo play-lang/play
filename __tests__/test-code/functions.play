@@ -1,0 +1,7 @@
+function a(a: num): num {
+	return a
+}
+
+function b(b: num): num {
+	return b
+}

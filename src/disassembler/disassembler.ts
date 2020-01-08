@@ -1,5 +1,6 @@
-import { CompiledProgram } from "src/compiler/compiled-program";
+import { AvlTree } from "src/common/avl-tree";
 import { Context } from "src/language/context";
+import { ObjectCode } from "src/language/object-code";
 import { OpCode } from "src/language/op-code";
 import { RuntimeError } from "src/vm/runtime-error";
 import { RuntimeType } from "src/vm/runtime-type";
@@ -11,13 +12,35 @@ export class Disassembler {
 	 * Disassembles the specified program and returns it as formatted mnemonics
 	 * @param program The program to disassemble
 	 */
-	public disassemble(program: CompiledProgram): string {
+	public disassemble(program: ObjectCode): string {
 		let out: string = "";
 		out += ".CONSTANTS\n";
 		out += this.disassembleConstantPool(program.constantPool) + "\n";
 		out += ".CODE\n";
+
+		let contextTree: AvlTree<number, Context> = new AvlTree();
+		if (program.contextMap) {
+			program.contexts.forEach(context =>
+				contextTree.insert(
+					program.contextMap!.get(context.name)!,
+					context
+				)
+			);
+		}
 		for (const context of program.contexts) {
-			out += this.disassembleContext(context, program.constantPool);
+			// Create AVL tree that maps the start index of each context to the context
+			if (!program.contextMap) {
+				contextTree = new AvlTree();
+				contextTree.insert(0, context);
+			}
+
+			out += this.disassembleContext(
+				context,
+				program.bytecode || context.bytecode,
+				program.constantPool,
+				contextTree,
+				program.contextMap ? program.contextMap.get(context.name)! : 0
+			);
 		}
 		return out;
 	}
@@ -44,24 +67,54 @@ export class Disassembler {
 	 */
 	public disassembleContext(
 		context: Context,
-		constantPool: RuntimeValue[]
+		bytecode: number[],
+		constantPool: RuntimeValue[],
+		contextTree: AvlTree<number, Context>,
+		startOffset: number
+	): string {
+		// Output string:
+		let out: string = "";
+		// Display the context's label
+		out +=
+			this.label(context.labelId) +
+			`: ; (CONTEXT) ${context.numLocals} LOCAL \n`;
+		out += this.disassembleBytecode(
+			bytecode,
+			context.bytecode.length,
+			constantPool,
+			contextTree,
+			startOffset
+		);
+		return out;
+	}
+
+	public disassembleBytecode(
+		bytecode: number[],
+		length: number,
+		constantPool: RuntimeValue[],
+		contextTree: AvlTree<number, Context>,
+		startOffset: number // bytecode start offset, if any
 	): string {
 		// Output string:
 		let out: string = "";
 		// Current index into the bytecode:
-		let p: number = 0;
+		let p: number = startOffset;
 		// Index of last instruction seen:
-		let ip: number = 0;
-		const bytecode = context.bytecode;
-		// Display the context's label
-		out += this.label(context.labelId) + ": ; (CONTEXT)\n";
-		while (ip < bytecode.length) {
+		let ip: number = startOffset;
+		let context: Context = contextTree.get(
+			contextTree.findLowerBound(startOffset)!
+		)!;
+		while (ip < startOffset + length) {
 			ip = p;
 			const op = bytecode[p++];
-			// See if the current line is a label
+			// Use the AVL tree for speedily checking which context to use for labels
+			const contextStartIndex = contextTree.findLowerBound(ip)!;
+			context = contextTree.get(contextStartIndex)!;
+			// While we're at it, see if the current line is a label
 			if (context.labels.has(ip)) {
 				out += this.label(context.labels.get(ip)!) + ":\n";
 			}
+
 			// Disassemble the instruction
 			switch (op) {
 				// Handle invalid instructions
@@ -129,24 +182,28 @@ export class Disassembler {
 				case OpCode.JumpFalsePop:
 				case OpCode.JumpTruePop: {
 					const offset = bytecode[p++];
-					const destIp = p + offset;
-					if (context.labels.has(destIp)) {
+					// const destIp = p + offset;
+					const destIp = p - startOffset + offset;
+					if (context && context.labels.has(destIp)) {
 						out += this.jump(op, ip, context.labels.get(destIp)!);
 					} else {
-						throw new Error(
-							"Cannot find label for index " + destIp
-						);
+						throw new Error("Can't find label for index " + destIp);
 					}
 					break;
 				}
 				case OpCode.Load: {
 					const addr = bytecode[p++];
-					this.instrParam(op, ip, addr);
+					const destContext = contextTree.get(addr) || undefined;
+					if (destContext) {
+						out += this.load(op, ip, destContext.labelId);
+					} else {
+						out += this.instrParam(op, ip, addr);
+					}
 					break;
 				}
 				case OpCode.Call: {
 					const numLocals = bytecode[p++];
-					this.instrParam(op, ip, numLocals);
+					out += this.instrParam(op, ip, numLocals);
 					break;
 				}
 			}
@@ -190,6 +247,24 @@ export class Disassembler {
 			this.op(op) +
 			"\t" +
 			this.label(labelId) +
+			"\n"
+		);
+	}
+	/**
+	 * Outputs a function load instruction
+	 * @param op The instruction to output
+	 * @param ip The bytecode instruction index
+	 * @param labelId The destination label of the jump
+	 */
+	private load(op: OpCode, ip: number, destContextLabelId: number): string {
+		return (
+			"\t" +
+			this.format(ip) +
+			"\t" +
+			this.op(op) +
+			"\t" +
+			this.label(destContextLabelId) +
+			" ; (CONTEXT)" +
 			"\n"
 		);
 	}
