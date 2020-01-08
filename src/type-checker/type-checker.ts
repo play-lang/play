@@ -23,6 +23,7 @@ import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
 import {
 	constructFunctionType,
+	ErrorType,
 	Num,
 	Type,
 } from "src/language/types/type-system";
@@ -109,6 +110,18 @@ export class TypeChecker implements Visitor {
 		const prefix = this.errorPrefix(token);
 		const hint = `${prefix} Invalid assignment�expected a variable reference to ${pretty}`;
 		const error = new SemanticError(token, hint);
+		this.errors.push(error);
+	}
+
+	/**
+	 * Register an error with a binary expression
+	 * @param token The binary expression token where the error occurred
+	 * @param message Description of the problem
+	 */
+	public badBinaryExp(token: TokenLike, message: string): void {
+		const prefix = this.errorPrefix(token);
+		const hint = `${prefix} ${message}`;
+		const error = new TypeCheckError(token, hint);
 		this.errors.push(error);
 	}
 
@@ -212,7 +225,6 @@ export class TypeChecker implements Visitor {
 							" referenced before declaration"
 					)
 				);
-				return;
 			}
 		}
 	}
@@ -278,7 +290,20 @@ export class TypeChecker implements Visitor {
 	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
 		node.lhs.accept(this);
 		node.rhs.accept(this);
-		// TODO: Fill this in
+		const lhsType = node.lhs.type(this.env);
+		const rhsType = node.rhs.type(this.env);
+		const exprType = node.type(this.env);
+		if (exprType instanceof ErrorType) {
+			this.badBinaryExp(
+				node.token,
+				"Cannot use " +
+					lhsType.description +
+					" to " +
+					node.action(this.env) +
+					" with " +
+					rhsType.description
+			);
+		}
 	}
 
 	public visitBinaryLogicalExpressionNode(
@@ -298,6 +323,8 @@ export class TypeChecker implements Visitor {
 		const rhsType = node.rhs.type(this.env);
 		if (!lhsType.equivalent(rhsType)) {
 			this.mismatch(node.lhs.token, lhsType, rhsType);
+		}
+		if (!lhsType.isAssignable) {
 		}
 	}
 

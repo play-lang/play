@@ -6,7 +6,7 @@ export class SemanticError extends Exception {
 		/** Token where the error occurred */
 		public readonly token: TokenLike,
 		/** Semantic error message */
-		message: string
+		public readonly message: string
 	) {
 		super(message);
 	}
