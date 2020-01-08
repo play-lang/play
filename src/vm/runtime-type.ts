@@ -3,5 +3,4 @@ export enum RuntimeType {
 	String,
 	Boolean,
 	Object,
-	Function,
 }
