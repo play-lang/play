@@ -58,7 +58,7 @@ export class Disassembler {
 			const op = bytecode[p++];
 			// See if the current line is a label
 			if (context.labels.has(ip)) {
-				out += this.label(context.labels.get(ip)!);
+				out += this.label(context.labels.get(ip)!) + ":\n";
 			}
 			// Disassemble the instruction
 			switch (op) {
@@ -178,16 +178,16 @@ export class Disassembler {
 	 * Outputs a jump instruction
 	 * @param op The instruction to output
 	 * @param ip The bytecode instruction index
-	 * @param param The destination label of the jump
+	 * @param labelId The destination label of the jump
 	 */
-	private jump(op: OpCode, ip: number, destLabel: number): string {
+	private jump(op: OpCode, ip: number, labelId: number): string {
 		return (
 			"\t" +
 			this.format(ip) +
 			"\t" +
 			this.op(op) +
-			"\tL" +
-			this.format(destLabel) +
+			"\t" +
+			this.label(labelId) +
 			"\n"
 		);
 	}
@@ -212,7 +212,7 @@ export class Disassembler {
 			this.op(op) +
 			"\t(" +
 			index +
-			")\t=" +
+			")\t= " +
 			constantPool[index].value +
 			"\n"
 		);
@@ -244,6 +244,6 @@ export class Disassembler {
 	 * @param labelId The label id
 	 */
 	private label(labelId: number): string {
-		return "L" + this.format(labelId) + ":\n";
+		return "LABEL_" + this.format(labelId) + "";
 	}
 }
