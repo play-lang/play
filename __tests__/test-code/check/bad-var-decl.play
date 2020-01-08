@@ -2,3 +2,4 @@ var x: str = 10
 var y: num = "hello, world"
 var z = 10
 z = "hello"
+return "a" + 10
