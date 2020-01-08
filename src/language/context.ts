@@ -47,6 +47,7 @@ export class Context {
 	}
 
 	public setLabel(ip: number, labelId: number): void {
+		if (this.labels.has(ip)) return;
 		this.labels.set(ip, labelId);
 	}
 }

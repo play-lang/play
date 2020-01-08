@@ -13,9 +13,9 @@ export class Disassembler {
 	 */
 	public disassemble(program: CompiledProgram): string {
 		let out: string = "";
-		out += "@CONSTANTS\n";
+		out += ".CONSTANTS\n";
 		out += this.disassembleConstantPool(program.constantPool) + "\n";
-		out += "@CODE\n";
+		out += ".CODE\n";
 		for (const context of program.contexts) {
 			out += this.disassembleContext(context, program.constantPool);
 		}
@@ -31,7 +31,7 @@ export class Disassembler {
 		let dp: number = 0;
 		while (dp < constantPool.length) {
 			const value = constantPool[dp];
-			out += this.format(dp) + "\t" + this.value(value);
+			out += "\t" + this.format(dp) + "\t" + this.value(value);
 			dp++;
 		}
 		return out;
