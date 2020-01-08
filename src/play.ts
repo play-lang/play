@@ -1,6 +1,7 @@
 import { CompiledProgram } from "src/compiler/compiled-program";
 import { Compiler } from "src/compiler/compiler";
 import { Disassembler } from "src/disassembler/disassembler";
+import { Disassembler as Disassembler2 } from "src/disassembler/disassembler2";
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
 import { SemanticError } from "src/language/semantic-error";
 import { TokenLike } from "src/language/token";
@@ -101,6 +102,18 @@ export class Play {
 		const loadedProgram = this.link(code).program;
 		const disassembler = new Disassembler(loadedProgram);
 		return disassembler.disassemble();
+	}
+
+	/**
+	 * "Disassembles" the specified code by describing the compiled instructions
+	 * and constant pool into a more friendly string representation
+	 * @param code The code to disassemble
+	 * @returns The string describing the compiled instructions and constant pool
+	 */
+	public static disassemble2(code: string): string {
+		const program = this.compile(code);
+		const disassembler = new Disassembler2();
+		return disassembler.disassemble(program);
 	}
 
 	/**

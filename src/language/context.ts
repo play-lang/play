@@ -10,6 +10,9 @@ export class Context {
 	/** Source map: maps bytecode offsets to original source code positions */
 	public readonly sourceMap: any = undefined;
 
+	/** Map of bytecode instruction indices to label id's */
+	public readonly labels: Map<number, number> = new Map();
+
 	/** Index of the last instruction emitted */
 	public lastInstr: number = -1;
 
@@ -41,5 +44,9 @@ export class Context {
 			this.lastInstr = this.bytecode.length - 1;
 		}
 		return this.bytecode.length - 1;
+	}
+
+	public setLabel(ip: number, labelId: number): void {
+		this.labels.set(ip, labelId);
 	}
 }

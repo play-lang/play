@@ -65,6 +65,8 @@ export class Compiler implements Visitor {
 	private scopeDepth: number = 0;
 	/** Registers labels and patches jumps between contexts */
 	private patcher: BytecodeAddressResolver = new BytecodeAddressResolver();
+	/** Index of the next label to be generated */
+	private labelId: number = 0;
 	/** Address of the last instruction */
 	private get lastInstr(): number {
 		return this.context.lastInstr;
@@ -320,22 +322,16 @@ export class Compiler implements Visitor {
 				const addr = this.jumpIfFalse();
 				this.emit(OpCode.Pop);
 				node.rhs.accept(this);
-				this.patch(
-					this.context,
-					addr,
-					this.context.bytecode.length - addr - 1
-				);
+				this.patch(addr, this.context.bytecode.length - addr - 1);
+				this.emitLabel();
 				break;
 			}
 			case TokenType.Or: {
 				const addr = this.jumpIfTrue();
 				this.emit(OpCode.Pop);
 				node.rhs.accept(this);
-				this.patch(
-					this.context,
-					addr,
-					this.context.bytecode.length - addr - 1
-				);
+				this.patch(addr, this.context.bytecode.length - addr - 1);
+				this.emitLabel();
 				break;
 			}
 		}
@@ -348,17 +344,16 @@ export class Compiler implements Visitor {
 		const falseAddr = this.jumpIfFalseAndPop();
 		node.consequent.accept(this);
 		const jumpAddr = this.jump();
-		this.patch(
-			this.context,
-			falseAddr,
-			this.context.bytecode.length - falseAddr - 1
-		);
+		// Calculate the jump offset required to perform a short (relative)
+		// jump and backpatch it
+		const falseOffset = this.context.bytecode.length - falseAddr - 1;
+		this.patch(falseAddr, falseOffset);
+		// Set a label for the jump's destination
+		this.emitLabel();
 		node.alternate.accept(this);
-		this.patch(
-			this.context,
-			jumpAddr,
-			this.context.bytecode.length - jumpAddr - 1
-		);
+		const jumpOffset = this.context.bytecode.length - jumpAddr - 1;
+		this.patch(jumpAddr, jumpOffset);
+		this.emitLabel();
 	}
 
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
@@ -465,13 +460,23 @@ export class Compiler implements Visitor {
 
 	/**
 	 * Patches a bytecode address reference in the specified context
-	 * @param context The context to patch the specified address in
-	 * @param addr The index of the address in the bytecode to replace
-	 * @param offset The jump's destination as an offset to the current
-	 * number
+	 * @param index The index of the bytecode parameter to replace
+	 * @param destOffset The jump's destination as an offset to the jump's ip
+	 * @param [context] The context to patch the specified address in
 	 */
-	public patch(context: Context, addr: number, offset: number): void {
-		context.bytecode[addr] = offset;
+	public patch(
+		index: number,
+		destOffset: number,
+		context: Context = this.context
+	): void {
+		context.bytecode[index] = destOffset;
+	}
+
+	/**
+	 * Output a label at the last instruction
+	 */
+	public emitLabel(): void {
+		this.context.setLabel(this.context.bytecode.length, this.labelId++);
 	}
 
 	/**
