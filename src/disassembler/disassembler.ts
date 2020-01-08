@@ -111,8 +111,9 @@ export class Disassembler {
 			const contextStartIndex = contextTree.findLowerBound(ip)!;
 			context = contextTree.get(contextStartIndex)!;
 			// While we're at it, see if the current line is a label
-			if (context.labels.has(ip)) {
-				out += this.label(context.labels.get(ip)!) + ":\n";
+			if (context.labels.has(ip - startOffset)) {
+				out +=
+					this.label(context.labels.get(ip - startOffset)!) + ":\n";
 			}
 
 			// Disassemble the instruction
@@ -182,10 +183,15 @@ export class Disassembler {
 				case OpCode.JumpFalsePop:
 				case OpCode.JumpTruePop: {
 					const offset = bytecode[p++];
-					// const destIp = p + offset;
 					const destIp = p - startOffset + offset;
 					if (context && context.labels.has(destIp)) {
-						out += this.jump(op, ip, context.labels.get(destIp)!);
+						out += this.jump(
+							op,
+							ip,
+							offset,
+							destIp,
+							context.labels.get(destIp)!
+						);
 					} else {
 						throw new Error("Can't find label for index " + destIp);
 					}
@@ -239,13 +245,23 @@ export class Disassembler {
 	 * @param ip The bytecode instruction index
 	 * @param labelId The destination label of the jump
 	 */
-	private jump(op: OpCode, ip: number, labelId: number): string {
+	private jump(
+		op: OpCode,
+		ip: number,
+		offset: number,
+		destIp: number,
+		labelId: number
+	): string {
 		return (
 			"\t" +
 			this.format(ip) +
 			"\t" +
 			this.op(op) +
 			"\t" +
+			this.format(offset) +
+			"\t(INSTR " +
+			this.format(destIp) +
+			")\t" +
 			this.label(labelId) +
 			"\n"
 		);
