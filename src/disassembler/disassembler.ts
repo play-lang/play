@@ -1,75 +1,101 @@
-import { LoadedProgram } from "src/language/loaded-program";
+import { CompiledProgram } from "src/compiler/compiled-program";
+import { Context } from "src/language/context";
 import { OpCode } from "src/language/op-code";
+import { RuntimeError } from "src/vm/runtime-error";
 import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";
+import { VMStatus } from "src/vm/vm-status";
 
 export class Disassembler {
-	/** Formatted version of the instruction pointer */
-	private get ipn(): string {
-		return this.format(this.ip);
-	}
-	/** Formatted version of the data pointer */
-	private get dpn(): string {
-		return this.format(this.dp);
-	}
-
-	/** Program to disassemble */
-	public readonly program: LoadedProgram;
-	/** Pointer to the last found instruction */
-	private ip: number = 0;
-	/** Bytecode pointer */
-	private p: number = 0;
-	/** Data pointer */
-	private dp: number = 0;
-
-	constructor(program: LoadedProgram) {
-		this.program = program;
-	}
-
-	/** Disassemble the specified program */
-	public disassemble(): string {
-		return (this.data() + this.instructions()).trim();
-	}
-
-	/** Disassemble data for the specified program */
-	public data(): string {
-		let str = "";
-		this.dp = 0;
-		while (this.dp < this.program.constantPool.length) {
-			const value = this.program.constantPool[this.dp];
-			str += this.dpn + "\t" + this.describe(value);
-			this.dp++;
+	/**
+	 * Disassembles the specified program and returns it as formatted mnemonics
+	 * @param program The program to disassemble
+	 */
+	public disassemble(program: CompiledProgram): string {
+		let out: string = "";
+		out += ".CONSTANTS\n";
+		out += this.disassembleConstantPool(program.constantPool) + "\n";
+		out += ".CODE\n";
+		for (const context of program.contexts) {
+			out += this.disassembleContext(context, program.constantPool);
 		}
-		return str;
+		return out;
 	}
 
-	/** Disassemble instructions for the specified program */
-	private instructions(): string {
-		let str = "\n";
-		this.p = 0;
-		const bytecode = this.program.bytecode;
-		const constantPool = this.program.constantPool;
-		while (this.p < bytecode.length) {
-			this.ip = this.p;
-			const instr = bytecode[this.p++];
-			switch (instr) {
-				// Special case - look up constant in data pool and show it
+	/**
+	 * Disassembles the specified constant pool
+	 * @param constantPool The constant pool to disassemble
+	 */
+	public disassembleConstantPool(constantPool: RuntimeValue[]): string {
+		let out: string = "";
+		let dp: number = 0;
+		while (dp < constantPool.length) {
+			const value = constantPool[dp];
+			out += "\t" + this.format(dp) + "\t" + this.value(value);
+			dp++;
+		}
+		return out;
+	}
+
+	/**
+	 * Disassembles the specified context and returns a string representation
+	 * of the context
+	 * @param context The context to disassemble
+	 */
+	public disassembleContext(
+		context: Context,
+		constantPool: RuntimeValue[]
+	): string {
+		// Output string:
+		let out: string = "";
+		// Current index into the bytecode:
+		let p: number = 0;
+		// Index of last instruction seen:
+		let ip: number = 0;
+		const bytecode = context.bytecode;
+		while (ip < bytecode.length) {
+			ip = p;
+			const op = bytecode[p++];
+			// See if the current line is a label
+			if (context.labels.has(ip)) {
+				out += this.label(context.labels.get(ip)!) + ":\n";
+			}
+			// Disassemble the instruction
+			switch (op) {
+				// Handle invalid instructions
+				default: {
+					throw new RuntimeError(
+						VMStatus.InvalidInstruction,
+						"Invalid instruction encountered: " +
+							op +
+							(OpCode[op] ? " (could be " + OpCode[op] + ")" : "")
+					);
+				}
+				case OpCode.Return:
+					out += this.instr(op, ip);
+					break;
 				case OpCode.Constant: {
-					const index = bytecode[this.p++];
-					str +=
-						this.ipn +
-						"\t" +
-						this.instr(instr) +
-						"\t(" +
-						index +
-						")\t= " +
-						constantPool[index].value +
-						"\n";
+					const index = bytecode[p++];
+					out += this.const(op, ip, index, constantPool);
 					break;
 				}
-				// Instructions with no parameter
-				case OpCode.Return:
 				case OpCode.Pop:
+					out += this.instr(op, ip);
+					break;
+				case OpCode.Drop: {
+					const nItems = bytecode[p++];
+					out += this.instrParam(op, ip, nItems);
+					break;
+				}
+				case OpCode.Get:
+				case OpCode.Set:
+				case OpCode.GetGlobal:
+				case OpCode.SetGlobal: {
+					// Index of the variable to get/set
+					const index = bytecode[p++];
+					out += this.instrParam(op, ip, index);
+					break;
+				}
 				case OpCode.Neg:
 				case OpCode.Inc:
 				case OpCode.Dec:
@@ -90,52 +116,134 @@ export class Disassembler {
 				case OpCode.Zero:
 				case OpCode.Blank:
 				case OpCode.True:
-				case OpCode.False:
-					str += this.ipn + "\t" + this.instr(instr) + "\n";
+				case OpCode.False: {
+					// None of the above require parameters
+					out += this.instr(op, ip);
 					break;
-				// Instructions that take a single parameter
-				case OpCode.Drop:
-				case OpCode.Get:
-				case OpCode.Set:
-				case OpCode.GetGlobal:
-				case OpCode.SetGlobal:
-				case OpCode.Load:
-				case OpCode.Call:
+				}
 				case OpCode.Jump:
 				case OpCode.JumpFalse:
 				case OpCode.JumpTrue:
-				case OpCode.JumpTruePop:
-				case OpCode.JumpFalsePop: {
-					const arg = bytecode[this.p++];
-					str +=
-						this.ipn + "\t" + this.instr(instr) + "\t" + arg + "\n";
+				case OpCode.JumpFalsePop:
+				case OpCode.JumpTruePop: {
+					const offset = bytecode[p++];
+					const destIp = p + offset;
+					if (context.labels.has(destIp)) {
+						out += this.jump(op, ip, context.labels.get(destIp)!);
+					} else {
+						throw new Error(
+							"Cannot find label for index " + destIp
+						);
+					}
 					break;
 				}
-				default: {
-					throw new Error(
-						"Unrecognized instruction code: " +
-							instr +
-							(OpCode[instr]
-								? " (could be " + OpCode[instr] + ")"
-								: "")
-					);
+				case OpCode.Load: {
+					const addr = bytecode[p++];
+					this.instrParam(op, ip, addr);
+					break;
+				}
+				case OpCode.Call: {
+					const numLocals = bytecode[p++];
+					this.instrParam(op, ip, numLocals);
+					break;
 				}
 			}
-		}
-		return str;
+			ip = p;
+		} // for op of bytecode
+		return out;
 	}
 
-	/** Describe a runtime value */
-	private describe(value: RuntimeValue): string {
-		return RuntimeType[value.type] + "\t" + value.value + "\n";
+	/**
+	 * Outputs a simple instruction with no parameters
+	 * @param op The instruction to output
+	 * @param ip The bytecode instruction index
+	 */
+	private instr(op: OpCode, ip: number): string {
+		return "\t" + this.format(ip) + "\t" + this.op(op) + "\n";
 	}
 
-	/** Pad a number and split it */
+	/**
+	 * Outputs an instruction with a single parameter
+	 * @param op The instruction to output
+	 * @param ip The bytecode instruction index
+	 * @param param The instruction's parameter
+	 */
+	private instrParam(op: OpCode, ip: number, param: number): string {
+		return (
+			"\t" + this.format(ip) + "\t" + this.op(op) + "\t" + param + "\n"
+		);
+	}
+
+	/**
+	 * Outputs a jump instruction
+	 * @param op The instruction to output
+	 * @param ip The bytecode instruction index
+	 * @param labelId The destination label of the jump
+	 */
+	private jump(op: OpCode, ip: number, labelId: number): string {
+		return (
+			"\t" +
+			this.format(ip) +
+			"\t" +
+			this.op(op) +
+			"\t" +
+			this.label(labelId) +
+			"\n"
+		);
+	}
+
+	/**
+	 * Outputs the constant loading instruction
+	 * @param op The instruction to output
+	 * @param ip The bytecode instruction index
+	 * @param index The index into the constant pool
+	 * @param constantPool The constant pool
+	 */
+	private const(
+		op: OpCode,
+		ip: number,
+		index: number,
+		constantPool: RuntimeValue[]
+	): string {
+		return (
+			"\t" +
+			this.format(ip) +
+			"\t" +
+			this.op(op) +
+			"\t(" +
+			index +
+			")\t= " +
+			constantPool[index].value +
+			"\n"
+		);
+	}
+
+	/**
+	 * Format a large number for output
+	 * @param num The number to format
+	 */
 	private format(num: number): string {
 		return String(num).padStart(4, "0");
 	}
 
-	private instr(code: OpCode): string {
-		return String(OpCode[code].toUpperCase()).padStart(20, " ");
+	/**
+	 * Format an operation code as a mnemonic
+	 * @param op Operation code to format
+	 */
+	private op(op: OpCode): string {
+		return String(OpCode[op].toUpperCase()).padStart(20, " ");
+	}
+
+	/** Describe a runtime value */
+	private value(value: RuntimeValue): string {
+		return RuntimeType[value.type] + "\t" + value.value + "\n";
+	}
+
+	/**
+	 * Formats the specified label id for output
+	 * @param labelId The label id
+	 */
+	private label(labelId: number): string {
+		return "LABEL_" + this.format(labelId) + "";
 	}
 }

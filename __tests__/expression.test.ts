@@ -4,11 +4,9 @@ import { Play } from "../src/play";
 describe("compiler/vm", () => {
 	test("should not register duplicates in the constant pool", () => {
 		const dis = Play.disassemble('let x: str = "x"\nlet y: str = "x"');
-		expect(
-			dis.startsWith(
-				"0000\tString\tx\n\n0000\t            CONSTANT\t(0)\t= x\n"
-			)
-		).toBe(true);
+		expect(dis).toBe(
+			`.CONSTANTS\n\t0000\tString\tx\n\n.CODE\n\t0000\t            CONSTANT\t(0)\t= x\n\t0002\t            CONSTANT\t(0)\t= x\n\t0004\t              RETURN\n`
+		);
 	});
 	test("should compute expressions", async () => {
 		// Throw some math at the language:
