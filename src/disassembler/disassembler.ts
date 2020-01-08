@@ -139,7 +139,7 @@ export class Disassembler {
 				case OpCode.Return:
 					out += this.instr(op, ip);
 					break;
-				case OpCode.Constant: {
+				case OpCode.Const: {
 					const index = bytecode[p++];
 					out += this.const(op, ip, index, constantPool);
 					break;
@@ -170,12 +170,12 @@ export class Disassembler {
 				case OpCode.Div:
 				case OpCode.Remain:
 				case OpCode.Exp:
-				case OpCode.LessThan:
-				case OpCode.LessThanEqual:
-				case OpCode.GreaterThan:
-				case OpCode.GreaterThanEqual:
-				case OpCode.Equality:
-				case OpCode.Inequality:
+				case OpCode.Less:
+				case OpCode.LessEqual:
+				case OpCode.Greater:
+				case OpCode.GreaterEqual:
+				case OpCode.Equal:
+				case OpCode.Unequal:
 				case OpCode.Not:
 				case OpCode.Nil:
 				case OpCode.Zero:
@@ -186,11 +186,11 @@ export class Disassembler {
 					out += this.instr(op, ip);
 					break;
 				}
-				case OpCode.Jump:
-				case OpCode.JumpFalse:
-				case OpCode.JumpTrue:
-				case OpCode.JumpFalsePop:
-				case OpCode.JumpTruePop: {
+				case OpCode.Jmp:
+				case OpCode.JmpFalse:
+				case OpCode.JmpTrue:
+				case OpCode.JmpFalsePop:
+				case OpCode.JmpTruePop: {
 					const offset = bytecode[p++];
 					const labelIp = p - startOffset + offset;
 					const absoluteIndex = startOffset + labelIp;

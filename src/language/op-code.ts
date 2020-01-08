@@ -4,7 +4,7 @@ export enum OpCode {
 	/** Return instruction */
 	Return = 1,
 	/** Push constant from constant pool */
-	Constant,
+	Const,
 	/** Discard the top of the stack */
 	Pop,
 	/** Discard N items from the top of the stack */
@@ -42,17 +42,17 @@ export enum OpCode {
 	// Relational Operators
 
 	/** Less than relational operator */
-	LessThan,
+	Less,
 	/** Less than or equal relational operator */
-	LessThanEqual,
+	LessEqual,
 	/** Greater than relational operator */
-	GreaterThan,
+	Greater,
 	/** Less than or equal relational operator */
-	GreaterThanEqual,
+	GreaterEqual,
 	/** Equality comparison operator */
-	Equality,
+	Equal,
 	/** Inequality */
-	Inequality,
+	Unequal,
 
 	/** Logical complement */
 	Not,
@@ -73,15 +73,15 @@ export enum OpCode {
 	// Jumps
 
 	/** Unconditional jump */
-	Jump,
+	Jmp,
 	/** Jump if top is falsy */
-	JumpFalse,
+	JmpFalse,
 	/** Jump if top is truthy */
-	JumpTrue,
+	JmpTrue,
 	/** Jump if false (and pop stack) */
-	JumpFalsePop,
+	JmpFalsePop,
 	/** Jump if true (and pop stack) */
-	JumpTruePop,
+	JmpTruePop,
 
 	// Function calls
 

@@ -87,7 +87,7 @@ export class VirtualMachine {
 						}
 						break;
 					}
-					case OpCode.Constant: {
+					case OpCode.Const: {
 						// Read a data value from the data section and push it
 						// to the stack
 						this.push(this.readData());
@@ -191,37 +191,37 @@ export class VirtualMachine {
 						);
 						break;
 					}
-					case OpCode.LessThan: {
+					case OpCode.Less: {
 						const rhs = this.pop();
 						const lhs = this.pop();
 						this.push(lhs.value < rhs.value ? True : False);
 						break;
 					}
-					case OpCode.LessThanEqual: {
+					case OpCode.LessEqual: {
 						const rhs = this.pop();
 						const lhs = this.pop();
 						this.push(lhs.value <= rhs.value ? True : False);
 						break;
 					}
-					case OpCode.GreaterThan: {
+					case OpCode.Greater: {
 						const rhs = this.pop();
 						const lhs = this.pop();
 						this.push(lhs.value > rhs.value ? True : False);
 						break;
 					}
-					case OpCode.GreaterThanEqual: {
+					case OpCode.GreaterEqual: {
 						const rhs = this.pop();
 						const lhs = this.pop();
 						this.push(lhs.value >= rhs.value ? True : False);
 						break;
 					}
-					case OpCode.Equality: {
+					case OpCode.Equal: {
 						const rhs = this.pop();
 						const lhs = this.pop();
 						this.push(lhs.value === rhs.value ? True : False);
 						break;
 					}
-					case OpCode.Inequality: {
+					case OpCode.Unequal: {
 						const rhs = this.pop();
 						const lhs = this.pop();
 						this.push(lhs.value !== rhs.value ? True : False);
@@ -254,27 +254,27 @@ export class VirtualMachine {
 						break;
 					}
 					// Jumps
-					case OpCode.Jump: {
+					case OpCode.Jmp: {
 						const dest = this.readCode();
 						this.ip += dest;
 						break;
 					}
-					case OpCode.JumpFalse: {
+					case OpCode.JmpFalse: {
 						const dest = this.readCode();
 						if (!this.isTruthy(this.top)) this.ip += dest;
 						break;
 					}
-					case OpCode.JumpTrue: {
+					case OpCode.JmpTrue: {
 						const dest = this.readCode();
 						if (this.isTruthy(this.top)) this.ip += dest;
 						break;
 					}
-					case OpCode.JumpFalsePop: {
+					case OpCode.JmpFalsePop: {
 						const dest = this.readCode();
 						if (!this.isTruthy(this.pop())) this.ip += dest;
 						break;
 					}
-					case OpCode.JumpTruePop: {
+					case OpCode.JmpTruePop: {
 						const dest = this.readCode();
 						if (this.isTruthy(this.pop())) this.ip += dest;
 						break;
