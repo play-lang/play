@@ -1,7 +1,7 @@
-import { BytecodeAddressResolver } from "src/assembler/bytecode-address-resolver";
 import { CompiledProgram } from "src/compiler/compiled-program";
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
 import { Context } from "src/language/context";
+import { ContextLabels } from "src/language/context-labels";
 import { FunctionInfo } from "src/language/function-info";
 import { OpCode } from "src/language/op-code";
 import { SymbolTable } from "src/language/symbol-table";
@@ -64,7 +64,7 @@ export class Compiler implements Visitor {
 	/** Number of scopes deep we are--used as an index to childScopeIndices */
 	private scopeDepth: number = 0;
 	/** Registers labels and patches jumps between contexts */
-	private patcher: BytecodeAddressResolver = new BytecodeAddressResolver();
+	private patcher: ContextLabels = new ContextLabels();
 	/** Index of the next label to be generated */
 	private labelId: number = 0;
 	/** Address of the last instruction */

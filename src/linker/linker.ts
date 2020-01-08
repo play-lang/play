@@ -30,7 +30,7 @@ export class Linker {
 
 		// Update and resolve all the addresses now that the bytecode
 		// has been chained together
-		program.addressResolver.resolve(bytecode, contexts, contextMap);
+		program.contextLabels.resolve(bytecode, contexts, contextMap);
 
 		return new LinkedProgram(
 			constantPool,
@@ -38,7 +38,7 @@ export class Linker {
 			numLocals,
 			contexts,
 			contextMap,
-			program.addressResolver
+			program.contextLabels
 		);
 	}
 }
