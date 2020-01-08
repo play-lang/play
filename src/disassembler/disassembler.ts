@@ -39,7 +39,10 @@ export class Disassembler {
 				program.bytecode || context.bytecode,
 				program.constantPool,
 				contextTree,
-				program.contextMap ? program.contextMap.get(context.name)! : 0
+				program.contextMap ? program.contextMap.get(context.name)! : 0,
+				program.contextLabels
+					? program.contextLabels.labels
+					: new Map<Context, Map<number, string>>()
 			);
 		}
 		return out;
@@ -70,7 +73,8 @@ export class Disassembler {
 		bytecode: number[],
 		constantPool: RuntimeValue[],
 		contextTree: AvlTree<number, Context>,
-		startOffset: number
+		startOffset: number,
+		contextLabels: Map<Context, Map<number, string>>
 	): string {
 		// Output string:
 		let out: string = "";
@@ -83,7 +87,8 @@ export class Disassembler {
 			context.bytecode.length,
 			constantPool,
 			contextTree,
-			startOffset
+			startOffset,
+			contextLabels
 		);
 		return out;
 	}
@@ -93,7 +98,8 @@ export class Disassembler {
 		length: number,
 		constantPool: RuntimeValue[],
 		contextTree: AvlTree<number, Context>,
-		startOffset: number // bytecode start offset, if any
+		startOffset: number, // bytecode start offset, if any
+		contextLabels: Map<Context, Map<number, string>>
 	): string {
 		// Output string:
 		let out: string = "";
@@ -109,11 +115,11 @@ export class Disassembler {
 			const op = bytecode[p++];
 			// Use the AVL tree for speedily checking which context to use for labels
 			const contextStartIndex = contextTree.findLowerBound(ip)!;
+			const relIp = ip - startOffset;
 			context = contextTree.get(contextStartIndex)!;
 			// While we're at it, see if the current line is a label
-			if (context.labels.has(ip - startOffset)) {
-				out +=
-					this.label(context.labels.get(ip - startOffset)!) + ":\n";
+			if (context.labels.has(relIp)) {
+				out += this.label(context.labels.get(relIp)!) + ":\n";
 			}
 
 			// Disassemble the instruction
@@ -206,6 +212,18 @@ export class Disassembler {
 					if (destContext) {
 						out += this.load(op, ip, destContext.labelId);
 					} else {
+						if (contextLabels.has(context)) {
+							const contextRefs = contextLabels.get(context)!;
+							if (contextRefs.has(relIp)) {
+								const destContextName = contextRefs.get(relIp)!;
+								out += this.loadWithNoInfo(
+									op,
+									ip,
+									destContextName
+								);
+								break;
+							}
+						}
 						out += this.instrParam(op, ip, addr);
 					}
 					break;
@@ -287,6 +305,27 @@ export class Disassembler {
 			"\n"
 		);
 	}
+	/**
+	 * Outputs a function load instruction with no jump information
+	 * @param op The instruction to output
+	 * @param ip The bytecode instruction index
+	 * @param contextName Name of the context to load the address of
+	 */
+	private loadWithNoInfo(
+		op: OpCode,
+		ip: number,
+		contextName: string
+	): string {
+		return (
+			"\t" +
+			this.format(ip) +
+			"\t" +
+			this.op(op) +
+			"\t[CONTEXT " +
+			contextName +
+			"]\n"
+		);
+	}
 
 	/**
 	 * Outputs the constant loading instruction
@@ -306,11 +345,11 @@ export class Disassembler {
 			this.format(ip) +
 			"\t" +
 			this.op(op) +
-			"\t(" +
+			"\t" +
 			index +
-			")\t= " +
+			"\t[VALUE " +
 			constantPool[index].value +
-			"\n"
+			"]\n"
 		);
 	}
 
