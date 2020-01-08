@@ -53,6 +53,8 @@ export class Disassembler {
 		// Index of last instruction seen:
 		let ip: number = 0;
 		const bytecode = context.bytecode;
+		// Display the context's label
+		out += this.label(context.labelId) + ": ; (CONTEXT)\n";
 		while (ip < bytecode.length) {
 			ip = p;
 			const op = bytecode[p++];

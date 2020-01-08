@@ -25,7 +25,12 @@ export class Context {
 		 */
 		public readonly numLocals: number,
 		/** Bytecode instructions, packed together */
-		public readonly bytecode: number[]
+		public readonly bytecode: number[],
+		/**
+		 * Label identifier used for the context to keep it unique among
+		 * local labels inside the contexts for pretty disassembler output
+		 */
+		public readonly labelId: number
 	) {}
 
 	/**

@@ -521,7 +521,7 @@ export class Compiler implements Visitor {
 	 * @param constants Shared constants look-up map for avoiding duplicates
 	 */
 	private createContext(contextName: string, numLocals: number): Context {
-		const context = new Context(contextName, numLocals, []);
+		const context = new Context(contextName, numLocals, [], this.labelId++);
 		this.allContexts.push(context);
 		this.patcher.prepare(this.context);
 		return context;
