@@ -412,8 +412,6 @@ export class VirtualMachine {
 				return value.value !== "";
 			case RuntimeType.Object:
 				return value !== Nil;
-			case RuntimeType.Function:
-				return Number.isInteger(value.value);
 		}
 	}
 }
