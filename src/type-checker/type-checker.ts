@@ -108,7 +108,7 @@ export class TypeChecker implements Visitor {
 	public badAssignment(token: TokenLike, expectedType: Type): void {
 		const pretty = expectedType.description;
 		const prefix = this.errorPrefix(token);
-		const hint = `${prefix} Invalid assignment�expected a variable reference to ${pretty}`;
+		const hint = `${prefix} Invalid assignment—expected a variable reference to ${pretty}`;
 		const error = new SemanticError(token, hint);
 		this.errors.push(error);
 	}
@@ -277,7 +277,7 @@ export class TypeChecker implements Visitor {
 		if (node.functionName && this.functionTable.has(node.functionName)) {
 			const functionInfo = this.functionTable.get(node.functionName!)!;
 			const functionType = constructFunctionType(functionInfo);
-			if (type.satisfiesRecordType(functionType.parameters)) {
+			if (!type.satisfiesRecordType(functionType.parameters)) {
 				this.mismatch(node.token, functionType.parameters, type);
 			}
 		} else {
@@ -321,10 +321,10 @@ export class TypeChecker implements Visitor {
 		node.rhs.accept(this);
 		const lhsType = node.lhs.type(this.env);
 		const rhsType = node.rhs.type(this.env);
-		if (!lhsType.equivalent(rhsType)) {
-			this.mismatch(node.lhs.token, lhsType, rhsType);
-		}
 		if (!lhsType.isAssignable) {
+			this.badAssignment(node.lhs.token, lhsType);
+		} else if (!lhsType.equivalent(rhsType)) {
+			this.mismatch(node.lhs.token, lhsType, rhsType);
 		}
 	}
 

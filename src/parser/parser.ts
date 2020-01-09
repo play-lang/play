@@ -97,12 +97,7 @@ export class Parser extends TokenParser {
 		// production to make
 		if (this.match(TokenType.Let, TokenType.Var)) {
 			return this.variableDeclaration();
-		}
-		// else if (this.match(TokenType.Id)) {
-		// 	// Non-reserved identifier indicates an expression every time
-		// 	return this.expression(0, this.previous);
-		// }
-		else if (this.match(TokenType.BraceOpen)) {
+		} else if (this.match(TokenType.BraceOpen)) {
 			// Match a block statement
 			return this.block();
 		} else if (this.match(TokenType.Function)) {

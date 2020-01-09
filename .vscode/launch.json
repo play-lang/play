@@ -43,13 +43,14 @@
 				"--passWithNoTests",
 				"--code-coverage=false",
 				"--config=jest.config.js",
+				"--no-cache",
 				"--",
 				"${fileBasenameNoExtension}"
 			],
 			"disableOptimisticBPs": true,
 			"console": "integratedTerminal",
 			"internalConsoleOptions": "neverOpen",
-			"port": 9229
+			"port": 9229,
 		}
 	]
 }

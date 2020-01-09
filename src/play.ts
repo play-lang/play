@@ -87,6 +87,11 @@ export class Play {
 	 */
 	public static run(code: string): VMResult {
 		const linkedProgram = Play.link(code);
+		const errors = Play.check(code);
+		if (errors.length > 0) {
+			console.error(errors);
+			throw new Error("Type checking failed");
+		}
 		const vm = new VirtualMachine(linkedProgram.program);
 		return vm.run();
 	}
