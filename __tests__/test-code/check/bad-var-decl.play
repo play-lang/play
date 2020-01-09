@@ -1,5 +1,11 @@
-var x: str = 10
-var y: num = "hello, world"
-var z = 10
-z = "hello"
-return "a" + 10
+// var x: str = 10
+// var y: num = "hello, world"
+// var z = 10
+// z = "hello"
+// return "a" + 10
+// 5 = "hello"
+doSomething(10, 10)
+
+function doSomething(a: num, b: num) {
+	return a + b
+}
