@@ -43,10 +43,11 @@ export class JSONVisitor implements Visitor, Describable {
 	// MARK: Visitor
 
 	public visitProgramNode(node: ProgramNode): void {
+		const statements = [];
 		for (const statement of node.statements) {
 			statement.accept(this);
+			statements.push(this.stack.pop());
 		}
-		const statements = this.clear();
 		this.stack.push({
 			type: node.nodeName,
 			start: node.start,
@@ -55,10 +56,11 @@ export class JSONVisitor implements Visitor, Describable {
 		});
 	}
 	public visitBlockStatementNode(node: BlockStatementNode): void {
+		const statements = [];
 		for (const statement of node.statements) {
 			statement.accept(this);
+			statements.push(this.stack.pop());
 		}
-		const statements = this.clear();
 		this.stack.push({
 			type: node.nodeName,
 			start: node.start,
@@ -238,16 +240,5 @@ export class JSONVisitor implements Visitor, Describable {
 			end: node.end,
 			expr,
 		});
-	}
-
-	// MARK: Private Methods
-
-	/**
-	 * Clears the stack and returns a copy of what was in it
-	 */
-	private clear(): any[] {
-		const stack = [...this.stack];
-		this.stack = [];
-		return stack;
 	}
 }
