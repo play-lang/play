@@ -106,11 +106,11 @@ export class TypeChecker implements Visitor {
 	}
 
 	/**
-	 * Register an error with a binary expression
-	 * @param token The binary expression token where the error occurred
-	 * @param message Description of the problem
+	 * Register a generic type checking error
+	 * @param token The token where the error occurred
+	 * @param message Error description
 	 */
-	public badBinaryExp(token: TokenLike, message: string): void {
+	public error(token: TokenLike, message: string): void {
 		const prefix = this.errorPrefix(token);
 		const hint = `${prefix} ${message}`;
 		const error = new TypeCheckError(token, hint);
@@ -226,7 +226,7 @@ export class TypeChecker implements Visitor {
 			} else {
 				throw new TypeCheckError(
 					node.token,
-					"Can't find type annotation or symbol table entry for parameter " +
+					"Failed to find type annotation or symbol table entry for parameter " +
 						parameter
 				);
 			}
@@ -287,7 +287,14 @@ export class TypeChecker implements Visitor {
 		}
 	}
 
-	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {}
+	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {
+		if (node.type(this.env) instanceof ErrorType) {
+			this.error(
+				node.token,
+				"Failed to resolve type for " + node.token.lexeme
+			);
+		}
+	}
 
 	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
 		node.lhs.accept(this);
@@ -296,9 +303,9 @@ export class TypeChecker implements Visitor {
 		const rhsType = node.rhs.type(this.env);
 		const exprType = node.type(this.env);
 		if (exprType instanceof ErrorType) {
-			this.badBinaryExp(
+			this.error(
 				node.token,
-				"Cannot use " +
+				"Failed to use " +
 					lhsType.description +
 					" to " +
 					node.action(this.env) +
