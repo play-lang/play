@@ -23,6 +23,7 @@ import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
 import {
 	constructFunctionType,
+	constructType,
 	ErrorType,
 	Num,
 	Type,
@@ -38,34 +39,25 @@ export class TypeChecker implements Visitor {
 	/* Type checker errors encountered while checking types */
 	public errors: SemanticError[] = [];
 
-	/** Global scope */
-	private globalScope: SymbolTable;
 	/** Symbol table for the current scope */
-	private symbolTable: SymbolTable;
+	private get symbolTable(): SymbolTable {
+		return this.env.symbolTable;
+	}
 	/** Function table for the environment */
-	private functionTable: Map<string, FunctionInfo>;
-
-	/** Index of the next child scope to visit for each scope level */
-	private childScopeIndices: number[] = [0];
-	/** Number of scopes deep we are--used as an index to childScopeIndices */
-	private scopeDepth: number = 0;
+	private get functionTable(): Map<string, FunctionInfo> {
+		return this.env.functionTable;
+	}
 
 	constructor(
 		/** Abstract syntax tree to validate */
 		public readonly ast: AbstractSyntaxTree
-	) {
-		this.symbolTable = ast.env.symbolTable;
-		this.globalScope = ast.env.symbolTable;
-		this.functionTable = ast.env.functionTable;
-	}
+	) {}
 
 	// MARK: Methods
 
 	public check(): boolean {
 		// Reset everything
 		this.errors = [];
-		this.childScopeIndices = [0];
-		this.scopeDepth = 0;
 
 		// Compute function types before checking types
 		for (const key of this.functionTable.keys()) {
@@ -154,20 +146,6 @@ export class TypeChecker implements Visitor {
 		return prefix;
 	}
 
-	/** Enter the next child scope of the current symbol table */
-	public enterScope(): void {
-		const childScopeIndex = this.childScopeIndices[this.scopeDepth++]++;
-		this.childScopeIndices.push(0);
-		this.symbolTable = this.symbolTable.scopes[childScopeIndex];
-	}
-
-	/** Exit the current scope */
-	public exitScope(): void {
-		this.scopeDepth--;
-		this.childScopeIndices.pop();
-		this.symbolTable = this.symbolTable.enclosingScope || this.globalScope;
-	}
-
 	// MARK: Visitor
 	public visitProgramNode(node: ProgramNode): void {
 		for (const statement of node.statements) {
@@ -176,11 +154,13 @@ export class TypeChecker implements Visitor {
 	}
 
 	public visitBlockStatementNode(node: BlockStatementNode): void {
-		this.enterScope();
+		// Scope is entered/exited manually for function blocks
+		// in visitFunctionDeclarationNode
+		if (!node.isFunctionBlock) this.env.enterScope();
 		for (const statement of node.statements) {
 			statement.accept(this);
 		}
-		this.exitScope();
+		if (!node.isFunctionBlock) this.env.exitScope();
 	}
 
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
@@ -230,7 +210,29 @@ export class TypeChecker implements Visitor {
 	}
 
 	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
+		this.env.enterScope();
+		// Compute types for parameters
+		for (const parameter of node.info.parameters) {
+			// Walk through each parameter, find its type information from the
+			// function info object attached to the node, look up the entry in the
+			// appropriate symbol table for the function's scope and resolve the
+			// parameter's types for later use
+			const typeAnnotation = node.info.parameterTypes.get(parameter);
+			const idSymbol = this.symbolTable.lookup(parameter);
+			if (typeAnnotation && idSymbol && typeAnnotation.length > 0) {
+				// TODO: Support pass-by-reference assignable parameter types someday
+				const type = constructType(typeAnnotation);
+				idSymbol.type = type;
+			} else {
+				throw new TypeCheckError(
+					node.token,
+					"Can't find type annotation or symbol table entry for parameter " +
+						parameter
+				);
+			}
+		}
 		node.block.accept(this);
+		this.env.exitScope();
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
