@@ -6,7 +6,7 @@ import { Describable } from "src/language/token";
  * Primitive types that can be represented with an instance of a PrimitiveType
  */
 export enum Primitive {
-	Void,
+	None,
 	Bool,
 	Num,
 	Str,
@@ -56,7 +56,11 @@ export class ErrorType extends Type {
 	}
 
 	public equivalent(type: Type): boolean {
-		return type === this || type instanceof ErrorType;
+		return (
+			type === this ||
+			type instanceof AnyType ||
+			type instanceof ErrorType
+		);
 	}
 
 	public get description(): string {
@@ -65,6 +69,29 @@ export class ErrorType extends Type {
 
 	public copy(): ErrorType {
 		return new ErrorType(this.isAssignable);
+	}
+}
+
+/**
+ * "Any" type
+ */
+export class AnyType extends Type {
+	constructor(isAssignable: boolean) {
+		super(isAssignable);
+	}
+
+	public equivalent(type: Type): boolean {
+		// AnyType is equivalent to every other type
+		return true;
+	}
+
+	public get description(): string {
+		return (this.isAssignable ? "&" : "") + "Any";
+	}
+
+	public copy(): AnyType {
+		// No need to make a copy when one any type is sufficient...
+		return this;
 	}
 }
 
@@ -85,6 +112,7 @@ export class PrimitiveType extends Type {
 	public equivalent(type: Type): boolean {
 		return (
 			type === this ||
+			type instanceof AnyType ||
 			(type instanceof PrimitiveType && type.primitive === this.primitive)
 		);
 	}
@@ -126,7 +154,7 @@ export class RecordType extends Type {
 	}
 
 	public equivalent(type: Type): boolean {
-		if (type === this) return true;
+		if (type === this || type instanceof AnyType) return true;
 		if (!(type instanceof RecordType)) return false;
 		if (type.operands.size !== this.operands.size) return false;
 		for (const name of type.operands.keys()) {
@@ -184,7 +212,7 @@ export class ProductType extends Type {
 	}
 
 	public equivalent(type: Type): boolean {
-		if (type === this) return true;
+		if (type === this || type instanceof AnyType) return true;
 		if (!(type instanceof ProductType)) return false;
 		if (type.operands.length !== this.operands.length) return false;
 		for (let i = 0; i < this.operands.length; i++) {
@@ -252,6 +280,7 @@ export class FunctionType extends Type {
 	public equivalent(type: Type): boolean {
 		return (
 			type === this ||
+			type instanceof AnyType ||
 			(type instanceof FunctionType &&
 				this.name === type.name &&
 				this.parameters.equivalent(type.parameters))
@@ -296,6 +325,7 @@ export class CollectionType extends Type {
 	public equivalent(type: Type): boolean {
 		return (
 			type === this ||
+			type instanceof AnyType ||
 			(type instanceof CollectionType &&
 				this.collection === type.collection &&
 				this.elementType.equivalent(type.elementType))
@@ -322,10 +352,15 @@ export class CollectionType extends Type {
 }
 
 /** Void type, for your convenience */
-export const Void = new PrimitiveType(Primitive.Void, false);
+export const None = new PrimitiveType(Primitive.None, false);
+/** Boolean type */
 export const Bool = new PrimitiveType(Primitive.Bool, false);
+/** Number type */
 export const Num = new PrimitiveType(Primitive.Num, false);
+/** String type */
 export const Str = new PrimitiveType(Primitive.Str, false);
+/** "Any" type */
+export const Any = new AnyType(false);
 
 /**
  * Construct a type instance from the specified type annotation array
@@ -341,13 +376,13 @@ export function constructType(
 	isAssignable: boolean = false
 ): Type {
 	if (typeAnnotation.length < 1) {
-		return new PrimitiveType(Primitive.Void, false);
+		return new PrimitiveType(Primitive.None, false);
 	}
 	let annotation = typeAnnotation[0]!;
 	let type: Type;
 	switch (annotation) {
 		case "void":
-			type = new PrimitiveType(Primitive.Void, false);
+			type = new PrimitiveType(Primitive.None, false);
 			break;
 		case "str":
 			type = new PrimitiveType(Primitive.Str, isAssignable);
