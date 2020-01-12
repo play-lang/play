@@ -3,6 +3,7 @@ import { TokenLike } from "src/language/token";
 import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
 import {
+	Any,
 	Bool,
 	ErrorType,
 	Num,
@@ -48,6 +49,28 @@ export class BinaryExpressionNode extends Expression {
 					return Num;
 				}
 				return new ErrorType(false);
+			case TokenType.Minus:
+			case TokenType.Asterisk:
+			case TokenType.Slash:
+			case TokenType.Percent:
+			case TokenType.Caret:
+				return Num;
+		}
+		return new ErrorType(false);
+	}
+
+	public operandType(env: Environment): Type {
+		switch (this.operatorType) {
+			case TokenType.EqualEqual:
+			case TokenType.BangEqual:
+				return Any;
+			case TokenType.LessThan:
+			case TokenType.LessThanEqual:
+			case TokenType.GreaterThan:
+			case TokenType.GreaterThanEqual:
+				return Num;
+			case TokenType.Plus:
+			// return
 			case TokenType.Minus:
 			case TokenType.Asterisk:
 			case TokenType.Slash:

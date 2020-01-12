@@ -179,14 +179,14 @@ export class TypeChecker implements Visitor {
 		// If the node has an assigned value and a type assertion, make sure they
 		// are both the same type.
 		if (node.expr && node.typeAnnotation) {
-			const type = node.type(this.env);
+			const varType = node.variableType(this.env);
 			const exprType = node.expr.type(this.env);
 			const idSymbol = scope.lookup(node.variableName)!;
-			idSymbol.type = type;
-			if (!type.equivalent(exprType)) {
+			idSymbol.type = varType;
+			if (!varType.equivalent(exprType)) {
 				// Report mismatch between variable's assigned value and variable's
 				// expected value
-				this.mismatch(node.token, type, exprType);
+				this.mismatch(node.token, varType, exprType);
 			}
 		}
 	}

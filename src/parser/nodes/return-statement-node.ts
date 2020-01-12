@@ -1,7 +1,7 @@
 import { Expression, Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import { Type, Void } from "src/language/types/type-system";
+import { None, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export class ReturnStatementNode extends Statement {
@@ -13,7 +13,7 @@ export class ReturnStatementNode extends Statement {
 	}
 
 	public type(env: Environment): Type {
-		return this.expr ? this.expr.type(env) : Void;
+		return None;
 	}
 
 	public accept(visitor: Visitor): void {
