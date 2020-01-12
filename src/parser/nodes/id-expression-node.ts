@@ -1,7 +1,7 @@
 import { Expression } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import { constructType, ErrorType, Type } from "src/language/types/type-system";
+import { ErrorType, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 /**
@@ -37,7 +37,7 @@ export class IdExpressionNode extends Expression {
 			// function table
 			const info = env.functionTable.get(this.name);
 			if (info) {
-				return constructType(info.typeAnnotation);
+				return Type.construct(info.typeAnnotation);
 			}
 			return new ErrorType(false);
 		}

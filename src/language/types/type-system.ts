@@ -25,8 +25,100 @@ export abstract class Type implements Describable {
 	// MARK: Describable
 	public abstract get description(): string;
 
-	// TODO: Move constructType() to here
-	// public static construct(): Type {}
+	/**
+	 * Construct a type instance from the specified type annotation array
+	 *
+	 * @param typeAnnotation A type annotation string array
+	 * Examples include ["str"], ["bool"], ["Wizard"], ["str", "map"],
+	 * ["str", "list", "map"], ["num", "list"]
+	 * @param [isAssignable=false] Whether or not the type represents an entity type that
+	 * can be assigned to (like a mutable variable)
+	 */
+	public static construct(
+		typeAnnotation: string[] | string,
+		isAssignable: boolean = false
+	): Type {
+		const memberAnnotations: string[][] =
+			typeof typeAnnotation === "string"
+				? typeAnnotation
+						.split("|")
+						.map(annotation => annotation.split(" "))
+				: [typeAnnotation];
+
+		const memberTypes: Type[] = [];
+
+		for (const memberAnnotation of memberAnnotations) {
+			if (memberAnnotation.length < 1) {
+				return new PrimitiveType(Primitive.None, false);
+			}
+			let annotation = memberAnnotation[0]!;
+			let type: Type;
+			switch (annotation) {
+				case "none":
+					type = new PrimitiveType(Primitive.None, false);
+					break;
+				case "any":
+					type = new AnyType(false);
+					break;
+				case "str":
+					type = new PrimitiveType(Primitive.Str, isAssignable);
+					break;
+				case "num":
+					type = new PrimitiveType(Primitive.Num, isAssignable);
+					break;
+				case "bool":
+					type = new PrimitiveType(Primitive.Bool, isAssignable);
+					break;
+				default:
+					type = new ErrorType(isAssignable);
+			}
+			for (let i = 1; i < memberAnnotation.length; i++) {
+				annotation = memberAnnotation[i];
+				switch (annotation) {
+					// Wrap the last type in the appropriate type constructor
+					case "list":
+						type = new CollectionType(Collection.List, type);
+						break;
+					case "map":
+						type = new CollectionType(Collection.Map, type);
+						break;
+					case "set":
+						type = new CollectionType(Collection.Set, type);
+						break;
+					default:
+						type = new ErrorType(isAssignable);
+				}
+			}
+			memberTypes.push(type);
+		}
+		if (memberTypes.length === 1) {
+			// Single type to return
+			return memberTypes[0];
+		} else {
+			// We parsed multiple types, which indicates a type union
+			// (i.e., sum type)
+			return new SumType(memberTypes, isAssignable);
+		}
+	}
+
+	/**
+	 * Construct a function type for use with type checking from a function
+	 * information object (which comes from the parser)
+	 *
+	 * @param info Function information from the parser
+	 */
+	public static constructFunction(info: FunctionInfo): FunctionType {
+		const parameters = new LinkedHashMap<string, Type>();
+		for (const paramName of info.parameters) {
+			const annotation = info.parameterTypes.get(paramName)!;
+			const type = Type.construct(annotation);
+			parameters.set(paramName, type);
+		}
+		const parametersType = new RecordType(parameters);
+		const returnType = Type.construct(info.typeAnnotation);
+		const type = new FunctionType(info.name, parametersType, returnType);
+		return type;
+	}
 
 	constructor(
 		/**
@@ -80,7 +172,7 @@ export abstract class Type implements Describable {
 
 /** Represents an error type */
 export class ErrorType extends Type {
-	constructor(isAssignable: boolean) {
+	constructor(isAssignable: boolean = false) {
 		super(isAssignable);
 	}
 
@@ -106,7 +198,7 @@ export class ErrorType extends Type {
  * "Any" type
  */
 export class AnyType extends Type {
-	constructor(isAssignable: boolean) {
+	constructor(isAssignable: boolean = false) {
 		super(isAssignable);
 	}
 
@@ -140,7 +232,7 @@ export class PrimitiveType extends Type {
 	constructor(
 		/** The data type primitive represented by this type */
 		public readonly primitive: Primitive,
-		isAssignable: boolean
+		isAssignable: boolean = false
 	) {
 		super(isAssignable);
 	}
@@ -479,99 +571,6 @@ export const Num = new PrimitiveType(Primitive.Num, false);
 export const Str = new PrimitiveType(Primitive.Str, false);
 /** "Any" type */
 export const Any = new AnyType(false);
-
-/**
- * Construct a type instance from the specified type annotation array
- *
- * @param typeAnnotation A type annotation string array
- * Examples include ["str"], ["bool"], ["Wizard"], ["str", "map"],
- * ["str", "list", "map"], ["num", "list"]
- * @param [isAssignable=false] Whether or not the type represents an entity type that
- * can be assigned to (like a mutable variable)
- */
-export function constructType(
-	typeAnnotation: string[] | string,
-	isAssignable: boolean = false
-): Type {
-	const memberAnnotations: string[][] =
-		typeof typeAnnotation === "string"
-			? typeAnnotation.split("|").map(annotation => annotation.split(" "))
-			: [typeAnnotation];
-
-	const memberTypes: Type[] = [];
-
-	for (const memberAnnotation of memberAnnotations) {
-		if (memberAnnotation.length < 1) {
-			return new PrimitiveType(Primitive.None, false);
-		}
-		let annotation = memberAnnotation[0]!;
-		let type: Type;
-		switch (annotation) {
-			case "none":
-				type = new PrimitiveType(Primitive.None, false);
-				break;
-			case "any":
-				type = new AnyType(false);
-				break;
-			case "str":
-				type = new PrimitiveType(Primitive.Str, isAssignable);
-				break;
-			case "num":
-				type = new PrimitiveType(Primitive.Num, isAssignable);
-				break;
-			case "bool":
-				type = new PrimitiveType(Primitive.Bool, isAssignable);
-				break;
-			default:
-				type = new ErrorType(isAssignable);
-		}
-		for (let i = 1; i < memberAnnotation.length; i++) {
-			annotation = memberAnnotation[i];
-			switch (annotation) {
-				// Wrap the last type in the appropriate type constructor
-				case "list":
-					type = new CollectionType(Collection.List, type);
-					break;
-				case "map":
-					type = new CollectionType(Collection.Map, type);
-					break;
-				case "set":
-					type = new CollectionType(Collection.Set, type);
-					break;
-				default:
-					type = new ErrorType(isAssignable);
-			}
-		}
-		memberTypes.push(type);
-	}
-	if (memberTypes.length === 1) {
-		// Single type to return
-		return memberTypes[0];
-	} else {
-		// We parsed multiple types, which indicates a type union
-		// (i.e., sum type)
-		return new SumType(memberTypes, isAssignable);
-	}
-}
-
-/**
- * Construct a function type for use with type checking from a function
- * information object (which comes from the parser)
- *
- * @param info Function information from the parser
- */
-export function constructFunctionType(info: FunctionInfo): FunctionType {
-	const parameters = new LinkedHashMap<string, Type>();
-	for (const paramName of info.parameters) {
-		const annotation = info.parameterTypes.get(paramName)!;
-		const type = constructType(annotation);
-		parameters.set(paramName, type);
-	}
-	const parametersType = new RecordType(parameters);
-	const returnType = constructType(info.typeAnnotation);
-	const type = new FunctionType(info.name, parametersType, returnType);
-	return type;
-}
 
 /**
  * Determines whether or not the specified right-hand side type can be assigned
