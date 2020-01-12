@@ -1,4 +1,4 @@
-import { Type } from "src/language/types/type-system";
+import { FunctionType } from "src/language/types/type-system";
 
 /**
  * Holds information about a parsed function
@@ -14,6 +14,6 @@ export class FunctionInfo {
 		/** Parameter names mapped to parameter type annotations */
 		public readonly parameterTypes: Map<string, string[]>,
 		/** Function type, determined after parsing by the type checker */
-		public type?: Type
+		public type?: FunctionType
 	) {}
 }

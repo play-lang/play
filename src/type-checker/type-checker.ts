@@ -21,7 +21,7 @@ import { SymbolTable } from "src/language/symbol-table";
 import { TokenLike } from "src/language/token";
 import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
-import { ErrorType, Num, Type } from "src/language/types/type-system";
+import { ErrorType, Num, SumType, Type } from "src/language/types/type-system";
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
 import { TypeCheckError } from "src/type-checker/type-check-error";
 
@@ -268,16 +268,20 @@ export class TypeChecker implements Visitor {
 	}
 
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
-		const type = node.type(this.env);
+		const type = node.argumentsType(this.env);
 		// TODO: Add better error handling for invalid action calls
-		if (node.functionName && this.functionTable.has(node.functionName)) {
-			const functionInfo = this.functionTable.get(node.functionName!)!;
-			const functionType = Type.constructFunction(functionInfo);
+		const functionName = node.functionName;
+		if (functionName && this.functionTable.has(functionName)) {
+			const info = this.functionTable.get(functionName)!;
+			// Function types are pre-computed before type checking so this should
+			// be safe
+			const functionType = info.type!;
 			if (!type.satisfiesRecordType(functionType.parameters)) {
 				this.mismatch(node.token, functionType.parameters, type);
 			}
 		} else {
 			// TODO: Semantic error here for unrecognized function
+			throw new Error("Can't find function");
 		}
 	}
 
@@ -295,17 +299,27 @@ export class TypeChecker implements Visitor {
 		node.rhs.accept(this);
 		const lhsType = node.lhs.type(this.env);
 		const rhsType = node.rhs.type(this.env);
-		const exprType = node.type(this.env);
-		if (exprType instanceof ErrorType) {
-			this.error(
-				node.token,
-				"Failed to use " +
-					lhsType.description +
-					" to " +
-					node.action(this.env) +
-					" with " +
-					rhsType.description
-			);
+		const allowedType = node.operandType(this.env);
+		if (
+			!allowedType.accepts(lhsType) ||
+			!allowedType.accepts(rhsType) ||
+			(allowedType instanceof SumType && !lhsType.equivalent(rhsType))
+		) {
+			// Both types must be accepted by the allowed type, and if the allowed
+			// type represents a union (sum type), the types must also be equivalent
+			// (represent the same type)
+			const exprType = node.type(this.env);
+			if (exprType instanceof ErrorType) {
+				this.error(
+					node.token,
+					"Failed to use " +
+						lhsType.description +
+						" to " +
+						node.action(this.env) +
+						" with " +
+						rhsType.description
+				);
+			}
 		}
 	}
 
@@ -326,7 +340,7 @@ export class TypeChecker implements Visitor {
 		const rhsType = node.rhs.type(this.env);
 		if (!lhsType.isAssignable) {
 			this.badAssignment(node.lhs.token, lhsType);
-		} else if (!lhsType.equivalent(rhsType)) {
+		} else if (!lhsType.accepts(rhsType)) {
 			this.mismatch(node.lhs.token, lhsType, rhsType);
 		}
 	}
