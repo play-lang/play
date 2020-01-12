@@ -4,16 +4,18 @@ import {
 	allowAssignment,
 	constructFunctionType,
 	constructType,
+	Any,
+	AnyType,
 	Collection,
 	CollectionType,
 	ErrorType,
 	FunctionType,
+	None,
 	Primitive,
 	PrimitiveType,
 	ProductType,
 	RecordType,
 	Type,
-	Void,
 } from "../src/language/types/type-system";
 
 describe("type system", () => {
@@ -26,6 +28,7 @@ describe("type system", () => {
 		const num2 = new PrimitiveType(Primitive.Num, false);
 		const err1 = new ErrorType(true);
 		const err2 = new ErrorType(false);
+		expect(err1.copy()).toBeInstanceOf(ErrorType);
 		expect(str1.description).toBe("&Str");
 		expect(str2.description).toBe("Str");
 		expect(err1.description).toBe("&ErrorType");
@@ -96,6 +99,7 @@ describe("type system", () => {
 		expect(rec1.equivalent(rec6)).toBe(false);
 		expect(rec6.equivalent(rec1)).toBe(false);
 		expect(t1.equivalent(rec1)).toBe(false);
+		expect(rec6.copy().equivalent(rec6)).toBe(true);
 	});
 	test("product type", () => {
 		const prod1 = new ProductType([str, num], true);
@@ -133,6 +137,7 @@ describe("type system", () => {
 		expect(prod1.satisfiesRecordType(rec1)).toBe(true);
 		expect(prod1.satisfiesRecordType(rec2)).toBe(false);
 		expect(prod1.satisfiesRecordType(rec3)).toBe(false);
+		expect(prod1.copy().equivalent(prod1)).toBe(true);
 	});
 	test("function type", () => {
 		const fun1 = new FunctionType(
@@ -172,6 +177,7 @@ describe("type system", () => {
 		expect(fun1.equivalent(fun3)).toBe(false);
 		expect(fun3.equivalent(fun1)).toBe(false);
 		expect(fun1.equivalent(num)).toBe(false);
+		expect(fun1.copy().equivalent(fun1)).toBe(true);
 	});
 	test("collection type", () => {
 		const list1 = new CollectionType(
@@ -194,6 +200,21 @@ describe("type system", () => {
 		expect(list1.equivalent(list3)).toBe(false);
 		expect(list3.equivalent(list1)).toBe(false);
 		expect(list1.equivalent(str)).toBe(false);
+		expect(list1.copy().equivalent(list1)).toBe(true);
+	});
+	test("any type", () => {
+		expect(Any.equivalent(constructType(["any"]))).toBe(true);
+		expect(Any.equivalent(constructType(["str", "list", "map"]))).toBe(
+			false
+		);
+		expect(Any.equivalent(constructType(["num"]))).toBe(false);
+		expect(Any.equivalent(constructType(["none"]))).toBe(false);
+		expect(Any.accepts(constructType(["num"]))).toBe(true);
+		expect(Any.accepts(constructType(["num", "list"]))).toBe(true);
+		expect(Any.accepts(constructType(["any"]))).toBe(true);
+		expect(Any.description).toBe("Any");
+		expect(new AnyType(true).description).toBe("&Any");
+		expect(Any.copy()).toBeInstanceOf(AnyType);
 	});
 	describe("type utilities", () => {
 		test("type construction", () => {
@@ -203,10 +224,12 @@ describe("type system", () => {
 					new CollectionType(Collection.List, str, false)
 				)
 			).toBe(true);
-			expect(constructType([]).equivalent(Void)).toBe(true);
-			expect(constructType(["void"]).equivalent(Void)).toBe(true);
+			expect(constructType([]).equivalent(None)).toBe(true);
+			expect(constructType(["none"]).equivalent(None)).toBe(true);
 			expect(
-				constructType(["num", "unknown"]).equivalent(new ErrorType(false))
+				constructType(["num", "unknown"]).equivalent(
+					new ErrorType(false)
+				)
 			).toBe(true);
 			expect(
 				constructType(["str", "map"]).equivalent(
@@ -217,7 +240,12 @@ describe("type system", () => {
 		test("function type construction", () => {
 			expect(
 				constructFunctionType(
-					new FunctionInfo("fun1", ["str"], ["a"], new Map([["a", ["str"]]]))
+					new FunctionInfo(
+						"fun1",
+						["str"],
+						["a"],
+						new Map([["a", ["str"]]])
+					)
 				).equivalent(
 					new FunctionType(
 						"fun1",
