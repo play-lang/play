@@ -360,7 +360,7 @@ export class SumType extends Type {
 			"<" +
 			Array.from(this.types.values())
 				.map(type => type.description)
-				.join(", ") +
+				.join(" | ") +
 			">"
 		);
 	}

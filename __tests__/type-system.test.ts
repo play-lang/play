@@ -11,10 +11,13 @@ import {
 	ErrorType,
 	FunctionType,
 	None,
+	Num,
 	Primitive,
 	PrimitiveType,
 	ProductType,
 	RecordType,
+	Str,
+	SumType,
 	Type,
 } from "../src/language/types/type-system";
 
@@ -138,6 +141,29 @@ describe("type system", () => {
 		expect(prod1.satisfiesRecordType(rec2)).toBe(false);
 		expect(prod1.satisfiesRecordType(rec3)).toBe(false);
 		expect(prod1.copy().equivalent(prod1)).toBe(true);
+	});
+	test("sum type", () => {
+		const sum1 = new SumType([Str, Num]);
+		const sum2 = new SumType([Str, Num]);
+		const sum3 = new SumType([Str]);
+		const sum4 = new SumType([Str, Num, None, Any]);
+		const sum5 = new SumType([
+			constructType(["num", "list"]),
+			Str,
+			Num,
+			None,
+		]);
+		expect(sum1.equivalent(sum1)).toBe(true);
+		expect(sum1.equivalent(sum2)).toBe(true);
+		expect(sum2.equivalent(sum1)).toBe(true);
+		expect(sum1.equivalent(sum3)).toBe(false);
+		expect(sum3.equivalent(sum1)).toBe(false);
+		expect(sum1.copy().equivalent(sum1)).toBe(true);
+		expect(sum1.description).toBe("<Str | Num>");
+		expect(sum3.description).toBe("<Str>");
+		expect(sum4.description).toBe("<Str | Num | None | Any>");
+		expect(sum4.equivalent(Any)).toBe(false);
+		expect(sum4.equivalent(sum5)).toBe(false);
 	});
 	test("function type", () => {
 		const fun1 = new FunctionType(
