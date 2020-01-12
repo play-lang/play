@@ -24,7 +24,8 @@ describe("type system", () => {
 	const num = new PrimitiveType(Primitive.Num, true);
 	test("primitive & error types", () => {
 		const str1 = new PrimitiveType(Primitive.Str, true);
-		const str2 = new PrimitiveType(Primitive.Str, false);
+		const str2 = new PrimitiveType(Primitive.Str);
+		expect(str2.isAssignable).toBe(false);
 		const num1 = new PrimitiveType(Primitive.Num, true);
 		const num2 = new PrimitiveType(Primitive.Num, false);
 		const err1 = new ErrorType(true);
@@ -45,6 +46,7 @@ describe("type system", () => {
 	});
 	test("record type", () => {
 		const empty = new RecordType(new LinkedHashMap());
+		expect(empty.isAssignable).toBe(false);
 		const rec1 = new RecordType(
 			new LinkedHashMap<string, Type>([
 				["p1", Type.construct("bool")],
@@ -103,6 +105,7 @@ describe("type system", () => {
 		expect(rec6.copy().equivalent(rec6)).toBe(true);
 	});
 	test("product type", () => {
+		expect(new ProductType([]).isAssignable).toBe(false);
 		const prod1 = new ProductType([str, num], true);
 		const prod2 = new ProductType([str, num], false);
 		const prod3 = new ProductType([num, str], false);
@@ -116,7 +119,6 @@ describe("type system", () => {
 		expect(prod4.equivalent(prod1)).toBe(false);
 		expect(prod1.description).toBe("&<&Str, &Num>");
 		expect(prod2.description).toBe("<&Str, &Num>");
-
 		const rec1 = new RecordType(
 			new LinkedHashMap<string, Type>([
 				["p1", str],
@@ -141,6 +143,7 @@ describe("type system", () => {
 		expect(prod1.copy().equivalent(prod1)).toBe(true);
 	});
 	test("sum type", () => {
+		expect(new SumType([]).isAssignable).toBe(false);
 		const sum1 = new SumType([Str, Num]);
 		const sum2 = new SumType([Str, Num]);
 		const sum3 = new SumType([Str]);
@@ -199,6 +202,9 @@ describe("type system", () => {
 		expect(fun1.copy().equivalent(fun1)).toBe(true);
 	});
 	test("collection type", () => {
+		expect(new CollectionType(Collection.Map, Str).isAssignable).toBe(
+			false
+		);
 		const list1 = new CollectionType(
 			Collection.List,
 			new PrimitiveType(Primitive.Bool, false)
@@ -222,6 +228,7 @@ describe("type system", () => {
 		expect(list1.copy().equivalent(list1)).toBe(true);
 	});
 	test("any type", () => {
+		expect(new AnyType().isAssignable).toBe(false);
 		expect(Any.equivalent(Type.construct(["any"]))).toBe(true);
 		expect(Any.equivalent(Type.construct("str list map"))).toBe(false);
 		expect(Any.equivalent(Num)).toBe(false);
