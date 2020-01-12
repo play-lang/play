@@ -139,9 +139,9 @@ describe("simple function call", () => {
 			const code = str`
 				return add(1, 2)
 				function add(p1: num, p2: num) {
-					let a = 3
+					var a = 3
 					{
-						let b = 4
+						var b = 4
 						{
 							let c = 5
 							b = b + c // b = 9
