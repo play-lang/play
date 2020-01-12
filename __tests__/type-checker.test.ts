@@ -5,15 +5,17 @@ import { Play } from "../src/play";
 describe("type-checker", () => {
 	test("bad variable declaration", () => {
 		const code = str`
-		// var x: str = 10
-		// var y: num = "hello, world"
-		// var z = 10
-		// z = "hello"
-		// return "a" + 10
-		// 5 = "hello"
+		var x: str = 10
+		var y: num = "hello, world"
+		var z = 10
+		z = "hello"
+		return "a" + 10
+		return 10 + 10
+		return "a" + "b"
+		5 = "hello"
 
 		return doSomething(10, 10)
-		// var x: num = 10		
+		var x: num = 10		
 		function doSomething(a: num, b: num) {
 			return a + b
 		}

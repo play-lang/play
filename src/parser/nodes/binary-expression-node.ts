@@ -8,6 +8,7 @@ import {
 	ErrorType,
 	Num,
 	Str,
+	SumType,
 	Type,
 } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
@@ -70,7 +71,7 @@ export class BinaryExpressionNode extends Expression {
 			case TokenType.GreaterThanEqual:
 				return Num;
 			case TokenType.Plus:
-			// return
+				return new SumType([Str, Num]);
 			case TokenType.Minus:
 			case TokenType.Asterisk:
 			case TokenType.Slash:
