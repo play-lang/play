@@ -22,6 +22,12 @@ export enum Collection {
 }
 
 export abstract class Type implements Describable {
+	// MARK: Describable
+	public abstract get description(): string;
+
+	// TODO: Move constructType() to here
+	// public static construct(): Type {}
+
 	constructor(
 		/**
 		 * True if the type is addressable and assignable
@@ -33,6 +39,13 @@ export abstract class Type implements Describable {
 	) {}
 
 	/**
+	 * *Type equivalence*, in type theory terminology determines whether
+	 * two types represent the same type of things, roughly stated. That is,
+	 * if two types are *equivalent* they are the same type.
+	 *
+	 * For any types A and B, if A is equivalent to B then B is also equivalent
+	 * to A. Equivalence is symmetric (it is a two-way street).
+	 *
 	 * Type subclasses should implement this to determine equivalence for a
 	 * specified type
 	 *
@@ -42,8 +55,24 @@ export abstract class Type implements Describable {
 	 */
 	public abstract equivalent(type: Type): boolean;
 
-	// MARK: Describable
-	public abstract get description(): string;
+	/**
+	 * Determines if the specified type can be used in place of the type
+	 * represented by the receiver (represents *type compatibility* in type
+	 * theory terminology))
+	 *
+	 * Type compatibility is not symmetric like type equivalence is. If type A
+	 * can be used in place of type B, type B cannot necessarily be used in
+	 * place of A.
+	 *
+	 * Type subclasses should implement this to determine compatibility with a
+	 * specified type
+	 *
+	 * @param type The type to be considered as a substitute
+	 *
+	 * @returns True if the specified type can be used in place of the type
+	 * represented by the receiver
+	 */
+	public abstract accepts(type: Type): boolean;
 
 	/** Create a copy of the type */
 	public abstract copy(): Type;
@@ -56,11 +85,12 @@ export class ErrorType extends Type {
 	}
 
 	public equivalent(type: Type): boolean {
-		return (
-			type === this ||
-			type instanceof AnyType ||
-			type instanceof ErrorType
-		);
+		return type instanceof ErrorType;
+	}
+
+	public accepts(type: Type): boolean {
+		// Error types have a narrow definition of compatibility
+		return this.equivalent(type);
 	}
 
 	public get description(): string {
@@ -81,8 +111,15 @@ export class AnyType extends Type {
 	}
 
 	public equivalent(type: Type): boolean {
-		// AnyType is equivalent to every other type
-		return true;
+		// Only equivalent to other AnyType instances or itself:
+		return type instanceof AnyType;
+	}
+
+	public accepts(type: Type): boolean {
+		// Any type has a broad definition of compatibility
+		// Anything that is not an error type is fair game to substitute for an
+		// any type
+		return !(type instanceof ErrorType);
 	}
 
 	public get description(): string {
@@ -90,8 +127,7 @@ export class AnyType extends Type {
 	}
 
 	public copy(): AnyType {
-		// No need to make a copy when one any type is sufficient...
-		return this;
+		return new AnyType(this.isAssignable);
 	}
 }
 
@@ -112,9 +148,13 @@ export class PrimitiveType extends Type {
 	public equivalent(type: Type): boolean {
 		return (
 			type === this ||
-			type instanceof AnyType ||
 			(type instanceof PrimitiveType && type.primitive === this.primitive)
 		);
+	}
+
+	public accepts(type: Type): boolean {
+		// Primitive types also have a narrow definition of compatibility
+		return this.equivalent(type);
 	}
 
 	public get description(): string {
@@ -154,7 +194,7 @@ export class RecordType extends Type {
 	}
 
 	public equivalent(type: Type): boolean {
-		if (type === this || type instanceof AnyType) return true;
+		if (type === this) return true;
 		if (!(type instanceof RecordType)) return false;
 		if (type.operands.size !== this.operands.size) return false;
 		for (const name of type.operands.keys()) {
@@ -173,6 +213,11 @@ export class RecordType extends Type {
 			}
 		}
 		return true;
+	}
+
+	public accepts(type: Type): boolean {
+		// Record types also have a narrow definition of compatibility
+		return this.equivalent(type);
 	}
 
 	public get description(): string {
@@ -212,13 +257,18 @@ export class ProductType extends Type {
 	}
 
 	public equivalent(type: Type): boolean {
-		if (type === this || type instanceof AnyType) return true;
+		if (type === this) return true;
 		if (!(type instanceof ProductType)) return false;
 		if (type.operands.length !== this.operands.length) return false;
 		for (let i = 0; i < this.operands.length; i++) {
 			if (!this.operands[i].equivalent(type.operands[i])) return false;
 		}
 		return true;
+	}
+
+	public accepts(type: Type): boolean {
+		// Product types also have a narrow definition of compatibility
+		return this.equivalent(type);
 	}
 
 	/**
@@ -261,6 +311,66 @@ export class ProductType extends Type {
 }
 
 /**
+ * Represents a union of types, where a type can be any of the allowed
+ * subtypes contained inside it.
+ *
+ * Comparable to a normal union (but not a tagged union)
+ */
+export class SumType extends Type {
+	/** The allowed types contained inside this sum type */
+	public readonly types: Set<Type>;
+	/**
+	 * Create a new sum type by specifying allowed types
+	 * @param types Array of types to be included as part of this sum type
+	 * @param isAssignable Whether or not the type is assignable
+	 */
+	constructor(types: Iterable<Type>, isAssignable: boolean = false) {
+		super(isAssignable);
+		this.types = new Set(types);
+	}
+
+	public equivalent(type: Type): boolean {
+		if (type === this) return true;
+		if (!(type instanceof SumType)) return false;
+		// Empty sum types are equivalent
+		// Ensure both sum types have the same number of member types
+		if (this.types.size !== type.types.size) return false;
+		// If every type from the receiver's set is present in the comparison
+		// type, then it must be equivalent
+		for (const t of this.types) {
+			if (!type.types.has(t)) return false;
+		}
+		return true;
+	}
+
+	public accepts(type: Type): boolean {
+		if (this.equivalent(type)) return true;
+		// If the comparison type is equivalent to any of the receiver's member
+		// types, the receiver accepts the comparison type as a substitute for
+		// itself
+		for (const t of this.types) {
+			if (type.equivalent(t)) return true;
+		}
+		return false;
+	}
+
+	public get description(): string {
+		return (
+			(this.isAssignable ? "&" : "") +
+			"<" +
+			Array.from(this.types.values())
+				.map(type => type.description)
+				.join(", ") +
+			">"
+		);
+	}
+
+	public copy(): SumType {
+		return new SumType(new Set(this.types), this.isAssignable);
+	}
+}
+
+/**
  * Represents a function type, which consists of a domain type for
  * the parameters (a product type containing multiple types) and a type
  * for the range (return value)
@@ -280,11 +390,15 @@ export class FunctionType extends Type {
 	public equivalent(type: Type): boolean {
 		return (
 			type === this ||
-			type instanceof AnyType ||
 			(type instanceof FunctionType &&
 				this.name === type.name &&
 				this.parameters.equivalent(type.parameters))
 		);
+	}
+
+	public accepts(type: Type): boolean {
+		// Function types also have a narrow definition of compatibility
+		return this.equivalent(type);
 	}
 
 	public get description(): string {
@@ -325,11 +439,15 @@ export class CollectionType extends Type {
 	public equivalent(type: Type): boolean {
 		return (
 			type === this ||
-			type instanceof AnyType ||
 			(type instanceof CollectionType &&
 				this.collection === type.collection &&
 				this.elementType.equivalent(type.elementType))
 		);
+	}
+
+	public accepts(type: Type): boolean {
+		// Collection types also have a narrow definition of compatibility
+		return this.equivalent(type);
 	}
 
 	public get description(): string {
@@ -381,8 +499,11 @@ export function constructType(
 	let annotation = typeAnnotation[0]!;
 	let type: Type;
 	switch (annotation) {
-		case "void":
+		case "none":
 			type = new PrimitiveType(Primitive.None, false);
+			break;
+		case "any":
+			type = new AnyType(false);
 			break;
 		case "str":
 			type = new PrimitiveType(Primitive.Str, isAssignable);
