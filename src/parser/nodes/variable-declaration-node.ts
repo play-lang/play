@@ -1,7 +1,7 @@
 import { Expression, Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import { constructType, Type } from "src/language/types/type-system";
+import { constructType, None, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export class VariableDeclarationNode extends Statement {
@@ -31,7 +31,12 @@ export class VariableDeclarationNode extends Statement {
 		return this.annotation ? this.annotation : [];
 	}
 
-	public type(env: Environment): Type {
+	/**
+	 * Compute the type of the variable based on its type annotation given
+	 * the current type checking environment
+	 * @param env The current type checking environment
+	 */
+	public variableType(env: Environment): Type {
 		if (this.annotation) {
 			return constructType(this.annotation, !this.isImmutable);
 		} else {
@@ -41,6 +46,11 @@ export class VariableDeclarationNode extends Statement {
 			exprType.isAssignable = !this.isImmutable;
 			return exprType;
 		}
+	}
+
+	public type(env: Environment): Type {
+		// Statements have "none" type
+		return None;
 	}
 
 	public accept(visitor: Visitor): void {

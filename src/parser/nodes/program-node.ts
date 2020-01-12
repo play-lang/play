@@ -1,7 +1,7 @@
 import { Node } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import { Type, Void } from "src/language/types/type-system";
+import { None, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export class ProgramNode extends Node {
@@ -18,7 +18,7 @@ export class ProgramNode extends Node {
 	}
 
 	public type(env: Environment): Type {
-		return Void;
+		return None;
 	}
 
 	public accept(visitor: Visitor): void {

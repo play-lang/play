@@ -1,7 +1,7 @@
 import { Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import { Type, Void } from "src/language/types/type-system";
+import { ErrorType, None, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export class BlockStatementNode extends Statement {
@@ -20,10 +20,14 @@ export class BlockStatementNode extends Statement {
 	}
 
 	public type(env: Environment): Type {
-		// Todo: synthesize type
-		// Examine return statements in this block to figure out / enforce what
-		// the return type is
-		return Void;
+		// All statements in the block must be valid for the block type to be None
+		// rather than ErrorType
+		for (const statement of this.statements) {
+			if (statement.type(env) instanceof ErrorType) {
+				return new ErrorType(false);
+			}
+		}
+		return None;
 	}
 
 	public accept(visitor: Visitor): void {

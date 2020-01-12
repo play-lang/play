@@ -1,6 +1,6 @@
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import { Type, Void } from "src/language/types/type-system";
+import { Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export abstract class Node {
@@ -18,9 +18,7 @@ export abstract class Node {
 	) {}
 
 	/** Type of the node for use with type checking */
-	public type(env: Environment): Type {
-		return Void;
-	}
+	public abstract type(env: Environment): Type;
 
 	/** Accept the specified visitor */
 	public abstract accept(visitor: Visitor): any;
