@@ -2,11 +2,7 @@ import { FunctionInfo } from "src/language/function-info";
 import { Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import {
-	constructFunctionType,
-	ErrorType,
-	Type,
-} from "src/language/types/type-system";
+import { ErrorType, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
 
@@ -27,7 +23,7 @@ export class FunctionDeclarationNode extends Statement {
 		// Check that the block has a valid error type
 		const blockType = this.block.type(env);
 		if (blockType instanceof ErrorType) return new ErrorType(false);
-		return constructFunctionType(this.info);
+		return Type.constructFunction(this.info);
 	}
 
 	public accept(visitor: Visitor): void {

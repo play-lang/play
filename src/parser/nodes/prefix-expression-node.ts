@@ -2,7 +2,7 @@ import { Expression } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { prefixTypeAnnotations, TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
-import { constructType, ErrorType, Type } from "src/language/types/type-system";
+import { ErrorType, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export class PrefixExpressionNode extends Expression {
@@ -24,7 +24,7 @@ export class PrefixExpressionNode extends Expression {
 		const rhsType = this.rhs.type(env);
 		const annotation = prefixTypeAnnotations.get(this.token.type);
 		if (annotation) {
-			return constructType(annotation, rhsType.isAssignable);
+			return Type.construct(annotation, rhsType.isAssignable);
 		}
 		return new ErrorType(rhsType.isAssignable);
 	}

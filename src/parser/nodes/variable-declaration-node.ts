@@ -1,7 +1,7 @@
 import { Expression, Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import { constructType, None, Type } from "src/language/types/type-system";
+import { None, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export class VariableDeclarationNode extends Statement {
@@ -38,7 +38,7 @@ export class VariableDeclarationNode extends Statement {
 	 */
 	public variableType(env: Environment): Type {
 		if (this.annotation) {
-			return constructType(this.annotation, !this.isImmutable);
+			return Type.construct(this.annotation, !this.isImmutable);
 		} else {
 			// We must have an expression, so use its type as our type
 			const exprType = this.expr!.type(env).copy();

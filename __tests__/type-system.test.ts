@@ -2,8 +2,6 @@ import { LinkedHashMap } from "../src/common/linked-hash-map";
 import { FunctionInfo } from "../src/language/function-info";
 import {
 	allowAssignment,
-	constructFunctionType,
-	constructType,
 	Any,
 	AnyType,
 	Collection,
@@ -30,7 +28,7 @@ describe("type system", () => {
 		const num1 = new PrimitiveType(Primitive.Num, true);
 		const num2 = new PrimitiveType(Primitive.Num, false);
 		const err1 = new ErrorType(true);
-		const err2 = new ErrorType(false);
+		const err2 = new ErrorType();
 		expect(err1.copy()).toBeInstanceOf(ErrorType);
 		expect(str1.description).toBe("&Str");
 		expect(str2.description).toBe("Str");
@@ -49,44 +47,44 @@ describe("type system", () => {
 		const empty = new RecordType(new LinkedHashMap());
 		const rec1 = new RecordType(
 			new LinkedHashMap<string, Type>([
-				["p1", constructType(["bool"])],
-				["p2", constructType(["num", "set"])],
+				["p1", Type.construct("bool")],
+				["p2", Type.construct("num set")],
 			]),
 			true
 		);
 		const rec2 = new RecordType(
 			new LinkedHashMap<string, Type>([
-				["p1", constructType(["bool"])],
-				["p2", constructType(["num", "set"])],
+				["p1", Type.construct("bool")],
+				["p2", Type.construct("num set")],
 			])
 		);
 		const rec3 = new RecordType(
 			new LinkedHashMap<string, Type>([
-				["p2", constructType(["num", "set"])],
-				["p1", constructType(["bool"])],
+				["p2", Type.construct("num set")],
+				["p1", Type.construct("bool")],
 			])
 		);
 		const rec4 = new RecordType(
 			new LinkedHashMap<string, Type>([
-				["p2", constructType(["num", "set"])],
-				["p1", constructType(["str"])],
+				["p2", Type.construct("num set")],
+				["p1", Type.construct("str")],
 			])
 		);
 		const rec5 = new RecordType(
 			new LinkedHashMap<string, Type>([
-				["p2", constructType(["num", "set"])],
-				["p5", constructType(["bool"])],
+				["p2", Type.construct("num set")],
+				["p5", Type.construct("bool")],
 			])
 		);
 		const rec6 = new RecordType(
 			new LinkedHashMap<string, Type>([
-				["p1", constructType(["str"])],
-				["p2", constructType(["num", "set"])],
+				["p1", Type.construct("str")],
+				["p2", Type.construct("num set")],
 			])
 		);
 		expect(rec1.description).toBe("&<p1: Bool, p2: Set<Num>>");
 		expect(rec2.description).toBe("<p1: Bool, p2: Set<Num>>");
-		const t1 = constructType(["Num"]);
+		const t1 = Num;
 		expect(rec1.equivalent(rec1)).toBe(true);
 		expect(rec1.equivalent(rec2)).toBe(true);
 		expect(rec2.equivalent(rec1)).toBe(true);
@@ -121,20 +119,20 @@ describe("type system", () => {
 
 		const rec1 = new RecordType(
 			new LinkedHashMap<string, Type>([
-				["p1", constructType(["str"])],
-				["p2", constructType(["num"])],
+				["p1", str],
+				["p2", num],
 			]),
 			true
 		);
 		const rec2 = new RecordType(
 			new LinkedHashMap<string, Type>([
-				["p1", constructType(["str"])],
-				["p2", constructType(["num", "list"])],
+				["p1", str],
+				["p2", Type.construct("num list")],
 			]),
 			true
 		);
 		const rec3 = new RecordType(
-			new LinkedHashMap<string, Type>([["p1", constructType(["str"])]]),
+			new LinkedHashMap<string, Type>([["p1", Type.construct("str")]]),
 			true
 		);
 		expect(prod1.satisfiesRecordType(rec1)).toBe(true);
@@ -147,12 +145,7 @@ describe("type system", () => {
 		const sum2 = new SumType([Str, Num]);
 		const sum3 = new SumType([Str]);
 		const sum4 = new SumType([Str, Num, None, Any]);
-		const sum5 = new SumType([
-			constructType(["num", "list"]),
-			Str,
-			Num,
-			None,
-		]);
+		const sum5 = new SumType([Type.construct("num list"), Str, Num, None]);
 		expect(sum1.equivalent(sum1)).toBe(true);
 		expect(sum1.equivalent(sum2)).toBe(true);
 		expect(sum2.equivalent(sum1)).toBe(true);
@@ -170,32 +163,32 @@ describe("type system", () => {
 			"fun1",
 			new RecordType(
 				new LinkedHashMap([
-					["a", constructType(["str"])],
-					["b", constructType(["str"])],
+					["a", Str],
+					["b", Str],
 				])
 			),
-			constructType(["str"])
+			Str
 		);
 		expect(fun1.description).toBe("(fun1(Str, Str) -> Str)");
 		const fun2 = new FunctionType(
 			"fun1",
 			new RecordType(
 				new LinkedHashMap([
-					["a", constructType(["str"])],
-					["b", constructType(["str"])],
+					["a", Str],
+					["b", Str],
 				])
 			),
-			constructType(["str"])
+			Str
 		);
 		const fun3 = new FunctionType(
 			"fun3",
 			new RecordType(
 				new LinkedHashMap([
-					["a", constructType(["str"])],
-					["b", constructType(["str"])],
+					["a", Str],
+					["b", Str],
 				])
 			),
-			constructType(["str"])
+			Str
 		);
 
 		expect(fun1.equivalent(fun2)).toBe(true);
@@ -229,43 +222,44 @@ describe("type system", () => {
 		expect(list1.copy().equivalent(list1)).toBe(true);
 	});
 	test("any type", () => {
-		expect(Any.equivalent(constructType(["any"]))).toBe(true);
-		expect(Any.equivalent(constructType(["str", "list", "map"]))).toBe(
-			false
-		);
-		expect(Any.equivalent(constructType(["num"]))).toBe(false);
-		expect(Any.equivalent(constructType(["none"]))).toBe(false);
-		expect(Any.accepts(constructType(["num"]))).toBe(true);
-		expect(Any.accepts(constructType(["num", "list"]))).toBe(true);
-		expect(Any.accepts(constructType(["any"]))).toBe(true);
+		expect(Any.equivalent(Type.construct(["any"]))).toBe(true);
+		expect(Any.equivalent(Type.construct("str list map"))).toBe(false);
+		expect(Any.equivalent(Num)).toBe(false);
+		expect(Any.equivalent(None)).toBe(false);
+		expect(Any.accepts(Num)).toBe(true);
+		expect(Any.accepts(Type.construct("num list"))).toBe(true);
+		expect(Any.accepts(Type.construct(["any"]))).toBe(true);
 		expect(Any.description).toBe("Any");
 		expect(new AnyType(true).description).toBe("&Any");
 		expect(Any.copy()).toBeInstanceOf(AnyType);
 	});
 	describe("type utilities", () => {
 		test("type construction", () => {
-			expect(constructType(["str"]).equivalent(str)).toBe(true);
+			expect(Type.construct("str").equivalent(str)).toBe(true);
 			expect(
-				constructType(["str", "list"]).equivalent(
+				Type.construct("str list").equivalent(
 					new CollectionType(Collection.List, str, false)
 				)
 			).toBe(true);
-			expect(constructType([]).equivalent(None)).toBe(true);
-			expect(constructType(["none"]).equivalent(None)).toBe(true);
+			expect(Type.construct([]).equivalent(None)).toBe(true);
+			expect(Type.construct("none").equivalent(None)).toBe(true);
 			expect(
-				constructType(["num", "unknown"]).equivalent(
-					new ErrorType(false)
+				Type.construct("num unknown").equivalent(new ErrorType())
+			).toBe(true);
+			expect(
+				Type.construct("unknown map").equivalent(
+					new CollectionType(Collection.Map, new ErrorType())
 				)
 			).toBe(true);
 			expect(
-				constructType(["str", "map"]).equivalent(
+				Type.construct("str map").equivalent(
 					new CollectionType(Collection.Map, str, false)
 				)
 			).toBe(true);
 		});
 		test("function type construction", () => {
 			expect(
-				constructFunctionType(
+				Type.constructFunction(
 					new FunctionInfo(
 						"fun1",
 						["str"],
@@ -280,6 +274,7 @@ describe("type system", () => {
 					)
 				)
 			).toBe(true);
+			expect(Type.construct("str | num")).toBeInstanceOf(SumType);
 		});
 		test("allow assignment", () => {
 			const str1 = new PrimitiveType(Primitive.Str, true);

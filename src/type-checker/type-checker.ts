@@ -21,13 +21,7 @@ import { SymbolTable } from "src/language/symbol-table";
 import { TokenLike } from "src/language/token";
 import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
-import {
-	constructFunctionType,
-	constructType,
-	ErrorType,
-	Num,
-	Type,
-} from "src/language/types/type-system";
+import { ErrorType, Num, Type } from "src/language/types/type-system";
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
 import { TypeCheckError } from "src/type-checker/type-check-error";
 
@@ -64,7 +58,7 @@ export class TypeChecker implements Visitor {
 			const info = this.functionTable.get(key)!;
 			if (!info.type) {
 				// Compute the type of the function
-				info.type = constructFunctionType(info);
+				info.type = Type.constructFunction(info);
 			}
 		}
 
@@ -221,7 +215,7 @@ export class TypeChecker implements Visitor {
 			const idSymbol = this.symbolTable.lookup(parameter);
 			if (typeAnnotation && idSymbol && typeAnnotation.length > 0) {
 				// TODO: Support pass-by-reference assignable parameter types someday
-				const type = constructType(typeAnnotation);
+				const type = Type.construct(typeAnnotation);
 				idSymbol.type = type;
 			} else {
 				throw new TypeCheckError(
@@ -278,7 +272,7 @@ export class TypeChecker implements Visitor {
 		// TODO: Add better error handling for invalid action calls
 		if (node.functionName && this.functionTable.has(node.functionName)) {
 			const functionInfo = this.functionTable.get(node.functionName!)!;
-			const functionType = constructFunctionType(functionInfo);
+			const functionType = Type.constructFunction(functionInfo);
 			if (!type.satisfiesRecordType(functionType.parameters)) {
 				this.mismatch(node.token, functionType.parameters, type);
 			}

@@ -2,7 +2,7 @@ import { Expression } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
-import { constructType, ErrorType, Type } from "src/language/types/type-system";
+import { ErrorType, Num, Str, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export class AssignmentExpressionNode extends Expression {
@@ -16,8 +16,8 @@ export class AssignmentExpressionNode extends Expression {
 	}
 
 	public type(env: Environment): Type {
-		const str = constructType(["str"]);
-		const num = constructType(["num"]);
+		const str = Str;
+		const num = Num;
 		switch (this.assignmentType) {
 			case TokenType.Equal:
 				return this.lhs.type(env);

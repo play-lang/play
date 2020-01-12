@@ -2,7 +2,7 @@ import { Expression } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
-import { constructType, Type } from "src/language/types/type-system";
+import { Bool, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export class BinaryLogicalExpressionNode extends Expression {
@@ -17,7 +17,7 @@ export class BinaryLogicalExpressionNode extends Expression {
 
 	public type(env: Environment): Type {
 		// Logical operators simply return booleans, no matter what
-		return constructType(["bool"]);
+		return Bool;
 	}
 
 	public accept(visitor: Visitor): void {
