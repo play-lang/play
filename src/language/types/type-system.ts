@@ -490,51 +490,68 @@ export const Any = new AnyType(false);
  * can be assigned to (like a mutable variable)
  */
 export function constructType(
-	typeAnnotation: string[],
+	typeAnnotation: string[] | string,
 	isAssignable: boolean = false
 ): Type {
-	if (typeAnnotation.length < 1) {
-		return new PrimitiveType(Primitive.None, false);
-	}
-	let annotation = typeAnnotation[0]!;
-	let type: Type;
-	switch (annotation) {
-		case "none":
-			type = new PrimitiveType(Primitive.None, false);
-			break;
-		case "any":
-			type = new AnyType(false);
-			break;
-		case "str":
-			type = new PrimitiveType(Primitive.Str, isAssignable);
-			break;
-		case "num":
-			type = new PrimitiveType(Primitive.Num, isAssignable);
-			break;
-		case "bool":
-			type = new PrimitiveType(Primitive.Bool, isAssignable);
-			break;
-		default:
-			type = new ErrorType(isAssignable);
-	}
-	for (let i = 1; i < typeAnnotation.length; i++) {
-		annotation = typeAnnotation[i];
+	const memberAnnotations: string[][] =
+		typeof typeAnnotation === "string"
+			? typeAnnotation.split("|").map(annotation => annotation.split(" "))
+			: [typeAnnotation];
+
+	const memberTypes: Type[] = [];
+
+	for (const memberAnnotation of memberAnnotations) {
+		if (memberAnnotation.length < 1) {
+			return new PrimitiveType(Primitive.None, false);
+		}
+		let annotation = memberAnnotation[0]!;
+		let type: Type;
 		switch (annotation) {
-			// Wrap the last type in the appropriate type constructor
-			case "list":
-				type = new CollectionType(Collection.List, type);
+			case "none":
+				type = new PrimitiveType(Primitive.None, false);
 				break;
-			case "map":
-				type = new CollectionType(Collection.Map, type);
+			case "any":
+				type = new AnyType(false);
 				break;
-			case "set":
-				type = new CollectionType(Collection.Set, type);
+			case "str":
+				type = new PrimitiveType(Primitive.Str, isAssignable);
+				break;
+			case "num":
+				type = new PrimitiveType(Primitive.Num, isAssignable);
+				break;
+			case "bool":
+				type = new PrimitiveType(Primitive.Bool, isAssignable);
 				break;
 			default:
 				type = new ErrorType(isAssignable);
 		}
+		for (let i = 1; i < memberAnnotation.length; i++) {
+			annotation = memberAnnotation[i];
+			switch (annotation) {
+				// Wrap the last type in the appropriate type constructor
+				case "list":
+					type = new CollectionType(Collection.List, type);
+					break;
+				case "map":
+					type = new CollectionType(Collection.Map, type);
+					break;
+				case "set":
+					type = new CollectionType(Collection.Set, type);
+					break;
+				default:
+					type = new ErrorType(isAssignable);
+			}
+		}
+		memberTypes.push(type);
 	}
-	return type;
+	if (memberTypes.length === 1) {
+		// Single type to return
+		return memberTypes[0];
+	} else {
+		// We parsed multiple types, which indicates a type union
+		// (i.e., sum type)
+		return new SumType(memberTypes, isAssignable);
+	}
 }
 
 /**
