@@ -43,6 +43,10 @@ describe("type system", () => {
 		expect(err1.equivalent(err2)).toBe(true);
 		expect(err1.equivalent(str1)).toBe(false);
 		expect(str2.equivalent(err2)).toBe(false);
+		expect(str1.accepts(str2)).toBe(true);
+		expect(str1.accepts(num)).toBe(false);
+		expect(err1.accepts(err2)).toBe(true);
+		expect(err1.accepts(str)).toBe(false);
 	});
 	test("record type", () => {
 		const empty = new RecordType(new LinkedHashMap());
@@ -103,6 +107,9 @@ describe("type system", () => {
 		expect(rec6.equivalent(rec1)).toBe(false);
 		expect(t1.equivalent(rec1)).toBe(false);
 		expect(rec6.copy().equivalent(rec6)).toBe(true);
+		expect(rec1.accepts(rec2)).toBe(true);
+		expect(rec1.accepts(rec3)).toBe(false);
+		expect(rec1.accepts(str)).toBe(false);
 	});
 	test("product type", () => {
 		expect(new ProductType([]).isAssignable).toBe(false);
@@ -119,6 +126,8 @@ describe("type system", () => {
 		expect(prod4.equivalent(prod1)).toBe(false);
 		expect(prod1.description).toBe("&<&Str, &Num>");
 		expect(prod2.description).toBe("<&Str, &Num>");
+		expect(prod1.accepts(prod2)).toBe(true);
+		expect(prod1.accepts(str)).toBe(false);
 		const rec1 = new RecordType(
 			new LinkedHashMap<string, Type>([
 				["p1", str],
@@ -148,7 +157,10 @@ describe("type system", () => {
 		const sum2 = new SumType([Str, Num]);
 		const sum3 = new SumType([Str]);
 		const sum4 = new SumType([Str, Num, None, Any]);
-		const sum5 = new SumType([Type.construct("num list"), Str, Num, None]);
+		const sum5 = new SumType(
+			[Type.construct("num list"), Str, Num, None],
+			true
+		);
 		expect(sum1.equivalent(sum1)).toBe(true);
 		expect(sum1.equivalent(sum2)).toBe(true);
 		expect(sum2.equivalent(sum1)).toBe(true);
@@ -158,8 +170,13 @@ describe("type system", () => {
 		expect(sum1.description).toBe("<Str | Num>");
 		expect(sum3.description).toBe("<Str>");
 		expect(sum4.description).toBe("<Str | Num | None | Any>");
+		expect(sum5.description).toBe("&<List<Num> | Str | Num | None>");
 		expect(sum4.equivalent(Any)).toBe(false);
 		expect(sum4.equivalent(sum5)).toBe(false);
+		expect(sum1.accepts(sum2)).toBe(true);
+		expect(sum1.accepts(Any)).toBe(false);
+		expect(sum1.accepts(sum5)).toBe(false);
+		expect(sum1.accepts(str)).toBe(true);
 	});
 	test("function type", () => {
 		const fun1 = new FunctionType(
@@ -200,6 +217,8 @@ describe("type system", () => {
 		expect(fun3.equivalent(fun1)).toBe(false);
 		expect(fun1.equivalent(num)).toBe(false);
 		expect(fun1.copy().equivalent(fun1)).toBe(true);
+		expect(fun1.accepts(fun2)).toBe(true);
+		expect(fun1.accepts(fun3)).toBe(false);
 	});
 	test("collection type", () => {
 		expect(new CollectionType(Collection.Map, Str).isAssignable).toBe(
@@ -226,6 +245,9 @@ describe("type system", () => {
 		expect(list3.equivalent(list1)).toBe(false);
 		expect(list1.equivalent(str)).toBe(false);
 		expect(list1.copy().equivalent(list1)).toBe(true);
+
+		expect(list1.accepts(list2)).toBe(true);
+		expect(list1.accepts(list3)).toBe(false);
 	});
 	test("any type", () => {
 		expect(new AnyType().isAssignable).toBe(false);
