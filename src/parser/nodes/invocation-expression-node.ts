@@ -33,6 +33,7 @@ export class InvocationExpressionNode extends Expression {
 	}
 
 	public type(env: Environment): Type {
+		// Find the return type of the invoked function
 		const functionName = this.functionName;
 		if (functionName) {
 			const info = env.functionTable.get(functionName);
@@ -49,6 +50,8 @@ export class InvocationExpressionNode extends Expression {
 	}
 
 	public argumentsType(env: Environment): ProductType {
+		// Compute the product type that represents the type of the arguments
+		// in the invocation expression
 		return new ProductType(this.args.map(arg => arg.type(env)));
 	}
 
