@@ -24,6 +24,7 @@ export enum TokenType {
 
 	// Reserved statement words
 	If,
+	Else,
 	While,
 	For,
 	Do,
@@ -100,6 +101,7 @@ export const idTokenTypes: { [key: string]: TokenType } = {
 	// Play language:
 	function: TokenType.Function,
 	if: TokenType.If,
+	else: TokenType.Else,
 	while: TokenType.While,
 	for: TokenType.For,
 	do: TokenType.Do,

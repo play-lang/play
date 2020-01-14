@@ -9,8 +9,10 @@ import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
 import { Lexer } from "src/lexer/lexer";
 import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
+import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
+import { IfStatementNode } from "src/parser/nodes/if-statement-node";
 import { ProgramNode } from "src/parser/nodes/program-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
@@ -105,6 +107,8 @@ export class Parser extends TokenParser {
 			return this.functionDeclaration();
 		} else if (this.match(TokenType.Return)) {
 			return this.returnStatement();
+		} else if (this.match(TokenType.If)) {
+			return this.ifStatement();
 		} else {
 			// An unrecognized statement must be an expression statement
 			return this.expressionStatement();
@@ -362,6 +366,42 @@ export class Parser extends TokenParser {
 			? this.expression()
 			: undefined;
 		return new ReturnStatementNode(this.previous, expr);
+	}
+
+	public ifStatement(): IfStatementNode {
+		const token = this.previous;
+		const predicate = this.expression();
+		const consequent = this.block();
+		const alternates: ElseStatementNode[] = [];
+		// Keep track of whether or not we have found a catch-all else block
+		// as in `else { }`
+		// This enables error reporting since we support `else if` sequences
+		let catchAllElseSeen = false;
+		while (this.match(TokenType.Else)) {
+			const token = this.previous;
+			const expr = this.match(TokenType.If)
+				? this.expression()
+				: undefined;
+			if (!expr) {
+				if (catchAllElseSeen) {
+					throw this.error(
+						token,
+						"Only one catch-all `else` block may be present"
+					);
+				}
+				catchAllElseSeen = true;
+			}
+			if (expr && catchAllElseSeen) {
+				throw this.error(
+					token,
+					"An `else if` block must appear before a catch-all `else` block"
+				);
+			}
+			const block = this.block();
+			const alternate = new ElseStatementNode(token, expr, block);
+			alternates.push(alternate);
+		}
+		return new IfStatementNode(token, predicate, consequent, alternates);
 	}
 
 	public expressionStatement(): ExpressionStatementNode {

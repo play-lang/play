@@ -11,9 +11,11 @@ import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
+import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
+import { IfStatementNode } from "src/parser/nodes/if-statement-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
@@ -29,6 +31,10 @@ export class Compiler implements Visitor {
 	/** Current bytecode context */
 	public get context(): Context {
 		return this.contexts.get(this.symbolTable)!;
+	}
+	/** Address of the last instruction */
+	private get lastInstr(): number {
+		return this.context.lastInstr;
 	}
 
 	/** Ast root to compile */
@@ -67,10 +73,6 @@ export class Compiler implements Visitor {
 	private patcher: ContextLabels = new ContextLabels();
 	/** Index of the next label to be generated */
 	private labelId: number = 0;
-	/** Address of the last instruction */
-	private get lastInstr(): number {
-		return this.context.lastInstr;
-	}
 
 	constructor(ast: AbstractSyntaxTree) {
 		this.ast = ast;
@@ -107,6 +109,14 @@ export class Compiler implements Visitor {
 			this.emit(OpCode.Drop, numLocalsToDrop);
 			this.exitScope();
 		}
+	}
+
+	public visitIfStatementNode(node: IfStatementNode): void {
+		throw new Error("Method not implemented.");
+	}
+
+	public visitElseStatementNode(node: ElseStatementNode): void {
+		throw new Error("Method not implemented.");
 	}
 
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
