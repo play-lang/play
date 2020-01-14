@@ -22,7 +22,9 @@ import { TokenLike } from "src/language/token";
 import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
 import { ErrorType, Num, SumType, Type } from "src/language/types/type-system";
+import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
+import { IfStatementNode } from "src/parser/nodes/if-statement-node";
 import { TypeCheckError } from "src/type-checker/type-check-error";
 
 export class TypeChecker implements Visitor {
@@ -30,8 +32,6 @@ export class TypeChecker implements Visitor {
 	public get env(): Environment {
 		return this.ast.env;
 	}
-	/* Type checker errors encountered while checking types */
-	public errors: SemanticError[] = [];
 
 	/** Symbol table for the current scope */
 	private get symbolTable(): SymbolTable {
@@ -41,6 +41,8 @@ export class TypeChecker implements Visitor {
 	private get functionTable(): Map<string, FunctionInfo> {
 		return this.env.functionTable;
 	}
+	/* Type checker errors encountered while checking types */
+	public errors: SemanticError[] = [];
 
 	constructor(
 		/** Abstract syntax tree to validate */
@@ -155,6 +157,14 @@ export class TypeChecker implements Visitor {
 			statement.accept(this);
 		}
 		if (!node.isFunctionBlock) this.env.exitScope();
+	}
+
+	public visitIfStatementNode(node: IfStatementNode): void {
+		throw new Error("Method not implemented.");
+	}
+
+	public visitElseStatementNode(node: ElseStatementNode): void {
+		throw new Error("Method not implemented.");
 	}
 
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {

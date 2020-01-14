@@ -6,9 +6,11 @@ import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
+import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
+import { IfStatementNode } from "src/parser/nodes/if-statement-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
@@ -39,6 +41,27 @@ export class PrintVisitor implements Visitor, Describable {
 			this.desc += this.spaces + (last ? "└── " : "├── ");
 			statement.accept(this);
 		}
+		this.indent -= 1;
+	}
+
+	public visitIfStatementNode(node: IfStatementNode): void {
+		this.desc += "If\n";
+		this.indent += 1;
+		node.consequent.accept(this);
+		this.desc += "Then\n";
+		for (const alternate of node.alternates) {
+			alternate.accept(this);
+		}
+		this.indent -= 1;
+	}
+
+	public visitElseStatementNode(node: ElseStatementNode): void {
+		this.desc += "Else";
+		this.desc += node.expr ? " If\n" : "\n";
+		this.indent += 1;
+		node.expr?.accept(this);
+		this.desc += "Then\n";
+		node.block.accept(this);
 		this.indent -= 1;
 	}
 

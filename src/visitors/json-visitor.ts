@@ -6,9 +6,11 @@ import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
+import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
+import { IfStatementNode } from "src/parser/nodes/if-statement-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
@@ -53,6 +55,41 @@ export class JSONVisitor implements Visitor, Describable {
 			start: node.start,
 			end: node.end,
 			statements,
+		});
+	}
+	public visitIfStatementNode(node: IfStatementNode): void {
+		node.predicate.accept(this);
+		const predicate = this.stack.pop();
+		node.consequent.accept(this);
+		const consequent = this.stack.pop();
+		const alternates: any[] = [];
+		for (const alternate of node.alternates) {
+			alternate.accept(this);
+			alternates.push(this.stack.pop());
+		}
+		this.stack.push({
+			type: node.nodeName,
+			start: node.start,
+			end: node.end,
+			predicate,
+			consequent,
+			alternates,
+		});
+	}
+	public visitElseStatementNode(node: ElseStatementNode): void {
+		let expr: any | undefined;
+		if (node.expr) {
+			node.expr.accept(this);
+			expr = this.stack.pop();
+		}
+		node.block.accept(this);
+		const block = this.stack.pop();
+		this.stack.push({
+			type: node.nodeName,
+			start: node.start,
+			end: node.end,
+			expr,
+			block,
 		});
 	}
 	public visitBlockStatementNode(node: BlockStatementNode): void {
