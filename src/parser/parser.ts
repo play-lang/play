@@ -99,9 +99,6 @@ export class Parser extends TokenParser {
 		// production to make
 		if (this.match(TokenType.Let, TokenType.Var)) {
 			return this.variableDeclaration();
-		} else if (this.match(TokenType.BraceOpen)) {
-			// Match a block statement
-			return this.block();
 		} else if (this.match(TokenType.Function)) {
 			// Function definition
 			return this.functionDeclaration();
@@ -109,6 +106,9 @@ export class Parser extends TokenParser {
 			return this.returnStatement();
 		} else if (this.match(TokenType.If)) {
 			return this.ifStatement();
+		} else if (this.match(TokenType.BraceOpen)) {
+			// Match a block statement
+			return this.block();
 		} else {
 			// An unrecognized statement must be an expression statement
 			return this.expressionStatement();
@@ -371,6 +371,7 @@ export class Parser extends TokenParser {
 	public ifStatement(): IfStatementNode {
 		const token = this.previous;
 		const predicate = this.expression();
+		this.consume(TokenType.BraceOpen, "Expected opening brace of if block");
 		const consequent = this.block();
 		const alternates: ElseStatementNode[] = [];
 		// Keep track of whether or not we have found a catch-all else block
@@ -397,6 +398,11 @@ export class Parser extends TokenParser {
 					"An `else if` block must appear before a catch-all `else` block"
 				);
 			}
+			this.consume(
+				TokenType.BraceOpen,
+				"Expected opening brace of `else" +
+					(expr ? " if` block" : "` block")
+			);
 			const block = this.block();
 			const alternate = new ElseStatementNode(token, expr, block);
 			alternates.push(alternate);
