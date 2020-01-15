@@ -6,9 +6,11 @@ describe("control flow", () => {
 		test("parse simple case", () => {
 			const code = str`
 				if (true and true) {
-					callAFunction()
-					// Add some numbers
-					2 + 3 + 4
+					doIf()
+				} else if (true and false) {
+					doElseIf()
+				} else {
+					doElse()
 				}
 			`;
 			// const ast = Play.parse(code);
