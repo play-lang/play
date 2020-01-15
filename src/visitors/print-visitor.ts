@@ -47,21 +47,46 @@ export class PrintVisitor implements Visitor, Describable {
 	public visitIfStatementNode(node: IfStatementNode): void {
 		this.desc += "If\n";
 		this.indent += 1;
+		this.desc += this.spaces + "├── Predicate\n";
+		this.indent += 1;
+		this.desc += this.spaces + "└── ";
+		node.predicate.accept(this);
+		this.indent -= 1;
+		this.desc += this.spaces + "├── Then\n";
+		this.indent += 1;
+		this.desc += this.spaces + "└── ";
 		node.consequent.accept(this);
-		this.desc += "Then\n";
+		this.indent -= 1;
+		this.desc += this.spaces + "└──  Alternates\n";
 		for (const alternate of node.alternates) {
+			this.indent += 1;
+			const last =
+				alternate === node.alternates[node.alternates.length - 1];
+			this.desc += this.spaces + (last ? "└── " : "├── ");
 			alternate.accept(this);
+			this.indent -= 1;
 		}
 		this.indent -= 1;
 	}
 
 	public visitElseStatementNode(node: ElseStatementNode): void {
 		this.desc += "Else";
-		this.desc += node.expr ? " If\n" : "\n";
 		this.indent += 1;
-		node.expr?.accept(this);
-		this.desc += "Then\n";
+		if (node.expr) {
+			this.desc += " If\n";
+			this.desc += this.spaces + "└── Predicate\n";
+			this.indent += 1;
+			this.desc += this.spaces + "└── ";
+			node.expr?.accept(this);
+			this.indent -= 1;
+		} else {
+			this.desc += "\n";
+		}
+		this.desc += this.spaces + "└── Then\n";
+		this.indent += 1;
+		this.desc += this.spaces + "└── ";
 		node.block.accept(this);
+		this.indent -= 1;
 		this.indent -= 1;
 	}
 
