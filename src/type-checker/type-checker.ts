@@ -160,11 +160,16 @@ export class TypeChecker implements Visitor {
 	}
 
 	public visitIfStatementNode(node: IfStatementNode): void {
-		throw new Error("Method not implemented.");
+		node.predicate.accept(this);
+		node.consequent.accept(this);
+		for (const alternate of node.alternates) {
+			alternate.accept(this);
+		}
 	}
 
 	public visitElseStatementNode(node: ElseStatementNode): void {
-		throw new Error("Method not implemented.");
+		node.expr?.accept(this);
+		node.block.accept(this);
 	}
 
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
