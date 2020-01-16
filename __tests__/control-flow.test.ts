@@ -9,6 +9,8 @@ describe("control flow", () => {
 					doIf()
 				} else if (true and false) {
 					doElseIf()
+				} else if (false and false) {
+
 				} else {
 					doElse()
 				}
