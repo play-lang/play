@@ -1,19 +1,3 @@
-import { Visitor } from "src/language/visitor";
-import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression-node";
-import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
-import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
-import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
-import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
-import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
-import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
-import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
-import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
-import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
-import { ProgramNode } from "src/parser/nodes/program-node";
-import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
-import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
-import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
-
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
 import { FunctionInfo } from "src/language/function-info";
 import { SemanticError } from "src/language/semantic-error";
@@ -22,9 +6,24 @@ import { TokenLike } from "src/language/token";
 import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
 import { ErrorType, Num, SumType, Type } from "src/language/types/type-system";
+import { Visitor } from "src/language/visitor";
+import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression-node";
+import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
+import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
+import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
 import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
+import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
+import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
 import { IfStatementNode } from "src/parser/nodes/if-statement-node";
+import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
+import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
+import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
+import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
+import { ProgramNode } from "src/parser/nodes/program-node";
+import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
+import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
+import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
 import { TypeCheckError } from "src/type-checker/type-check-error";
 
 export class TypeChecker implements Visitor {

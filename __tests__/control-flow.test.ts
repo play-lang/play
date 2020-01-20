@@ -17,7 +17,8 @@ describe("control flow", () => {
 		`;
 		test("check consequent", () => {
 			const code = bigIf("true", "true");
-			console.log(Play.describeAst(code));
+			console.log(code);
+			// console.log(Play.describeAst(code));
 			const dis = Play.disassemble(code);
 			console.log(dis);
 			expect(Play.run(code).value.value).toBe(1);
