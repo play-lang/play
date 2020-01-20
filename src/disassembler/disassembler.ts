@@ -204,9 +204,9 @@ export class Disassembler {
 							context.labels.get(labelIp)!
 						);
 					} else {
-						throw new Error(
-							"Can't find label for index " + absoluteIndex
-						);
+						// throw new Error(
+						// 	"Can't find label for index " + absoluteIndex
+						// );
 					}
 					break;
 				}

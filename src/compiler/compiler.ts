@@ -3,6 +3,7 @@ import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
 import { Context } from "src/language/context";
 import { ContextLabels } from "src/language/context-labels";
 import { FunctionInfo } from "src/language/function-info";
+import { Expression } from "src/language/node";
 import { OpCode } from "src/language/op-code";
 import { SymbolTable } from "src/language/symbol-table";
 import { TokenType } from "src/language/token-type";
@@ -143,19 +144,20 @@ export class Compiler implements Visitor {
 			this.patch(falseAddr, falseOffset);
 		}
 	}
+
 	public visitWhileStatementNode(node: WhileStatementNode): void {
-		// TODO: Add control-flow logic
-		// const dest = this.emitLabel();
+		const dest = this.emitLabel();
 		node.condition.accept(this);
 		const falseAddr = this.jumpIfFalseAndPop();
 		node.block.accept(this);
-
-		// const loopAddr = this.loop();
-		// const loopOffset = -(this.context.bytecode.length - dest - 1);
-
+		// Calculate the distance from the emitted loop instruction
+		// to the destination instruction...we have to add 2 because the loop
+		// instruction itself takes up two codes
+		this.loop(dest - (this.context.bytecode.length + 2));
 		const falseOffset = this.context.bytecode.length - falseAddr - 1;
 		this.patch(falseAddr, falseOffset);
 	}
+
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
 		if (!this.symbolTable.entries.has(node.variableName)) {
 			throw new Error(
@@ -267,9 +269,11 @@ export class Compiler implements Visitor {
 				break;
 			case TokenType.PlusPlus:
 				this.emit(OpCode.Inc);
+				this.mutateForNode(node.rhs);
 				break;
 			case TokenType.MinusMinus:
 				this.emit(OpCode.Dec);
+				this.mutateForNode(node.rhs);
 				break;
 		}
 	}
@@ -279,12 +283,35 @@ export class Compiler implements Visitor {
 			// Postfix operators
 			case TokenType.PlusPlus:
 				this.emit(OpCode.Inc);
+				this.mutateForNode(node.lhs);
 				break;
 			case TokenType.MinusMinus:
 				this.emit(OpCode.Dec);
+				this.mutateForNode(node.lhs);
 				break;
 		}
 	}
+
+	/**
+	 * Output the necessary code to properly update a variable contained
+	 * in the specified node to the value at the top of the stack
+	 * @param node The node containing the variable to mutate
+	 */
+	public mutateForNode(node: Expression): void {
+		if (node instanceof IdExpressionNode) {
+			const scope = this.symbolTable.findScope(node.name);
+			const stackPos = this.symbolTable.stackPos(node.name)!;
+			this.emit(
+				scope === this.globalScope ? OpCode.SetGlobal : OpCode.Set,
+				stackPos
+			);
+		} else {
+			throw new Error(
+				"Can't compile assignment of non-variable " + node.token.lexeme
+			);
+		}
+	}
+
 	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {
 		let value: any;
 		let type: RuntimeType = RuntimeType.Object;
@@ -402,14 +429,7 @@ export class Compiler implements Visitor {
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
 		node.rhs.accept(this);
 		// TODO: Handle subscripts for collections
-		if (node.lhs instanceof IdExpressionNode) {
-			const stackPos = this.symbolTable.stackPos(node.lhs.name)!;
-			this.emit(OpCode.Set, stackPos);
-		} else {
-			throw new Error(
-				"Can't compile assignment of non-variable " + node.token.lexeme
-			);
-		}
+		this.mutateForNode(node.lhs);
 	}
 
 	public visitReturnStatementNode(node: ReturnStatementNode): void {
@@ -499,6 +519,14 @@ export class Compiler implements Visitor {
 
 	public jumpIfTrueAndPop(): number {
 		return this.emit(OpCode.JmpTruePop, 0);
+	}
+
+	/**
+	 * Jump backwards by an offset amount
+	 * @param dest The loop destination as an offset to the current ip
+	 */
+	public loop(dest: number): number {
+		return this.emit(OpCode.Loop, dest);
 	}
 
 	/**
