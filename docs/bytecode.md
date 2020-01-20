@@ -35,5 +35,6 @@
 | JMPTRUE      | addr       | Jump to specified address if top of the stack is true        |
 | JMPFALSEPOP  | addr       | Jump to specified address and pop if top is false            |
 | JMPTRUEPOP   | addr       | Jump to specified address and pop if top is true             |
+| LOOP         | addr       | Jump backwards to specified address                          |
 | LOAD         | fnAddr     | Push the specified function address onto the stack           |
 | CALL         | numLocals  | Call address on top with specified number of local variables |

@@ -279,6 +279,11 @@ export class VirtualMachine {
 						if (this.isTruthy(this.pop())) this.ip += dest;
 						break;
 					}
+					case OpCode.Loop: {
+						const dest = this.readCode();
+						this.ip += dest;
+						break;
+					}
 					case OpCode.Load: {
 						this.push(
 							new RuntimeValue(
