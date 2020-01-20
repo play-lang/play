@@ -1,22 +1,38 @@
-import { str } from "../shared/test-utils";
 import { Play } from "../src/play";
 
 describe("control flow", () => {
 	describe("if statements", () => {
-		test("parse simple case", () => {
-			const code = str`
-				if (true and true) {
-					doIf()
-				} else if (true and false) {
-					doElseIf()
-				} else if (false and false) {
-
-				} else {
-					doElse()
-				}
-			`;
-			// const ast = Play.parse(code);
+		const bigIf = (a: string, b: string) => `
+			let x = ${a}
+			let y = ${b}
+			if (x and y) {
+				return 1
+			} else if (!x and !y) {
+				return 2
+			} else if (x and !y) {
+				return 3
+			} else {
+				return 4
+			}
+		`;
+		test("check consequent", () => {
+			const code = bigIf("true", "true");
 			console.log(Play.describeAst(code));
+			const dis = Play.disassemble(code);
+			console.log(dis);
+			expect(Play.run(code).value.value).toBe(1);
+		});
+		test("check alternate 1", () => {
+			const code = bigIf("false", "false");
+			expect(Play.run(code).value.value).toBe(2);
+		});
+		test("check alternate 2", () => {
+			const code = bigIf("true", "false");
+			expect(Play.run(code).value.value).toBe(3);
+		});
+		test("check alternate catch-all", () => {
+			const code = bigIf("false", "true");
+			expect(Play.run(code).value.value).toBe(4);
 		});
 	});
 });

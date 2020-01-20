@@ -405,13 +405,13 @@ export class VirtualMachine {
 	public isTruthy(value: RuntimeValue): boolean {
 		switch (value.type) {
 			case RuntimeType.Boolean:
-				return value === True;
+				return value.value === true;
 			case RuntimeType.Number:
 				return value.value !== 0 && value.value !== -0;
 			case RuntimeType.String:
 				return value.value !== "";
 			case RuntimeType.Object:
-				return value !== Nil;
+				return value.value !== null && value.value !== undefined;
 		}
 	}
 }

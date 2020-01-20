@@ -102,7 +102,7 @@ export class PrintVisitor implements Visitor, Describable {
 			"(`" +
 			node.variableName +
 			"`, " +
-			(node.typeAnnotation.join(" ") || "synth") +
+			(node.typeAnnotation.join(" ") || "inferred") +
 			")\n";
 		this.indent += 1;
 		if (node.expr) {

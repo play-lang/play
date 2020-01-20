@@ -106,17 +106,43 @@ export class Compiler implements Visitor {
 			// normal block -- functions get call frames which the VM uses to clean
 			// up the stack for us
 			const numLocalsToDrop = this.symbolTable.available;
-			this.emit(OpCode.Drop, numLocalsToDrop);
+			if (numLocalsToDrop > 0) {
+				this.emit(OpCode.Drop, numLocalsToDrop);
+			}
 			this.exitScope();
 		}
 	}
 
 	public visitIfStatementNode(node: IfStatementNode): void {
-		throw new Error("Method not implemented.");
+		// Compile if expression predicate
+		node.predicate.accept(this);
+		const falseAddr = this.jumpIfFalseAndPop();
+		// Compile main block
+		node.consequent.accept(this);
+		// Calculate the jump offset required to perform a short (relative)
+		// jump and backpatch it
+		const falseOffset = this.context.bytecode.length - falseAddr - 1;
+		this.patch(falseAddr, falseOffset);
+		this.emitLabel();
+		for (const alternate of node.alternates) {
+			alternate.accept(this);
+		}
 	}
 
 	public visitElseStatementNode(node: ElseStatementNode): void {
-		throw new Error("Method not implemented.");
+		let shouldJump = false;
+		let falseAddr: number = 0;
+		if (node.expr) {
+			node.expr.accept(this);
+			falseAddr = this.jumpIfFalseAndPop();
+			shouldJump = true;
+		}
+		node.block.accept(this);
+		if (shouldJump) {
+			const falseOffset = this.context.bytecode.length - falseAddr - 1;
+			this.patch(falseAddr, falseOffset);
+			this.emitLabel();
+		}
 	}
 
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
