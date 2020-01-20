@@ -24,6 +24,7 @@ import { ProgramNode } from "src/parser/nodes/program-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
+import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
 import { TypeCheckError } from "src/type-checker/type-check-error";
 
 export class TypeChecker implements Visitor {
@@ -365,5 +366,10 @@ export class TypeChecker implements Visitor {
 
 	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
 		node.expr.accept(this);
+	}
+
+	public visitWhileStatementNode(node: WhileStatementNode): void {
+		node.condition.accept(this);
+		node.block.accept(this);
 	}
 }

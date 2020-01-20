@@ -19,6 +19,7 @@ import { ProgramNode } from "src/parser/nodes/program-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
+import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
 
 export class JSONVisitor implements Visitor, Describable {
 	// MARK: Describable
@@ -276,6 +277,19 @@ export class JSONVisitor implements Visitor, Describable {
 			start: node.start,
 			end: node.end,
 			expr,
+		});
+	}
+	public visitWhileStatementNode(node: WhileStatementNode): void {
+		node.condition.accept(this);
+		const condition = this.stack.pop();
+		node.block.accept(this);
+		const block = this.stack.pop();
+		this.stack.push({
+			type: node.nodeName,
+			start: node.start,
+			end: node.end,
+			condition,
+			block,
 		});
 	}
 }

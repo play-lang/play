@@ -19,6 +19,7 @@ import { ProgramNode } from "src/parser/nodes/program-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
+import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
 
 export class PrintVisitor implements Visitor, Describable {
 	private indent: number = 0;
@@ -47,12 +48,12 @@ export class PrintVisitor implements Visitor, Describable {
 	public visitIfStatementNode(node: IfStatementNode): void {
 		this.desc += "If\n";
 		this.indent += 1;
-		this.desc += this.spaces + "├── Predicate\n";
+		this.desc += this.spaces + "├── predicate\n";
 		this.indent += 1;
 		this.desc += this.spaces + "└── ";
 		node.predicate.accept(this);
 		this.indent -= 1;
-		this.desc += this.spaces + "├── Then\n";
+		this.desc += this.spaces + "├── then\n";
 		this.indent += 1;
 		this.desc += this.spaces + "└── ";
 		node.consequent.accept(this);
@@ -71,7 +72,7 @@ export class PrintVisitor implements Visitor, Describable {
 		this.indent += 1;
 		if (node.expr) {
 			this.desc += " If\n";
-			this.desc += this.spaces + "└── Predicate\n";
+			this.desc += this.spaces + "└── predicate\n";
 			this.indent += 1;
 			this.desc += this.spaces + "└── ";
 			node.expr?.accept(this);
@@ -205,11 +206,11 @@ export class PrintVisitor implements Visitor, Describable {
 	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
 		this.desc += "TernaryConditional\n";
 		this.indent += 1;
-		this.desc += this.spaces + "├── Predicate: ";
+		this.desc += this.spaces + "├── predicate ";
 		node.predicate.accept(this);
-		this.desc += this.spaces + "├── Consequent: ";
+		this.desc += this.spaces + "├── consequent ";
 		node.consequent.accept(this);
-		this.desc += this.spaces + "└── Alternate: ";
+		this.desc += this.spaces + "└── alternate ";
 		node.alternate.accept(this);
 		this.indent -= 1;
 	}
@@ -217,9 +218,9 @@ export class PrintVisitor implements Visitor, Describable {
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
 		this.desc += "Assignment(" + TokenType[node.assignmentType] + ")\n";
 		this.indent += 1;
-		this.desc += this.spaces + "├── lhs: ";
+		this.desc += this.spaces + "├── lhs ";
 		node.lhs.accept(this);
-		this.desc += this.spaces + "└── rhs: ";
+		this.desc += this.spaces + "└── rhs ";
 		node.rhs.accept(this);
 		this.indent -= 1;
 	}
@@ -239,6 +240,16 @@ export class PrintVisitor implements Visitor, Describable {
 		this.indent += 1;
 		this.desc += this.spaces + "└── ";
 		node.expr.accept(this);
+		this.indent -= 1;
+	}
+
+	public visitWhileStatementNode(node: WhileStatementNode): void {
+		this.desc += "WhileStatement\n";
+		this.indent += 1;
+		this.desc += this.spaces + "├── condition ";
+		node.condition.accept(this);
+		this.desc += this.spaces + "└── do ";
+		node.block.accept(this);
 		this.indent -= 1;
 	}
 

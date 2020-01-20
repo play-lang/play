@@ -24,6 +24,7 @@ import { ProgramNode } from "src/parser/nodes/program-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
+import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
 import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";
 
@@ -123,7 +124,6 @@ export class Compiler implements Visitor {
 		// jump and backpatch it
 		const falseOffset = this.context.bytecode.length - falseAddr - 1;
 		this.patch(falseAddr, falseOffset);
-		this.emitLabel();
 		for (const alternate of node.alternates) {
 			alternate.accept(this);
 		}
@@ -141,10 +141,21 @@ export class Compiler implements Visitor {
 		if (shouldJump) {
 			const falseOffset = this.context.bytecode.length - falseAddr - 1;
 			this.patch(falseAddr, falseOffset);
-			this.emitLabel();
 		}
 	}
+	public visitWhileStatementNode(node: WhileStatementNode): void {
+		// TODO: Add control-flow logic
+		// const dest = this.emitLabel();
+		node.condition.accept(this);
+		const falseAddr = this.jumpIfFalseAndPop();
+		node.block.accept(this);
 
+		// const loopAddr = this.loop();
+		// const loopOffset = -(this.context.bytecode.length - dest - 1);
+
+		const falseOffset = this.context.bytecode.length - falseAddr - 1;
+		this.patch(falseAddr, falseOffset);
+	}
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
 		if (!this.symbolTable.entries.has(node.variableName)) {
 			throw new Error(
@@ -359,7 +370,6 @@ export class Compiler implements Visitor {
 				this.emit(OpCode.Pop);
 				node.rhs.accept(this);
 				this.patch(addr, this.context.bytecode.length - addr - 1);
-				this.emitLabel();
 				break;
 			}
 			case TokenType.Or: {
@@ -367,7 +377,6 @@ export class Compiler implements Visitor {
 				this.emit(OpCode.Pop);
 				node.rhs.accept(this);
 				this.patch(addr, this.context.bytecode.length - addr - 1);
-				this.emitLabel();
 				break;
 			}
 		}
@@ -385,11 +394,9 @@ export class Compiler implements Visitor {
 		const falseOffset = this.context.bytecode.length - falseAddr - 1;
 		this.patch(falseAddr, falseOffset);
 		// Set a label for the jump's destination
-		this.emitLabel();
 		node.alternate.accept(this);
 		const jumpOffset = this.context.bytecode.length - jumpAddr - 1;
 		this.patch(jumpAddr, jumpOffset);
-		this.emitLabel();
 	}
 
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
@@ -506,13 +513,17 @@ export class Compiler implements Visitor {
 		context: Context = this.context
 	): void {
 		context.bytecode[index] = destOffset;
+		this.emitLabel();
 	}
 
 	/**
-	 * Output a label at the last instruction
+	 * Output a label at the last instruction and return the index of the
+	 * last instruction
+	 * @returns Index of the last instruction
 	 */
-	public emitLabel(): void {
+	public emitLabel(): number {
 		this.context.setLabel(this.context.bytecode.length, this.labelId++);
+		return this.context.bytecode.length;
 	}
 
 	/**

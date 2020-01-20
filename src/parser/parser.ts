@@ -16,6 +16,7 @@ import { IfStatementNode } from "src/parser/nodes/if-statement-node";
 import { ProgramNode } from "src/parser/nodes/program-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
+import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
 import { InfixParselet } from "src/parser/parselet";
 
 export class Parser extends TokenParser {
@@ -410,6 +411,17 @@ export class Parser extends TokenParser {
 		return new IfStatementNode(token, predicate, consequent, alternates);
 	}
 
+	public whileStatement(): WhileStatementNode {
+		const token = this.previous;
+		const condition = this.expression();
+		this.consume(
+			TokenType.BraceOpen,
+			"Expected opening brace of while block"
+		);
+		const block = this.block();
+		return new WhileStatementNode(token, condition, block);
+	}
+
 	public expressionStatement(): ExpressionStatementNode {
 		// Parse an unused expression as a single line statement
 		return new ExpressionStatementNode(this.peek, this.expression());
@@ -423,8 +435,6 @@ export class Parser extends TokenParser {
 	 * to see if an expression production is merited)
 	 */
 	public expression(precedence: number = 0, token?: TokenLike): Expression {
-		// return this.value();
-
 		token = token || this.advance();
 		const prefix = prefixParselets.get(token.type);
 		if (!prefix) {
