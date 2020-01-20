@@ -15,6 +15,7 @@ import { ProgramNode } from "src/parser/nodes/program-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
+import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
 
 export interface Visitor {
 	visitAssignmentExpressionNode(node: AssignmentExpressionNode): void;
@@ -34,4 +35,5 @@ export interface Visitor {
 	visitReturnStatementNode(node: ReturnStatementNode): void;
 	visitTernaryConditionalNode(node: TernaryConditionalNode): void;
 	visitVariableDeclarationNode(node: VariableDeclarationNode): void;
+	visitWhileStatementNode(node: WhileStatementNode): void;
 }
