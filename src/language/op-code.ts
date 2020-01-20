@@ -82,6 +82,8 @@ export enum OpCode {
 	JmpFalsePop,
 	/** Jump if true (and pop stack) */
 	JmpTruePop,
+	/** Jump unconditionally backwards */
+	Loop,
 
 	// Function calls
 

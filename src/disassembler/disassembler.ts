@@ -190,7 +190,8 @@ export class Disassembler {
 				case OpCode.JmpFalse:
 				case OpCode.JmpTrue:
 				case OpCode.JmpFalsePop:
-				case OpCode.JmpTruePop: {
+				case OpCode.JmpTruePop:
+				case OpCode.Loop: {
 					const offset = bytecode[p++];
 					const labelIp = p - startOffset + offset;
 					const absoluteIndex = startOffset + labelIp;
