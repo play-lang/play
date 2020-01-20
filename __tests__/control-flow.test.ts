@@ -1,3 +1,4 @@
+import { str } from "../shared/test-utils";
 import { Play } from "../src/play";
 
 describe("control flow", () => {
@@ -17,10 +18,6 @@ describe("control flow", () => {
 		`;
 		test("check consequent", () => {
 			const code = bigIf("true", "true");
-			console.log(code);
-			// console.log(Play.describeAst(code));
-			const dis = Play.disassemble(code);
-			console.log(dis);
 			expect(Play.run(code).value.value).toBe(1);
 		});
 		test("check alternate 1", () => {
@@ -34,6 +31,20 @@ describe("control flow", () => {
 		test("check alternate catch-all", () => {
 			const code = bigIf("false", "true");
 			expect(Play.run(code).value.value).toBe(4);
+		});
+	});
+	describe("while statements", () => {
+		test("basic while statement", () => {
+			const code = str`
+				var x = 0
+				while (x < 2) {
+					x++
+				}
+				return x
+			`;
+			console.log(code);
+			console.log(Play.describeAst(code));
+			console.log(Play.disassemble(code));
 		});
 	});
 });

@@ -107,6 +107,8 @@ export class Parser extends TokenParser {
 			return this.returnStatement();
 		} else if (this.match(TokenType.If)) {
 			return this.ifStatement();
+		} else if (this.match(TokenType.While)) {
+			return this.whileStatement();
 		} else if (this.match(TokenType.BraceOpen)) {
 			// Match a block statement
 			return this.block();
