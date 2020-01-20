@@ -37,7 +37,7 @@ describe("control flow", () => {
 		test("basic while statement", () => {
 			const code = str`
 				var x = 0
-				while (x < 2) {
+				while (x < 10) {
 					x++
 				}
 				return x
@@ -45,6 +45,7 @@ describe("control flow", () => {
 			console.log(code);
 			console.log(Play.describeAst(code));
 			console.log(Play.disassemble(code));
+			expect(Play.run(code).value.value).toBe(10);
 		});
 	});
 });
