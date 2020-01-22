@@ -2,6 +2,7 @@ import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
+import { DoWhileStatementNode } from "src/parser/nodes/do-while-statement-node";
 import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
@@ -22,6 +23,7 @@ export interface Visitor {
 	visitBinaryExpressionNode(node: BinaryExpressionNode): void;
 	visitBinaryLogicalExpressionNode(node: BinaryLogicalExpressionNode): void;
 	visitBlockStatementNode(node: BlockStatementNode): void;
+	visitDoWhileStatementNode(node: DoWhileStatementNode): void;
 	visitElseStatementNode(node: ElseStatementNode): void;
 	visitExpressionStatementNode(node: ExpressionStatementNode): void;
 	visitFunctionDeclarationNode(node: FunctionDeclarationNode): void;

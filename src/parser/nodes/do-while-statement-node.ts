@@ -1,0 +1,26 @@
+import { Expression, Statement } from "src/language/node";
+import { TokenLike } from "src/language/token";
+import { Environment } from "src/language/types/environment";
+import { None, Type } from "src/language/types/type-system";
+import { Visitor } from "src/language/visitor";
+import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
+
+export class DoWhileStatementNode extends Statement {
+	constructor(
+		token: TokenLike,
+		/** Block to evaluate at least once and while condition is true */
+		public readonly block: BlockStatementNode,
+		/** Expression to examine */
+		public readonly condition: Expression
+	) {
+		super(token, condition.start, block.end);
+	}
+
+	public type(env: Environment): Type {
+		return None;
+	}
+
+	public accept(visitor: Visitor): void {
+		visitor.visitDoWhileStatementNode?.(this);
+	}
+}

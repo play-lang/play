@@ -12,6 +12,7 @@ import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
+import { DoWhileStatementNode } from "src/parser/nodes/do-while-statement-node";
 import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
@@ -143,6 +144,16 @@ export class Compiler implements Visitor {
 			const falseOffset = this.context.bytecode.length - falseAddr - 1;
 			this.patch(falseAddr, falseOffset);
 		}
+	}
+
+	public visitDoWhileStatementNode(node: DoWhileStatementNode): void {
+		const dest = this.emitLabel();
+		node.block.accept(this);
+		node.condition.accept(this);
+		const trueAddr = this.jumpIfTrueAndPop();
+		this.loop(dest - (this.context.bytecode.length + 2));
+		const offset = this.context.bytecode.length - trueAddr - 1;
+		this.patch(trueAddr, offset);
 	}
 
 	public visitWhileStatementNode(node: WhileStatementNode): void {

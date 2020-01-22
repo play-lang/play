@@ -6,6 +6,7 @@ import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
+import { DoWhileStatementNode } from "src/parser/nodes/do-while-statement-node";
 import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
@@ -249,7 +250,6 @@ export class JSONVisitor implements Visitor, Describable {
 			rhs,
 		});
 	}
-
 	public visitReturnStatementNode(node: ReturnStatementNode): void {
 		if (node.expr) {
 			node.expr.accept(this);
@@ -268,7 +268,6 @@ export class JSONVisitor implements Visitor, Describable {
 			});
 		}
 	}
-
 	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
 		node.expr.accept(this);
 		const expr = this.stack.pop();
@@ -277,6 +276,19 @@ export class JSONVisitor implements Visitor, Describable {
 			start: node.start,
 			end: node.end,
 			expr,
+		});
+	}
+	public visitDoWhileStatementNode(node: DoWhileStatementNode): void {
+		node.block.accept(this);
+		const block = this.stack.pop();
+		node.condition.accept(this);
+		const condition = this.stack.pop();
+		this.stack.push({
+			type: node.nodeName,
+			start: node.start,
+			end: node.end,
+			condition,
+			block,
 		});
 	}
 	public visitWhileStatementNode(node: WhileStatementNode): void {
