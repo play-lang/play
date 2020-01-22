@@ -632,7 +632,6 @@ export class Compiler implements Visitor {
 	 * Creates a new context and adds it to the list of contexts so that
 	 * they can be given to the linker later
 	 * @param contextName Name of the context (should be the function name)
-	 * @param constantPool Shared constant pool
 	 * @param constants Shared constants look-up map for avoiding duplicates
 	 */
 	private createContext(contextName: string, numLocals: number): Context {
