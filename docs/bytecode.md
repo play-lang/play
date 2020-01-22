@@ -10,8 +10,10 @@
 | GETGLOBAL    | index      | Push a copy of item in the stack with absolute index         |
 | SETGLOBAL    | index      | Sets item on the stack with absolute index to value at top   |
 | NEG          |            | Negate the value on the top of the stack                     |
-| INC          |            | Increment the value on the top of the stack by one           |
-| DEC          |            | Decrement the value on the top of the stack by one           |
+| INC          | index      | Increment the numeric value specified by relative index      |
+| DEC          | index      | Decrement the numeric value specified by relative index      |
+| INCGLOBAL    | index      | Increment the numeric value specified by relative index      |
+| DECGLOBAL    | index      | Decrement the numeric value specified by relative index      |
 | ADD          |            | Add top two values on stack and replace with sum             |
 | SUB          |            | Subtract top two values on stack and replace with difference |
 | MUL          |            | Multiply top two values on stack and replace with product    |
