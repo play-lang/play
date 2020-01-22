@@ -256,24 +256,27 @@ export class Compiler implements Visitor {
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
-		node.rhs.accept(this);
 		switch (node.operatorType) {
 			case TokenType.Bang:
+				node.rhs.accept(this);
 				this.emit(OpCode.Not);
 				break;
 			case TokenType.Plus:
-				// nop
+				node.rhs.accept(this);
 				break;
 			case TokenType.Minus:
+				node.rhs.accept(this);
 				this.emit(OpCode.Neg);
 				break;
 			case TokenType.PlusPlus:
-				this.emit(OpCode.Inc);
-				this.mutateForNode(node.rhs);
-				break;
 			case TokenType.MinusMinus:
-				this.emit(OpCode.Dec);
-				this.mutateForNode(node.rhs);
+				this.incrementOrDecrement(
+					node.rhs,
+					node.operatorType === TokenType.PlusPlus
+				);
+				// To gain prefix functionality we must visit the rhs after
+				// increment/decrementing the variable's value
+				node.rhs.accept(this);
 				break;
 		}
 	}
@@ -282,13 +285,31 @@ export class Compiler implements Visitor {
 		switch (node.operatorType) {
 			// Postfix operators
 			case TokenType.PlusPlus:
-				this.emit(OpCode.Inc);
-				this.mutateForNode(node.lhs);
+				this.incrementOrDecrement(node.lhs, true);
 				break;
 			case TokenType.MinusMinus:
-				this.emit(OpCode.Dec);
-				this.mutateForNode(node.lhs);
+				this.incrementOrDecrement(node.lhs, false);
 				break;
+		}
+	}
+
+	public incrementOrDecrement(
+		node: Expression,
+		shouldIncrement: boolean
+	): void {
+		if (node instanceof IdExpressionNode) {
+			const scope = this.symbolTable.findScope(node.name);
+			const stackPos = this.symbolTable.stackPos(node.name)!;
+			if (scope?.isGlobalScope) {
+				this.emit(
+					shouldIncrement ? OpCode.IncGlobal : OpCode.DecGlobal,
+					stackPos
+				);
+			} else {
+				this.emit(shouldIncrement ? OpCode.Inc : OpCode.Dec, stackPos);
+			}
+		} else {
+			throw new Error("Can't mutate non-variable" + node.token.lexeme);
 		}
 	}
 
@@ -297,12 +318,12 @@ export class Compiler implements Visitor {
 	 * in the specified node to the value at the top of the stack
 	 * @param node The node containing the variable to mutate
 	 */
-	public mutateForNode(node: Expression): void {
+	public assignToNode(node: Expression): void {
 		if (node instanceof IdExpressionNode) {
 			const scope = this.symbolTable.findScope(node.name);
 			const stackPos = this.symbolTable.stackPos(node.name)!;
 			this.emit(
-				scope === this.globalScope ? OpCode.SetGlobal : OpCode.Set,
+				scope?.isGlobalScope ? OpCode.SetGlobal : OpCode.Set,
 				stackPos
 			);
 		} else {
@@ -429,7 +450,7 @@ export class Compiler implements Visitor {
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
 		node.rhs.accept(this);
 		// TODO: Handle subscripts for collections
-		this.mutateForNode(node.lhs);
+		this.assignToNode(node.lhs);
 	}
 
 	public visitReturnStatementNode(node: ReturnStatementNode): void {

@@ -105,13 +105,13 @@ export class VirtualMachine {
 					}
 					case OpCode.Get: {
 						// Get a local variable
-						const index = this.readCode() + this.frame.basePointer;
+						const index = this.localIndex();
 						this.push(this.readStack(index));
 						break;
 					}
 					case OpCode.Set: {
 						// Set a local variable
-						const index = this.readCode() + this.frame.basePointer;
+						const index = this.localIndex();
 						this.stack[index] = this.top;
 						break;
 					}
@@ -132,15 +132,35 @@ export class VirtualMachine {
 						break;
 					}
 					case OpCode.Inc: {
-						// Increment the top value of the stack
-						const top = this.pop();
-						this.push(new RuntimeValue(top.type, top.value + 1));
+						const index = this.localIndex();
+						this.stack[index] = new RuntimeValue(
+							this.stack[index].type,
+							this.stack[index].value + 1
+						);
 						break;
 					}
 					case OpCode.Dec: {
-						// Decrement the top value of the stack
-						const top = this.pop();
-						this.push(new RuntimeValue(top.type, top.value - 1));
+						const index = this.localIndex();
+						this.stack[index] = new RuntimeValue(
+							this.stack[index].type,
+							this.stack[index].value - 1
+						);
+						break;
+					}
+					case OpCode.IncGlobal: {
+						const index = this.readCode();
+						this.stack[index] = new RuntimeValue(
+							this.stack[index].type,
+							this.stack[index].value + 1
+						);
+						break;
+					}
+					case OpCode.DecGlobal: {
+						const index = this.readCode();
+						this.stack[index] = new RuntimeValue(
+							this.stack[index].type,
+							this.stack[index].value - 1
+						);
 						break;
 					}
 					case OpCode.Add: {
@@ -346,6 +366,14 @@ export class VirtualMachine {
 		const i = typeof index === "undefined" ? this.readCode() : index;
 		const rv = this.stack[i];
 		return new RuntimeValue(rv.type, rv.value);
+	}
+
+	/**
+	 * Calculate a variable's stack position based on the offset specified in
+	 * the next "byte" of bytecode
+	 */
+	public localIndex(): number {
+		return this.bytecode[this.ip++] + this.frame.basePointer;
 	}
 
 	/** Pop an item from the stack and return it if possible */

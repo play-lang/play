@@ -155,15 +155,17 @@ export class Disassembler {
 				case OpCode.Get:
 				case OpCode.Set:
 				case OpCode.GetGlobal:
-				case OpCode.SetGlobal: {
-					// Index of the variable to get/set
+				case OpCode.SetGlobal:
+				case OpCode.Inc:
+				case OpCode.Dec:
+				case OpCode.IncGlobal:
+				case OpCode.DecGlobal: {
+					// Index of the variable to get/set or increment/decrement
 					const index = bytecode[p++];
 					out += this.instrParam(op, ip, index);
 					break;
 				}
 				case OpCode.Neg:
-				case OpCode.Inc:
-				case OpCode.Dec:
 				case OpCode.Add:
 				case OpCode.Sub:
 				case OpCode.Mul:

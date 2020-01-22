@@ -22,10 +22,14 @@ export enum OpCode {
 
 	/** Negate the value */
 	Neg,
-	/** Increment by one */
+	/** Increment a numeric local by one */
 	Inc,
-	/** Decrement by one */
+	/** Decrement a numeric local by one */
 	Dec,
+	/** Increment a numeric local by one */
+	IncGlobal,
+	/** Decrement a numeric global by one */
+	DecGlobal,
 	/** Add using the top two values of the stack */
 	Add,
 	/** Subtract using the top two values of the stack */
