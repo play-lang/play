@@ -5,7 +5,7 @@ import { ContextLabels } from "src/language/context-labels";
 import { FunctionInfo } from "src/language/function-info";
 import { Expression } from "src/language/node";
 import { OpCode } from "src/language/op-code";
-import { SymbolTable } from "src/language/symbol-table";
+import { Scope } from "src/language/scope";
 import { TokenType } from "src/language/token-type";
 import { Visitor } from "src/language/visitor";
 import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression-node";
@@ -33,7 +33,7 @@ import { RuntimeValue } from "src/vm/runtime-value";
 export class Compiler implements Visitor {
 	/** Current bytecode context */
 	public get context(): Context {
-		return this.contexts.get(this.symbolTable)!;
+		return this.contexts.get(this.scope)!;
 	}
 	/** Address of the last instruction */
 	private get lastInstr(): number {
@@ -55,8 +55,8 @@ export class Compiler implements Visitor {
 	 * entry point
 	 */
 	public readonly allContexts: Context[] = [];
-	/** Maps symbol table instances to their respective bytecode context */
-	public readonly contexts: Map<SymbolTable, Context> = new Map();
+	/** Map of bytecode contexts keyed by scope */
+	public readonly contexts: Map<Scope, Context> = new Map();
 
 	/**
 	 * Context names mapped to function nodes
@@ -65,9 +65,9 @@ export class Compiler implements Visitor {
 	public readonly functionTable: Map<string, FunctionInfo>;
 
 	/** Global scope */
-	private globalScope: SymbolTable;
-	/** Symbol table for the current scope */
-	private symbolTable: SymbolTable;
+	private globalScope: Scope;
+	/** Current scope */
+	private scope: Scope;
 	/** Index of the next child scope to visit for each scope level */
 	private childScopeIndices: number[] = [0];
 	/** Number of scopes deep we are--used as an index to childScopeIndices */
@@ -79,11 +79,11 @@ export class Compiler implements Visitor {
 
 	constructor(ast: AbstractSyntaxTree) {
 		this.ast = ast;
-		this.symbolTable = ast.env.symbolTable;
-		this.globalScope = ast.env.symbolTable;
+		this.scope = ast.env.scope;
+		this.globalScope = ast.env.scope;
 		this.contexts.set(
-			this.symbolTable,
-			this.createContext("main", this.symbolTable.totalEntries)
+			this.scope,
+			this.createContext("main", this.scope.totalEntries)
 		);
 		this.functionTable = ast.env.functionTable;
 	}
@@ -108,7 +108,7 @@ export class Compiler implements Visitor {
 			// We should clean up variables local to this block if we're just a
 			// normal block -- functions get call frames which the VM uses to clean
 			// up the stack for us
-			const numLocalsToDrop = this.symbolTable.available;
+			const numLocalsToDrop = this.scope.available;
 			if (numLocalsToDrop > 0) {
 				this.emit(OpCode.Drop, numLocalsToDrop);
 			}
@@ -170,7 +170,7 @@ export class Compiler implements Visitor {
 	}
 
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
-		if (!this.symbolTable.entries.has(node.variableName)) {
+		if (!this.scope.entries.has(node.variableName)) {
 			throw new Error(
 				"Fatal error: Can't find name " +
 					node.variableName +
@@ -197,13 +197,14 @@ export class Compiler implements Visitor {
 			return;
 		}
 		node.expr.accept(this);
-		// Mark the next variable as available in the symbol table
-		this.symbolTable.available++;
+		// Mark the next variable as available in the scope since it has now
+		// been declared
+		this.scope.available++;
 	}
 
 	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
 		this.enterScope(node.info.name);
-		this.symbolTable.available += node.info.parameters.length;
+		this.scope.available += node.info.parameters.length;
 		node.block!.accept(this);
 		if (!this.checkLastEmit(OpCode.Return)) {
 			this.emit(OpCode.Return);
@@ -228,7 +229,7 @@ export class Compiler implements Visitor {
 			}
 		} else {
 			// Node represents a variable reference
-			const scope = this.symbolTable.findScope(node.name);
+			const scope = this.scope.findScope(node.name);
 			if (!scope) {
 				throw new Error(
 					"Cannot compile non-existent variable reference `" +
@@ -238,7 +239,7 @@ export class Compiler implements Visitor {
 			}
 			// Emit the proper instruction to push a copy of the variable's value
 			// lower in the stack to the top of the stack
-			const stackPos = this.symbolTable.stackPos(node.name)!;
+			const stackPos = this.scope.stackPos(node.name)!;
 			this.emit(
 				scope.isGlobalScope ? OpCode.GetGlobal : OpCode.Get,
 				stackPos
@@ -317,8 +318,8 @@ export class Compiler implements Visitor {
 		shouldIncrement: boolean
 	): void {
 		if (node instanceof IdExpressionNode) {
-			const scope = this.symbolTable.findScope(node.name);
-			const stackPos = this.symbolTable.stackPos(node.name)!;
+			const scope = this.scope.findScope(node.name);
+			const stackPos = this.scope.stackPos(node.name)!;
 			if (scope?.isGlobalScope) {
 				this.emit(
 					shouldIncrement ? OpCode.IncGlobal : OpCode.DecGlobal,
@@ -339,8 +340,8 @@ export class Compiler implements Visitor {
 	 */
 	public assignToNode(node: Expression): void {
 		if (node instanceof IdExpressionNode) {
-			const scope = this.symbolTable.findScope(node.name);
-			const stackPos = this.symbolTable.stackPos(node.name)!;
+			const scope = this.scope.findScope(node.name);
+			const stackPos = this.scope.stackPos(node.name)!;
 			this.emit(
 				scope?.isGlobalScope ? OpCode.SetGlobal : OpCode.Set,
 				stackPos
@@ -506,7 +507,7 @@ export class Compiler implements Visitor {
 		return new CompiledProgram(
 			this.allContexts,
 			this.constantPool,
-			this.symbolTable.totalEntries,
+			this.scope.totalEntries,
 			this.patcher
 		);
 	}
@@ -595,7 +596,7 @@ export class Compiler implements Visitor {
 	}
 
 	/**
-	 * Enter the next child scope of the current symbol table
+	 * Enter the next child scope of the current scope
 	 *
 	 * @param [contextName] If provided, this will create a new compilation
 	 * context for the added scope with the specified name
@@ -604,14 +605,14 @@ export class Compiler implements Visitor {
 		const context = this.context;
 		const childScopeIndex = this.childScopeIndices[this.scopeDepth++]++;
 		this.childScopeIndices.push(0);
-		this.symbolTable = this.symbolTable.scopes[childScopeIndex];
-		this.symbolTable.available = 0;
-		// Add a context entry in the map of symbol tables to contexts
+		this.scope = this.scope.scopes[childScopeIndex];
+		this.scope.available = 0;
+		// Add a context entry
 		this.contexts.set(
-			this.symbolTable,
+			this.scope,
 			contextName === ""
 				? context
-				: this.createContext(contextName, this.symbolTable.totalEntries)
+				: this.createContext(contextName, this.scope.totalEntries)
 		);
 	}
 
@@ -619,13 +620,13 @@ export class Compiler implements Visitor {
 	 * Exits the current scope
 	 * @returns The last scope
 	 */
-	private exitScope(): SymbolTable {
+	private exitScope(): Scope {
 		// Go back up the scope chain
 		this.scopeDepth--;
 		this.childScopeIndices.pop();
-		const symbolTable = this.symbolTable;
-		this.symbolTable = this.symbolTable.enclosingScope || this.globalScope;
-		return symbolTable;
+		const scope = this.scope;
+		this.scope = this.scope.enclosingScope || this.globalScope;
+		return scope;
 	}
 
 	/**

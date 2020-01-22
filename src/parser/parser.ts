@@ -3,7 +3,7 @@ import { FunctionInfo } from "src/language/function-info";
 import { IdentifierSymbol } from "src/language/identifier-symbol";
 import { Expression, Statement } from "src/language/node";
 import { infixParselets, prefixParselets } from "src/language/operator-grammar";
-import { SymbolTable } from "src/language/symbol-table";
+import { Scope } from "src/language/scope";
 import { TokenLike } from "src/language/token";
 import { TokenParser } from "src/language/token-parser";
 import { TokenType } from "src/language/token-type";
@@ -22,14 +22,14 @@ import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
 import { InfixParselet } from "src/parser/parselet";
 
 export class Parser extends TokenParser {
-	/** Global scope symbol table */
-	public get globalScope(): SymbolTable {
-		return this._symbolTables[0];
+	/** Global scope */
+	public get globalScope(): Scope {
+		return this._scopes[0];
 	}
 
-	/** Active symbol table for the current scope */
-	public get symbolTable(): SymbolTable {
-		return this._symbolTables[this._symbolTables.length - 1];
+	/** Current scope */
+	public get scope(): Scope {
+		return this._scopes[this._scopes.length - 1];
 	}
 
 	/**
@@ -38,15 +38,15 @@ export class Parser extends TokenParser {
 	 */
 	public readonly functionTable: Map<string, FunctionInfo> = new Map();
 
-	/** Symbol table pointer stack for tracking scopes */
-	protected _symbolTables: SymbolTable[] = [];
+	/** Stack of active scopes */
+	protected _scopes: Scope[] = [];
 	/** Number of scopes encountered */
-	protected _scopes: number = 0;
+	protected _numScopes: number = 0;
 
 	constructor(contents: string) {
 		// Todo: Update for file table when preprocessor is ready
 		super(new Lexer(contents));
-		this._symbolTables.push(new SymbolTable());
+		this._scopes.push(new Scope());
 		this._token = this.lexer.token;
 		this._previous = this._token;
 	}
@@ -93,7 +93,7 @@ export class Parser extends TokenParser {
 				? this.previous.end
 				: statements[statements.length - 1].end;
 		const root = new ProgramNode(this.previous, start, end, statements);
-		const env = new Environment(this.symbolTable, this.functionTable);
+		const env = new Environment(this.scope, this.functionTable);
 		return new AbstractSyntaxTree(root, env);
 	}
 
@@ -132,9 +132,9 @@ export class Parser extends TokenParser {
 		const start = this.previous.pos;
 		this.eatLines();
 		if (!isFunctionBlock) {
-			// Create a new symbol table scope and push it on the symbol table stack
-			// (Only if we're not a function block -- it brings its own symbol table)
-			this._symbolTables.push(this.symbolTable.addScope());
+			// Create a new scope and push it on the scope stack
+			// (Only if we're not a function block -- it brings its own scope)
+			this._scopes.push(this.scope.addScope());
 		}
 		const statements: Statement[] = [];
 		while (!this.isAtEnd && this.peek.type !== TokenType.BraceClose) {
@@ -152,7 +152,7 @@ export class Parser extends TokenParser {
 		this.eatLines();
 		this.consume(TokenType.BraceClose, "Expected closing brace for block");
 		// Pop the scope
-		if (!isFunctionBlock) this._symbolTables.pop();
+		if (!isFunctionBlock) this._scopes.pop();
 		// Calculate start and end in the input string
 		const end =
 			statements.length < 1
@@ -231,7 +231,6 @@ export class Parser extends TokenParser {
 				"Variable must have a type or an assigned value to synthesize a type from"
 			);
 		}
-		// TODO: Don't register types in the symbol table until type-check time
 		const node: VariableDeclarationNode = new VariableDeclarationNode(
 			nameToken,
 			start,
@@ -240,8 +239,8 @@ export class Parser extends TokenParser {
 			expr,
 			typeAnnotation
 		);
-		// Register the declared variable in the symbol table
-		this.symbolTable.register(
+		// Register the declared variable in the current scope
+		this.scope.register(
 			new IdentifierSymbol(nameToken.lexeme, nameToken, isImmutable)
 		);
 		return node;
@@ -259,7 +258,7 @@ export class Parser extends TokenParser {
 	 * ```
 	 */
 	public functionDeclaration(): FunctionDeclarationNode {
-		if (!this.symbolTable.isGlobalScope) {
+		if (!this.scope.isGlobalScope) {
 			throw this.error(
 				this.previous,
 				"Functions can only be declared in global scope"
@@ -333,12 +332,12 @@ export class Parser extends TokenParser {
 		);
 
 		// Create a scope for this function
-		this._symbolTables.push(this.symbolTable.addScope());
+		this._scopes.push(this.scope.addScope());
 
 		let i = 0;
 		for (const param of parameters) {
-			// Register each parameter in the function's symbol table
-			this.symbolTable.register(
+			// Register each of the function's parameters in the current scope
+			this.scope.register(
 				new IdentifierSymbol(param, paramTokens[i], false)
 			);
 			i++;
@@ -354,7 +353,7 @@ export class Parser extends TokenParser {
 		}
 
 		// Pop the scope for this function
-		this._symbolTables.pop();
+		this._scopes.pop();
 
 		const node = new FunctionDeclarationNode(nameToken, start, info, block);
 		return node;

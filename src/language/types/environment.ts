@@ -1,23 +1,23 @@
 import { FunctionInfo } from "src/language/function-info";
-import { SymbolTable } from "src/language/symbol-table";
+import { Scope } from "src/language/scope";
 
 /**
  * Represents a type checking environment that contains the following
  * pieces of information:
  *
- * - Global scope symbol table
- * - Symbol table for the current scope
- * - Function table containing information about all functions
+ * - Global scope
+ * - Current scope
+ * - Function table containing information about every function
  *
  * Additionally, the environment provides methods that allow the next scope
  * to be entered and exited easily to walk the scope tree.
  */
 export class Environment {
-	private _symbolTable: SymbolTable;
+	private _scope: Scope;
 
-	/** Current symbol table for the active scope */
-	public get symbolTable(): SymbolTable {
-		return this._symbolTable;
+	/** Current scope */
+	public get scope(): Scope {
+		return this._scope;
 	}
 
 	/** Index of the next child scope to visit for each scope level */
@@ -27,28 +27,26 @@ export class Environment {
 
 	constructor(
 		/**
-		 * Symbol table for use in the type-checking environment
-		 *
-		 * When initializing the environment, give it the global scope symbol table
+		 * Global scope of the type-checking environment
 		 */
-		public readonly globalScope: SymbolTable,
-		/** Function table for use in the type-checking environment */
+		public readonly globalScope: Scope,
+		/** Function table of the type-checking environment */
 		public readonly functionTable: Map<string, FunctionInfo>
 	) {
-		this._symbolTable = globalScope;
+		this._scope = globalScope;
 	}
 
-	/** Enter the next child scope of the current symbol table */
+	/** Enter the next child scope */
 	public enterScope(): void {
 		const childScopeIndex = this.childScopeIndices[this.scopeDepth++]++;
 		this.childScopeIndices.push(0);
-		this._symbolTable = this.symbolTable.scopes[childScopeIndex];
+		this._scope = this.scope.scopes[childScopeIndex];
 	}
 
-	/** Exit the current scope */
+	/** Go back to the parent scope */
 	public exitScope(): void {
 		this.scopeDepth--;
 		this.childScopeIndices.pop();
-		this._symbolTable = this.symbolTable.enclosingScope || this.globalScope;
+		this._scope = this.scope.enclosingScope || this.globalScope;
 	}
 }
