@@ -115,9 +115,5 @@ function makeIdSymbol(
 	token: TokenLike,
 	isImmutable: boolean
 ): IdentifierSymbol {
-	return {
-		name: token.lexeme,
-		token,
-		isImmutable,
-	};
+	return new IdentifierSymbol(token.lexeme, token, isImmutable);
 }
