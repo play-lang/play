@@ -398,7 +398,7 @@ export class Disassembler {
 	 * @param num The number to format
 	 */
 	private format(num: number): string {
-		return String(Math.abs(num)).padStart(4, "0");
+		return (num < 0 ? "-" : " ") + String(Math.abs(num)).padStart(4, "0");
 	}
 
 	/**

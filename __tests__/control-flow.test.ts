@@ -3,17 +3,17 @@ import { Play } from "../src/play";
 describe("control flow", () => {
 	describe("if statements", () => {
 		const bigIf = (a: string, b: string) => `
-			let x = ${a}
-			let y = ${b}
-			if (x and y) {
-				return 1
-			} else if (!x and !y) {
-				return 2
-			} else if (x and !y) {
-				return 3
-			} else {
-				return 4
-			}
+let x = ${a}
+let y = ${b}
+if (x and y) {
+	return 1
+} else if (!x and !y) {
+	return 2
+} else if (x and !y) {
+	return 3
+} else {
+	return 4
+}
 		`;
 		test("check consequent", () => {
 			const code = bigIf("true", "true");
