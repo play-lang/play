@@ -6,6 +6,7 @@ import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
 import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
+import { DoWhileStatementNode } from "src/parser/nodes/do-while-statement-node";
 import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
@@ -243,10 +244,20 @@ export class PrintVisitor implements Visitor, Describable {
 		this.indent -= 1;
 	}
 
+	public visitDoWhileStatementNode(node: DoWhileStatementNode): void {
+		this.desc += "DoWhileStatement\n";
+		this.indent += 1;
+		this.desc += this.spaces + "└── do ";
+		node.block.accept(this);
+		this.desc += this.spaces + "├── while ";
+		node.condition.accept(this);
+		this.indent -= 1;
+	}
+
 	public visitWhileStatementNode(node: WhileStatementNode): void {
 		this.desc += "WhileStatement\n";
 		this.indent += 1;
-		this.desc += this.spaces + "├── condition ";
+		this.desc += this.spaces + "├── while ";
 		node.condition.accept(this);
 		this.desc += this.spaces + "└── do ";
 		node.block.accept(this);

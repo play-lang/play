@@ -9,6 +9,7 @@ import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
 import { Lexer } from "src/lexer/lexer";
 import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
+import { DoWhileStatementNode } from "src/parser/nodes/do-while-statement-node";
 import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
@@ -109,6 +110,8 @@ export class Parser extends TokenParser {
 			return this.ifStatement();
 		} else if (this.match(TokenType.While)) {
 			return this.whileStatement();
+		} else if (this.match(TokenType.Do)) {
+			return this.doWhileStatement();
 		} else if (this.match(TokenType.BraceOpen)) {
 			// Match a block statement
 			return this.block();
@@ -411,6 +414,18 @@ export class Parser extends TokenParser {
 			alternates.push(alternate);
 		}
 		return new IfStatementNode(token, predicate, consequent, alternates);
+	}
+
+	public doWhileStatement(): DoWhileStatementNode {
+		const token = this.previous;
+		this.consume(
+			TokenType.BraceOpen,
+			"Expected opening brace of while block"
+		);
+		const block = this.block();
+		this.consume(TokenType.While, "Expected while keyword");
+		const condition = this.expression();
+		return new DoWhileStatementNode(token, block, condition);
 	}
 
 	public whileStatement(): WhileStatementNode {
