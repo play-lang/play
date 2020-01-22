@@ -1,5 +1,6 @@
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
 import { FunctionInfo } from "src/language/function-info";
+import { IdentifierSymbol } from "src/language/identifier-symbol";
 import { Expression, Statement } from "src/language/node";
 import { infixParselets, prefixParselets } from "src/language/operator-grammar";
 import { SymbolTable } from "src/language/symbol-table";
@@ -240,11 +241,9 @@ export class Parser extends TokenParser {
 			typeAnnotation
 		);
 		// Register the declared variable in the symbol table
-		this.symbolTable.register({
-			token: nameToken,
-			name: nameToken.lexeme,
-			isImmutable,
-		});
+		this.symbolTable.register(
+			new IdentifierSymbol(nameToken.lexeme, nameToken, isImmutable)
+		);
 		return node;
 	}
 
@@ -339,11 +338,9 @@ export class Parser extends TokenParser {
 		let i = 0;
 		for (const param of parameters) {
 			// Register each parameter in the function's symbol table
-			this.symbolTable.register({
-				name: param,
-				token: paramTokens[i],
-				isImmutable: false,
-			});
+			this.symbolTable.register(
+				new IdentifierSymbol(param, paramTokens[i], false)
+			);
 			i++;
 		}
 
