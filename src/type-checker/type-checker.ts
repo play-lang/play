@@ -45,6 +45,7 @@ export class TypeChecker implements Visitor {
 	public check(): boolean {
 		// Reset everything
 		this.errors = [];
+		this.env.symbolTable.reset();
 
 		// Compute function types before checking types
 		for (const key of this.env.functionTable.keys()) {
@@ -143,11 +144,11 @@ export class TypeChecker implements Visitor {
 	public visitBlockStatementNode(node: BlockStatementNode): void {
 		// Scope is entered/exited manually for function blocks
 		// in visitFunctionDeclarationNode
-		if (!node.isFunctionBlock) this.env.enterScope();
+		if (!node.isFunctionBlock) this.env.symbolTable.enterScope();
 		for (const statement of node.statements) {
 			statement.accept(this);
 		}
-		if (!node.isFunctionBlock) this.env.exitScope();
+		if (!node.isFunctionBlock) this.env.symbolTable.exitScope();
 	}
 
 	public visitIfStatementNode(node: IfStatementNode): void {
@@ -164,7 +165,7 @@ export class TypeChecker implements Visitor {
 	}
 
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
-		const scope = this.env.scope.findScope(node.variableName);
+		const scope = this.env.symbolTable.scope.findScope(node.variableName);
 		if (!scope) {
 			this.report(
 				new SemanticError(node.token, "Variable not found in scope")
@@ -192,7 +193,7 @@ export class TypeChecker implements Visitor {
 		if (node.usedAsFunction) {
 			// TODO: Id is used as a function reference, make sure function exists
 		} else {
-			const scope = this.env.scope.findScope(node.name);
+			const scope = this.env.symbolTable.scope.findScope(node.name);
 			if (!scope) {
 				this.report(
 					new SemanticError(
@@ -207,14 +208,14 @@ export class TypeChecker implements Visitor {
 	}
 
 	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
-		this.env.enterScope();
+		this.env.symbolTable.enterScope();
 		// Compute types for parameters
 		for (const parameter of node.info.parameters) {
 			// Walk through each parameter, find its type information from the
 			// function info object attached to the node, look up the entry in the
 			// function's scope and resolve the parameter types for later use
 			const typeAnnotation = node.info.parameterTypes.get(parameter);
-			const idSymbol = this.env.scope.lookup(parameter);
+			const idSymbol = this.env.symbolTable.scope.lookup(parameter);
 			if (typeAnnotation && idSymbol && typeAnnotation.length > 0) {
 				// TODO: Support pass-by-reference assignable parameter types someday
 				const type = Type.construct(typeAnnotation);
@@ -228,7 +229,7 @@ export class TypeChecker implements Visitor {
 			}
 		}
 		node.block.accept(this);
-		this.env.exitScope();
+		this.env.symbolTable.exitScope();
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {

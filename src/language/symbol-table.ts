@@ -33,4 +33,13 @@ export class SymbolTable {
 		this.childScopeIndices.pop();
 		this._scope = this.scope.enclosingScope || this.globalScope;
 	}
+
+	/**
+	 * Reset the symbol table's current scope and position within the scope tree
+	 */
+	public reset(): void {
+		this._scope = this.globalScope;
+		this.scopeDepth = 0;
+		this.childScopeIndices = [0];
+	}
 }

@@ -27,10 +27,10 @@ export class IdExpressionNode extends Expression {
 	}
 
 	public type(env: Environment): Type {
-		const scope = env.scope.findScope(this.name);
+		const scope = env.symbolTable.scope.findScope(this.name);
 		if (scope) {
 			// Identifier represents a variable
-			return env.scope.lookup(this.name)!.type!;
+			return env.symbolTable.scope.lookup(this.name)!.type!;
 		}
 		if (this.usedAsFunction) {
 			// The id is invoked as a function, so see if it can be found in the

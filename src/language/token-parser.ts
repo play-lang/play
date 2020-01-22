@@ -59,6 +59,7 @@ export class TokenParser {
 		/** Lexer used to provide tokens as needed */
 		public readonly lexer: Lexer
 	) {
+		// Prime the parser correctly based on existing lexer tokens
 		this._token = this.lexer.token;
 		this._previous = this._token;
 	}
