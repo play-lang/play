@@ -1,17 +1,6 @@
 import { Context } from "src/language/context";
 
 /**
- * Represents a jump that must be patched at link time once all the contexts
- * are chained together into one big bytecode array
- */
-export class ContextLabelEntry {
-	public constructor(
-		/** Instruction offset of the jump to patch in its context */
-		public readonly offset: number
-	) {}
-}
-
-/**
  * Holds a list of references to contexts amongst contexts
  */
 export class ContextLabels {
