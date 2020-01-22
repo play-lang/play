@@ -4,6 +4,7 @@ import { IdentifierSymbol } from "src/language/identifier-symbol";
 import { Expression, Statement } from "src/language/node";
 import { infixParselets, prefixParselets } from "src/language/operator-grammar";
 import { Scope } from "src/language/scope";
+import { SymbolTable } from "src/language/symbol-table";
 import { TokenLike } from "src/language/token";
 import { TokenParser } from "src/language/token-parser";
 import { TokenType } from "src/language/token-type";
@@ -22,40 +23,33 @@ import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
 import { InfixParselet } from "src/parser/parselet";
 
 export class Parser extends TokenParser {
-	/** Global scope */
-	public get globalScope(): Scope {
-		return this._scopes[0];
+	/** Parsing environment containing symbol table and function table */
+	public readonly env: Environment;
+
+	public get symbolTable(): SymbolTable {
+		return this.env.symbolTable;
 	}
 
-	/** Current scope */
+	public get functionTable(): Map<string, FunctionInfo> {
+		return this.env.functionTable;
+	}
+
 	public get scope(): Scope {
-		return this._scopes[this._scopes.length - 1];
+		return this.symbolTable.scope;
 	}
-
-	/**
-	 * Context names mapped to function nodes
-	 * This allows us to look-up functions by name without having to walk the tree
-	 */
-	public readonly functionTable: Map<string, FunctionInfo> = new Map();
-
-	/** Stack of active scopes */
-	protected _scopes: Scope[] = [];
-	/** Number of scopes encountered */
-	protected _numScopes: number = 0;
 
 	constructor(contents: string) {
 		// Todo: Update for file table when preprocessor is ready
 		super(new Lexer(contents));
-		this._scopes.push(new Scope());
-		this._token = this.lexer.token;
-		this._previous = this._token;
+		this.env = new Environment(
+			new SymbolTable(new Scope()),
+			new Map<string, FunctionInfo>()
+		);
 	}
 
 	///
 	///
-	/// Recursive Descent
-	///
-	/// Parsing Methods
+	/// Recursive Descent Parsing Methods
 	///
 	///
 
@@ -93,8 +87,7 @@ export class Parser extends TokenParser {
 				? this.previous.end
 				: statements[statements.length - 1].end;
 		const root = new ProgramNode(this.previous, start, end, statements);
-		const env = new Environment(this.scope, this.functionTable);
-		return new AbstractSyntaxTree(root, env);
+		return new AbstractSyntaxTree(root, this.env);
 	}
 
 	public statement(): Statement {
@@ -134,7 +127,7 @@ export class Parser extends TokenParser {
 		if (!isFunctionBlock) {
 			// Create a new scope and push it on the scope stack
 			// (Only if we're not a function block -- it brings its own scope)
-			this._scopes.push(this.scope.addScope());
+			this.createScope();
 		}
 		const statements: Statement[] = [];
 		while (!this.isAtEnd && this.peek.type !== TokenType.BraceClose) {
@@ -152,7 +145,7 @@ export class Parser extends TokenParser {
 		this.eatLines();
 		this.consume(TokenType.BraceClose, "Expected closing brace for block");
 		// Pop the scope
-		if (!isFunctionBlock) this._scopes.pop();
+		if (!isFunctionBlock) this.exitScope();
 		// Calculate start and end in the input string
 		const end =
 			statements.length < 1
@@ -240,7 +233,7 @@ export class Parser extends TokenParser {
 			typeAnnotation
 		);
 		// Register the declared variable in the current scope
-		this.scope.register(
+		this.symbolTable.scope.register(
 			new IdentifierSymbol(nameToken.lexeme, nameToken, isImmutable)
 		);
 		return node;
@@ -332,7 +325,7 @@ export class Parser extends TokenParser {
 		);
 
 		// Create a scope for this function
-		this._scopes.push(this.scope.addScope());
+		this.createScope();
 
 		let i = 0;
 		for (const param of parameters) {
@@ -353,7 +346,7 @@ export class Parser extends TokenParser {
 		}
 
 		// Pop the scope for this function
-		this._scopes.pop();
+		this.exitScope();
 
 		const node = new FunctionDeclarationNode(nameToken, start, info, block);
 		return node;
@@ -469,5 +462,16 @@ export class Parser extends TokenParser {
 		const parser = infixParselets.get(this.peek.type);
 		if (parser) return parser.precedence;
 		return 0;
+	}
+
+	private createScope(): void {
+		// Create a new scope
+		this.scope.addScope();
+		// Enter the newly created scope
+		this.symbolTable.enterScope();
+	}
+
+	private exitScope(): void {
+		this.symbolTable.exitScope();
 	}
 }

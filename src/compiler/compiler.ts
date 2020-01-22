@@ -79,8 +79,9 @@ export class Compiler implements Visitor {
 
 	constructor(ast: AbstractSyntaxTree) {
 		this.ast = ast;
-		this.scope = ast.env.scope;
-		this.globalScope = ast.env.scope;
+		ast.env.symbolTable.reset();
+		this.scope = ast.env.symbolTable.scope;
+		this.globalScope = ast.env.symbolTable.scope;
 		this.contexts.set(
 			this.scope,
 			this.createContext("main", this.scope.totalEntries)
