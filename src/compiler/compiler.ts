@@ -150,10 +150,10 @@ export class Compiler implements Visitor {
 		const dest = this.emitLabel();
 		node.block.accept(this);
 		node.condition.accept(this);
-		const trueAddr = this.jumpIfTrueAndPop();
+		const falseAddr = this.jumpIfFalseAndPop();
 		this.loop(dest - (this.context.bytecode.length + 2));
-		const offset = this.context.bytecode.length - trueAddr - 1;
-		this.patch(trueAddr, offset);
+		const offset = this.context.bytecode.length - falseAddr - 1;
+		this.patch(falseAddr, offset);
 	}
 
 	public visitWhileStatementNode(node: WhileStatementNode): void {

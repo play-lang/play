@@ -36,15 +36,25 @@ if (x and y) {
 		test("basic while statement", () => {
 			const code = `
 var x = 0
-while (x < 10) {
+while x < 10 {
 	x++
 }
 return x + 1
 			`.trim();
-			console.log(code);
-			console.log(Play.describeAst(code));
-			console.log(Play.disassemble(code));
 			expect(Play.run(code).value.value).toBe(11);
+		});
+	});
+	describe("do/while statements", () => {
+		test("basic do/while statement", () => {
+			const code = `
+var x = 5
+do {
+	x--
+} while x > 0
+
+			`;
+			console.log(Play.disassemble(code));
+			expect(Play.run(code).value.value).toBe(0);
 		});
 	});
 });
