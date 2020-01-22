@@ -57,7 +57,7 @@ export class Disassembler {
 		let dp: number = 0;
 		while (dp < constantPool.length) {
 			const value = constantPool[dp];
-			out += "\t" + this.format(dp) + "\t" + this.value(value);
+			out += "\t" + this.format(dp).trim() + "\t" + this.value(value);
 			dp++;
 		}
 		return out;
@@ -263,7 +263,7 @@ export class Disassembler {
 	 * @param ip The bytecode instruction index
 	 */
 	private instr(op: OpCode, ip: number): string {
-		return "\t" + this.format(ip) + "\t" + this.op(op) + "\n";
+		return "\t" + this.format(ip).trim() + "\t" + this.op(op) + "\n";
 	}
 
 	/**
@@ -275,7 +275,7 @@ export class Disassembler {
 	private instrParam(op: OpCode, ip: number, param: number): string {
 		return (
 			"\t" +
-			this.format(ip) +
+			this.format(ip).trim() +
 			"\t" +
 			this.op(op) +
 			"\t" +
@@ -299,7 +299,7 @@ export class Disassembler {
 	): string {
 		return (
 			"\t" +
-			this.format(ip) +
+			this.format(ip).trim() +
 			"\t" +
 			this.op(op) +
 			"\t" +
@@ -329,7 +329,7 @@ export class Disassembler {
 	): string {
 		return (
 			"\t" +
-			this.format(ip) +
+			this.format(ip).trim() +
 			"\t" +
 			this.op(op) +
 			"\t" +
@@ -356,7 +356,7 @@ export class Disassembler {
 	): string {
 		return (
 			"\t" +
-			this.format(ip) +
+			this.format(ip).trim() +
 			"\t" +
 			this.op(op) +
 			"\t" +
@@ -382,7 +382,7 @@ export class Disassembler {
 	): string {
 		return (
 			"\t" +
-			this.format(ip) +
+			this.format(ip).trim() +
 			"\t" +
 			this.op(op) +
 			"\t" +
@@ -421,6 +421,6 @@ export class Disassembler {
 	 * @param labelId The label id
 	 */
 	private label(labelId: number): string {
-		return "label_" + this.format(labelId) + "";
+		return "label_" + this.format(labelId).trim() + "";
 	}
 }
