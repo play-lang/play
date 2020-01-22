@@ -1,4 +1,3 @@
-import { str } from "../shared/test-utils";
 import { Play } from "../src/play";
 
 describe("control flow", () => {
@@ -35,17 +34,17 @@ describe("control flow", () => {
 	});
 	describe("while statements", () => {
 		test("basic while statement", () => {
-			const code = str`
-				var x = 0
-				while (x < 10) {
-					x++
-				}
-				return x
-			`;
+			const code = `
+var x = 0
+while (x < 10) {
+	x++
+}
+return x + 1
+			`.trim();
 			console.log(code);
 			console.log(Play.describeAst(code));
 			console.log(Play.disassemble(code));
-			expect(Play.run(code).value.value).toBe(10);
+			expect(Play.run(code).value.value).toBe(11);
 		});
 	});
 });
