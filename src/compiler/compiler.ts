@@ -293,6 +293,14 @@ export class Compiler implements Visitor {
 		}
 	}
 
+	/**
+	 * Output the appropriate instructions for incrementing or decrementing
+	 * a l-value referenced by a node
+	 * @param node The node containing the expression to be
+	 * incremented/decremented
+	 * @param shouldIncrement True if instructions for incrementing should be
+	 * output, false for decrementing
+	 */
 	public incrementOrDecrement(
 		node: Expression,
 		shouldIncrement: boolean
