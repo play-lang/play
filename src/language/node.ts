@@ -4,6 +4,9 @@ import { Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export abstract class Node {
+	/** Parent node or undefined if the root node */
+	public parent: Node | undefined;
+
 	/** Type of the syntax tree node */
 	public get nodeName(): string {
 		return this.constructor.name;
@@ -22,6 +25,9 @@ export abstract class Node {
 
 	/** Accept the specified visitor */
 	public abstract accept(visitor: Visitor): any;
+
+	/** Set the parent of the node (recursive) */
+	public abstract setParent(node: Node | undefined): void;
 }
 
 export abstract class Expression extends Node {}
