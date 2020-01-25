@@ -1,4 +1,4 @@
-import { Statement } from "src/language/node";
+import { Node, Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
 import { ErrorType, None, Type } from "src/language/types/type-system";
@@ -17,6 +17,11 @@ export class BlockStatementNode extends Statement {
 		public readonly isFunctionBlock: boolean
 	) {
 		super(token, start, end);
+	}
+
+	public setParent(node: Node | undefined): void {
+		this.parent = node;
+		this.statements.forEach(statement => statement.setParent(this));
 	}
 
 	public type(env: Environment): Type {

@@ -1,4 +1,4 @@
-import { Expression } from "src/language/node";
+import { Expression, Node } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
@@ -21,6 +21,12 @@ export class BinaryExpressionNode extends Expression {
 		public readonly rhs: Expression
 	) {
 		super(token, lhs.start, rhs.end);
+	}
+
+	public setParent(node: Node | undefined): void {
+		this.parent = node;
+		this.lhs.setParent(this);
+		this.rhs.setParent(this);
 	}
 
 	public type(env: Environment): Type {

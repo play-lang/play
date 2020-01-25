@@ -15,6 +15,13 @@ export class ProgramNode extends Node {
 		public readonly statements: Node[]
 	) {
 		super(token, start, end);
+		// Force the whole tree to have back-references to their parent nodes
+		this.setParent(undefined);
+	}
+
+	public setParent(node: Node | undefined): void {
+		this.parent = node;
+		this.statements.forEach(statement => statement.setParent(this));
 	}
 
 	public type(env: Environment): Type {

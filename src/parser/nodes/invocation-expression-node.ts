@@ -1,4 +1,4 @@
-import { Expression } from "src/language/node";
+import { Expression, Node } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
 import {
@@ -30,6 +30,12 @@ export class InvocationExpressionNode extends Expression {
 		public readonly args: Expression[]
 	) {
 		super(token, start, end);
+	}
+
+	public setParent(node: Node | undefined): void {
+		this.parent = node;
+		this.lhs.setParent(this);
+		this.args.forEach(arg => arg.setParent(this));
 	}
 
 	public type(env: Environment): Type {

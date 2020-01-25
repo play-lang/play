@@ -1,4 +1,4 @@
-import { Expression, Statement } from "src/language/node";
+import { Expression, Node, Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
 import { None, Type } from "src/language/types/type-system";
@@ -25,6 +25,13 @@ export class IfStatementNode extends Statement {
 				? alternates[alternates.length - 1].end
 				: consequent.end
 		);
+	}
+
+	public setParent(node: Node | undefined): void {
+		this.parent = node;
+		this.predicate.setParent(this);
+		this.consequent.setParent(this);
+		this.alternates.forEach(alternate => alternate.setParent(this));
 	}
 
 	public type(env: Environment): Type {

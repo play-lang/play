@@ -1,4 +1,4 @@
-import { Expression } from "src/language/node";
+import { Expression, Node } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { postfixTypeAnnotations, TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
@@ -18,6 +18,11 @@ export class PostfixExpressionNode extends Expression {
 		super(token, lhs.start, token.end);
 		this.operatorType = token.type;
 		this.lhs = lhs;
+	}
+
+	public setParent(node: Node | undefined): void {
+		this.parent = node;
+		this.lhs.setParent(this);
 	}
 
 	public type(env: Environment): Type {
