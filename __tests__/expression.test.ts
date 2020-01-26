@@ -5,7 +5,7 @@ describe("compiler/vm", () => {
 	test("should not register duplicates in the constant pool", () => {
 		const dis = Play.disassemble('let x: str = "x"\nlet y: str = "x"');
 		expect(dis).toBe(
-			`.CONSTANTS\n\t0000\tstring\tx\n\n.CODE\n; Context main\n; 2 locals\nlabel_0000:\n\t0000\t               const\t 0000\t; value x\n\t0002\t               const\t 0000\t; value x\n\t0004\t              return\n`
+			`.CONSTANTS\n\t0000\tstring\tx\n\n.CODE\n; Context (main)\n; 2 locals\nlabel_0000:\n\t0000\t               const\t 0000\t; value x\n\t0002\t               const\t 0000\t; value x\n\t0004\t              return\n`
 		);
 	});
 	test("should compute expressions", async () => {

@@ -84,7 +84,7 @@ export class Compiler implements Visitor {
 		this.globalScope = ast.env.symbolTable.scope;
 		this.contexts.set(
 			this.scope,
-			this.createContext("main", this.scope.totalEntries)
+			this.createContext("(main)", this.scope.totalEntries)
 		);
 		this.functionTable = ast.env.functionTable;
 	}
