@@ -1,10 +1,10 @@
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
+import { Node } from "src/language/node";
 import { SemanticError } from "src/language/semantic-error";
 import { TokenLike } from "src/language/token";
 import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
 import { ErrorType, Num, SumType, Type } from "src/language/types/type-system";
-import { Visitor } from "src/language/visitor";
 import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
@@ -26,7 +26,7 @@ import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-n
 import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
 import { TypeCheckError } from "src/type-checker/type-check-error";
 
-export class TypeChecker implements Visitor {
+export class TypeChecker {
 	/** Current type checking environment */
 	public get env(): Environment {
 		return this.ast.env;
@@ -40,11 +40,32 @@ export class TypeChecker implements Visitor {
 		public readonly ast: AbstractSyntaxTree
 	) {}
 
+	/**
+	 * Find the name of the function which contains the specified syntax
+	 * tree node
+	 *
+	 * If the node is not contained inside a function, it returns the
+	 * main context's name
+	 *
+	 * @param node The node to find the parent function of
+	 */
+	public parentFunction(node: Node): string {
+		let n = node.parent;
+		while (n && !(n instanceof FunctionDeclarationNode)) {
+			n = n.parent;
+		}
+		if (n) {
+			return n.info.name;
+		}
+		return "(main)";
+	}
+
 	// MARK: Methods
 
 	public check(): boolean {
 		// Reset everything
 		this.errors = [];
+		// Reset our position within the symbol table (doesn't delete data)
 		this.env.symbolTable.reset();
 
 		// Compute function types before checking types
@@ -56,7 +77,8 @@ export class TypeChecker implements Visitor {
 			}
 		}
 
-		this.ast.root.accept(this);
+		this.checkNode(this.ast.root);
+
 		return this.errors.length < 1;
 	}
 
@@ -137,7 +159,7 @@ export class TypeChecker implements Visitor {
 	// MARK: Visitor
 	public visitProgramNode(node: ProgramNode): void {
 		for (const statement of node.statements) {
-			statement.accept(this);
+			this.checkNode(statement);
 		}
 	}
 
@@ -146,22 +168,22 @@ export class TypeChecker implements Visitor {
 		// in visitFunctionDeclarationNode
 		if (!node.isFunctionBlock) this.env.symbolTable.enterScope();
 		for (const statement of node.statements) {
-			statement.accept(this);
+			this.checkNode(statement);
 		}
 		if (!node.isFunctionBlock) this.env.symbolTable.exitScope();
 	}
 
 	public visitIfStatementNode(node: IfStatementNode): void {
-		node.predicate.accept(this);
-		node.consequent.accept(this);
+		this.checkNode(node.predicate);
+		this.checkNode(node.consequent);
 		for (const alternate of node.alternates) {
-			alternate.accept(this);
+			this.checkNode(alternate);
 		}
 	}
 
 	public visitElseStatementNode(node: ElseStatementNode): void {
-		node.expr?.accept(this);
-		node.block.accept(this);
+		if (node.expr) this.checkNode(node.expr);
+		this.checkNode(node.block);
 	}
 
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
@@ -173,7 +195,7 @@ export class TypeChecker implements Visitor {
 			return;
 		}
 		// Visit the assignment expression that might follow a variable declaration:
-		if (node.expr) node.expr!.accept(this);
+		if (node.expr) this.checkNode(node.expr);
 		// If the node has an assigned value and a type assertion, make sure they
 		// are both the same type.
 		if (node.expr && node.typeAnnotation) {
@@ -228,12 +250,12 @@ export class TypeChecker implements Visitor {
 				);
 			}
 		}
-		node.block.accept(this);
+		this.checkNode(node.block);
 		this.env.symbolTable.exitScope();
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
-		node.rhs.accept(this);
+		this.checkNode(node.rhs);
 		const type = node.type(this.env);
 		switch (node.operatorType) {
 			case TokenType.Bang:
@@ -256,7 +278,7 @@ export class TypeChecker implements Visitor {
 	}
 
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
-		node.lhs.accept(this);
+		this.checkNode(node.lhs);
 		const type = node.type(this.env);
 		switch (node.operatorType) {
 			case TokenType.PlusPlus:
@@ -282,9 +304,22 @@ export class TypeChecker implements Visitor {
 			if (!type.satisfiesRecordType(functionType.parameters)) {
 				this.mismatch(node.token, functionType.parameters, type);
 			}
+
+			// TODO: Check for tail recursion so the compiler can output the correct
+			// bytecode for recursive calls
+			if (node.parent instanceof ReturnStatementNode) {
+				// Find the name of the enclosing function
+				const parentFuncName = this.parentFunction(node.parent);
+				if (parentFuncName === node.functionName) {
+					// TODO: Also check for class equivalence to avoid incorrect tail-call
+					// optimizations for methods that are in different classes but share
+					// the same names
+					node.isTailRecursive = true;
+				}
+			}
 		} else {
 			// TODO: Semantic error here for unrecognized function
-			throw new Error("Can't find function");
+			throw new Error("Can't find function " + node.functionName);
 		}
 	}
 
@@ -298,8 +333,8 @@ export class TypeChecker implements Visitor {
 	}
 
 	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
-		node.lhs.accept(this);
-		node.rhs.accept(this);
+		this.checkNode(node.lhs);
+		this.checkNode(node.rhs);
 		const lhsType = node.lhs.type(this.env);
 		const rhsType = node.rhs.type(this.env);
 		const allowedType = node.operandType(this.env);
@@ -331,14 +366,15 @@ export class TypeChecker implements Visitor {
 	): void {}
 
 	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
-		node.predicate.accept(this);
-		node.consequent.accept(this);
-		node.alternate.accept(this);
+		// TODO: Ensure that consequent and alternate return same type of value
+		this.checkNode(node.predicate);
+		this.checkNode(node.consequent);
+		this.checkNode(node.alternate);
 	}
 
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
-		node.lhs.accept(this);
-		node.rhs.accept(this);
+		this.checkNode(node.lhs);
+		this.checkNode(node.rhs);
 		const lhsType = node.lhs.type(this.env);
 		const rhsType = node.rhs.type(this.env);
 		if (!lhsType.isAssignable) {
@@ -349,20 +385,108 @@ export class TypeChecker implements Visitor {
 	}
 
 	public visitReturnStatementNode(node: ReturnStatementNode): void {
-		if (node.expr) node.expr!.accept(this);
+		if (node.expr) this.checkNode(node.expr);
 	}
 
 	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
-		node.expr.accept(this);
+		this.checkNode(node.expr);
 	}
 
 	public visitDoWhileStatementNode(node: DoWhileStatementNode): void {
-		node.block.accept(this);
-		node.condition.accept(this);
+		this.checkNode(node.block);
+		this.checkNode(node.condition);
 	}
 
 	public visitWhileStatementNode(node: WhileStatementNode): void {
-		node.condition.accept(this);
-		node.block.accept(this);
+		this.checkNode(node.condition);
+		this.checkNode(node.block);
+	}
+
+	// MARK: Private methods
+
+	/**
+	 * Type check a given node
+	 *
+	 * This examines the type of node given and calls the appropriate routine,
+	 * passing any needed state around
+	 *
+	 * @param node The node to check
+	 */
+	private checkNode(node: Node): void {
+		switch (true) {
+			case node instanceof AssignmentExpressionNode:
+				this.visitAssignmentExpressionNode(
+					node as AssignmentExpressionNode
+				);
+				break;
+			case node instanceof BinaryExpressionNode:
+				this.visitBinaryExpressionNode(node as BinaryExpressionNode);
+				break;
+			case node instanceof BinaryLogicalExpressionNode:
+				this.visitBinaryLogicalExpressionNode(
+					node as BinaryLogicalExpressionNode
+				);
+				break;
+			case node instanceof BlockStatementNode:
+				this.visitBlockStatementNode(node as BlockStatementNode);
+				break;
+			case node instanceof DoWhileStatementNode:
+				this.visitDoWhileStatementNode(node as DoWhileStatementNode);
+				break;
+			case node instanceof ElseStatementNode:
+				this.visitElseStatementNode(node as ElseStatementNode);
+				break;
+			case node instanceof ExpressionStatementNode:
+				this.visitExpressionStatementNode(
+					node as ExpressionStatementNode
+				);
+				break;
+			case node instanceof FunctionDeclarationNode:
+				this.visitFunctionDeclarationNode(
+					node as FunctionDeclarationNode
+				);
+				break;
+			case node instanceof IdExpressionNode:
+				this.visitIdExpressionNode(node as IdExpressionNode);
+				break;
+			case node instanceof IfStatementNode:
+				this.visitIfStatementNode(node as IfStatementNode);
+				break;
+			case node instanceof InvocationExpressionNode:
+				this.visitInvocationExpressionNode(
+					node as InvocationExpressionNode
+				);
+				break;
+			case node instanceof PostfixExpressionNode:
+				this.visitPostfixExpressionNode(node as PostfixExpressionNode);
+				break;
+			case node instanceof PrefixExpressionNode:
+				this.visitPrefixExpressionNode(node as PrefixExpressionNode);
+				break;
+			case node instanceof PrimitiveExpressionNode:
+				this.visitPrimitiveExpressionNode(
+					node as PrimitiveExpressionNode
+				);
+				break;
+			case node instanceof ProgramNode:
+				this.visitProgramNode(node as ProgramNode);
+				break;
+			case node instanceof ReturnStatementNode:
+				this.visitReturnStatementNode(node as ReturnStatementNode);
+				break;
+			case node instanceof TernaryConditionalNode:
+				this.visitTernaryConditionalNode(
+					node as TernaryConditionalNode
+				);
+				break;
+			case node instanceof VariableDeclarationNode:
+				this.visitVariableDeclarationNode(
+					node as VariableDeclarationNode
+				);
+				break;
+			case node instanceof WhileStatementNode:
+				this.visitWhileStatementNode(node as WhileStatementNode);
+				break;
+		}
 	}
 }

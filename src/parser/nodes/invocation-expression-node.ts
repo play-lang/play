@@ -10,6 +10,14 @@ import { Visitor } from "src/language/visitor";
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
 
 export class InvocationExpressionNode extends Expression {
+	/**
+	 * True if the invocation is a recursive call in tail position
+	 *
+	 * This flag is set accordingly by the type-checker as it relies on a
+	 * fully formed AST to make this designation
+	 */
+	public isTailRecursive: boolean = false;
+
 	/** Name of the function to call */
 	public get functionName(): string | undefined {
 		if (this.lhs instanceof IdExpressionNode) {

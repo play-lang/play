@@ -152,7 +152,12 @@ export class PrintVisitor implements Visitor, Describable {
 	}
 
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
-		this.desc += "Call(" + node.functionName + ")\n";
+		this.desc +=
+			"Call(" +
+			node.functionName +
+			", tailRecursive=" +
+			String(node.isTailRecursive) +
+			")\n";
 		this.indent += 1;
 		for (const arg of node.args) {
 			const last = arg === node.args[node.args.length - 1];

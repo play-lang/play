@@ -207,6 +207,7 @@ export class JSONVisitor implements Visitor, Describable {
 			start: node.start,
 			end: node.end,
 			functionName: node.functionName,
+			isTailRecursive: node.isTailRecursive,
 			args: node.args,
 			lhs,
 		});
