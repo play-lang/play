@@ -156,14 +156,15 @@ export class TypeChecker {
 		return prefix;
 	}
 
-	// MARK: Visitor
-	public checkProgram(node: ProgramNode): void {
+	// MARK: Type Checking Routines
+
+	private checkProgram(node: ProgramNode): void {
 		for (const statement of node.statements) {
 			this.checkNode(statement);
 		}
 	}
 
-	public checkBlockStatement(node: BlockStatementNode): void {
+	private checkBlockStatement(node: BlockStatementNode): void {
 		// Scope is entered/exited manually for function blocks
 		// in visitFunctionDeclarationNode
 		if (!node.isFunctionBlock) this.env.symbolTable.enterScope();
@@ -173,7 +174,7 @@ export class TypeChecker {
 		if (!node.isFunctionBlock) this.env.symbolTable.exitScope();
 	}
 
-	public checkIfStatement(node: IfStatementNode): void {
+	private checkIfStatement(node: IfStatementNode): void {
 		this.checkNode(node.predicate);
 		this.checkNode(node.consequent);
 		for (const alternate of node.alternates) {
@@ -181,12 +182,12 @@ export class TypeChecker {
 		}
 	}
 
-	public checkElseStatement(node: ElseStatementNode): void {
+	private checkElseStatement(node: ElseStatementNode): void {
 		if (node.expr) this.checkNode(node.expr);
 		this.checkNode(node.block);
 	}
 
-	public checkVariableDeclaration(node: VariableDeclarationNode): void {
+	private checkVariableDeclaration(node: VariableDeclarationNode): void {
 		const scope = this.env.symbolTable.scope.findScope(node.variableName);
 		if (!scope) {
 			this.report(
@@ -211,7 +212,7 @@ export class TypeChecker {
 		}
 	}
 
-	public checkIdExpression(node: IdExpressionNode): void {
+	private checkIdExpression(node: IdExpressionNode): void {
 		if (node.usedAsFunction) {
 			// TODO: Id is used as a function reference, make sure function exists
 		} else {
@@ -229,7 +230,7 @@ export class TypeChecker {
 		}
 	}
 
-	public checkFunctionDeclaration(node: FunctionDeclarationNode): void {
+	private checkFunctionDeclaration(node: FunctionDeclarationNode): void {
 		this.env.symbolTable.enterScope();
 		// Compute types for parameters
 		for (const parameter of node.info.parameters) {
@@ -254,7 +255,7 @@ export class TypeChecker {
 		this.env.symbolTable.exitScope();
 	}
 
-	public checkPrefixExpression(node: PrefixExpressionNode): void {
+	private checkPrefixExpression(node: PrefixExpressionNode): void {
 		this.checkNode(node.rhs);
 		const type = node.type(this.env);
 		switch (node.operatorType) {
@@ -277,7 +278,7 @@ export class TypeChecker {
 		}
 	}
 
-	public checkPostfixExpression(node: PostfixExpressionNode): void {
+	private checkPostfixExpression(node: PostfixExpressionNode): void {
 		this.checkNode(node.lhs);
 		const type = node.type(this.env);
 		switch (node.operatorType) {
@@ -292,7 +293,7 @@ export class TypeChecker {
 		}
 	}
 
-	public checkInvocationExpression(node: InvocationExpressionNode): void {
+	private checkInvocationExpression(node: InvocationExpressionNode): void {
 		const type = node.argumentsType(this.env);
 		// TODO: Add better error handling for invalid action calls
 		const functionName = node.functionName;
@@ -323,7 +324,7 @@ export class TypeChecker {
 		}
 	}
 
-	public checkPrimitiveExpression(node: PrimitiveExpressionNode): void {
+	private checkPrimitiveExpression(node: PrimitiveExpressionNode): void {
 		if (node.type(this.env) instanceof ErrorType) {
 			this.error(
 				node.token,
@@ -332,7 +333,7 @@ export class TypeChecker {
 		}
 	}
 
-	public checkBinaryExpression(node: BinaryExpressionNode): void {
+	private checkBinaryExpression(node: BinaryExpressionNode): void {
 		this.checkNode(node.lhs);
 		this.checkNode(node.rhs);
 		const lhsType = node.lhs.type(this.env);
@@ -361,11 +362,11 @@ export class TypeChecker {
 		}
 	}
 
-	public checkBinaryLogicalExpression(
+	private checkBinaryLogicalExpression(
 		node: BinaryLogicalExpressionNode
 	): void {}
 
-	public checkTernaryConditional(node: TernaryConditionalNode): void {
+	private checkTernaryConditional(node: TernaryConditionalNode): void {
 		this.checkNode(node.predicate);
 		this.checkNode(node.consequent);
 		this.checkNode(node.alternate);
@@ -377,7 +378,7 @@ export class TypeChecker {
 		}
 	}
 
-	public checkAssignmentExpression(node: AssignmentExpressionNode): void {
+	private checkAssignmentExpression(node: AssignmentExpressionNode): void {
 		this.checkNode(node.lhs);
 		this.checkNode(node.rhs);
 		const lhsType = node.lhs.type(this.env);
@@ -389,20 +390,20 @@ export class TypeChecker {
 		}
 	}
 
-	public checkReturnStatement(node: ReturnStatementNode): void {
+	private checkReturnStatement(node: ReturnStatementNode): void {
 		if (node.expr) this.checkNode(node.expr);
 	}
 
-	public checkExpressionStatement(node: ExpressionStatementNode): void {
+	private checkExpressionStatement(node: ExpressionStatementNode): void {
 		this.checkNode(node.expr);
 	}
 
-	public checkDoWhileStatement(node: DoWhileStatementNode): void {
+	private checkDoWhileStatement(node: DoWhileStatementNode): void {
 		this.checkNode(node.block);
 		this.checkNode(node.condition);
 	}
 
-	public checkWhileStatement(node: WhileStatementNode): void {
+	private checkWhileStatement(node: WhileStatementNode): void {
 		this.checkNode(node.condition);
 		this.checkNode(node.block);
 	}
