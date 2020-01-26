@@ -88,7 +88,7 @@ export class TypeChecker {
 	 * @param expectedType The expected type
 	 * @param encounteredType The encountered type
 	 */
-	public mismatch(
+	private mismatch(
 		token: TokenLike,
 		expectedType: Type,
 		encounteredType: Type
@@ -107,7 +107,7 @@ export class TypeChecker {
 	 * @param expectedType The expected type
 	 * @param encounteredType The encountered type
 	 */
-	public badAssignment(token: TokenLike, expectedType: Type): void {
+	private badAssignment(token: TokenLike, expectedType: Type): void {
 		const pretty = expectedType.description;
 		const prefix = this.errorPrefix(token);
 		const hint = `${prefix} Invalid assignment—expected a variable reference to ${pretty}`;
@@ -120,7 +120,7 @@ export class TypeChecker {
 	 * @param token The token where the error occurred
 	 * @param message Error description
 	 */
-	public error(token: TokenLike, message: string): void {
+	private error(token: TokenLike, message: string): void {
 		const prefix = this.errorPrefix(token);
 		const hint = `${prefix} ${message}`;
 		const error = new TypeCheckError(token, hint);
@@ -134,7 +134,7 @@ export class TypeChecker {
 	 * report semantic errors other than type errors
 	 * @param error The error to report
 	 */
-	public report(error: SemanticError): void {
+	private report(error: SemanticError): void {
 		this.errors.push(error);
 	}
 
@@ -142,7 +142,7 @@ export class TypeChecker {
 	 * Describes a type error prefix string based on an error token
 	 * @param token The token where the error occurred
 	 */
-	public errorPrefix(token: TokenLike): string {
+	private errorPrefix(token: TokenLike): string {
 		const prefix =
 			"Type error in " +
 			token.file.name +
