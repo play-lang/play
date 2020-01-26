@@ -158,178 +158,15 @@ export class TypeChecker {
 
 	// MARK: Type Checking Routines
 
-	private checkProgram(node: ProgramNode): void {
-		for (const statement of node.statements) {
-			this.checkNode(statement);
-		}
-	}
-
-	private checkBlockStatement(node: BlockStatementNode): void {
-		// Scope is entered/exited manually for function blocks
-		// in visitFunctionDeclarationNode
-		if (!node.isFunctionBlock) this.env.symbolTable.enterScope();
-		for (const statement of node.statements) {
-			this.checkNode(statement);
-		}
-		if (!node.isFunctionBlock) this.env.symbolTable.exitScope();
-	}
-
-	private checkIfStatement(node: IfStatementNode): void {
-		this.checkNode(node.predicate);
-		this.checkNode(node.consequent);
-		for (const alternate of node.alternates) {
-			this.checkNode(alternate);
-		}
-	}
-
-	private checkElseStatement(node: ElseStatementNode): void {
-		if (node.expr) this.checkNode(node.expr);
-		this.checkNode(node.block);
-	}
-
-	private checkVariableDeclaration(node: VariableDeclarationNode): void {
-		const scope = this.env.symbolTable.scope.findScope(node.variableName);
-		if (!scope) {
-			this.report(
-				new SemanticError(node.token, "Variable not found in scope")
-			);
-			return;
-		}
-		// Visit the assignment expression that might follow a variable declaration:
-		if (node.expr) this.checkNode(node.expr);
-		// If the node has an assigned value and a type assertion, make sure they
-		// are both the same type.
-		if (node.expr && node.typeAnnotation) {
-			const varType = node.variableType(this.env);
-			const exprType = node.expr.type(this.env);
-			const idSymbol = scope.lookup(node.variableName)!;
-			idSymbol.type = varType;
-			if (!varType.equivalent(exprType)) {
-				// Report mismatch between variable's assigned value and variable's
-				// expected value
-				this.mismatch(node.token, varType, exprType);
-			}
-		}
-	}
-
-	private checkIdExpression(node: IdExpressionNode): void {
-		if (node.usedAsFunction) {
-			// TODO: Id is used as a function reference, make sure function exists
-		} else {
-			const scope = this.env.symbolTable.scope.findScope(node.name);
-			if (!scope) {
-				this.report(
-					new SemanticError(
-						node.token,
-						"Variable " +
-							node.name +
-							" referenced before declaration"
-					)
-				);
-			}
-		}
-	}
-
-	private checkFunctionDeclaration(node: FunctionDeclarationNode): void {
-		this.env.symbolTable.enterScope();
-		// Compute types for parameters
-		for (const parameter of node.info.parameters) {
-			// Walk through each parameter, find its type information from the
-			// function info object attached to the node, look up the entry in the
-			// function's scope and resolve the parameter types for later use
-			const typeAnnotation = node.info.parameterTypes.get(parameter);
-			const idSymbol = this.env.symbolTable.scope.lookup(parameter);
-			if (typeAnnotation && idSymbol && typeAnnotation.length > 0) {
-				// TODO: Support pass-by-reference assignable parameter types someday
-				const type = Type.construct(typeAnnotation);
-				idSymbol.type = type;
-			} else {
-				throw new TypeCheckError(
-					node.token,
-					"Failed to find type annotation or symbol table entry for parameter " +
-						parameter
-				);
-			}
-		}
-		this.checkNode(node.block);
-		this.env.symbolTable.exitScope();
-	}
-
-	private checkPrefixExpression(node: PrefixExpressionNode): void {
-		this.checkNode(node.rhs);
-		const type = node.type(this.env);
-		switch (node.operatorType) {
-			case TokenType.Bang:
-				return;
-			case TokenType.Plus:
-			case TokenType.Minus:
-				if (!type.equivalent(Num)) {
-					this.mismatch(node.token, Num, type);
-				}
-				break;
-			case TokenType.PlusPlus:
-			case TokenType.MinusMinus:
-				if (!type.equivalent(Num)) {
-					this.mismatch(node.token, Num, type);
-				}
-				if (!type.isAssignable) {
-					this.badAssignment(node.token, type);
-				}
-		}
-	}
-
-	private checkPostfixExpression(node: PostfixExpressionNode): void {
+	private checkAssignmentExpression(node: AssignmentExpressionNode): void {
 		this.checkNode(node.lhs);
-		const type = node.type(this.env);
-		switch (node.operatorType) {
-			case TokenType.PlusPlus:
-			case TokenType.MinusMinus:
-				if (!type.equivalent(Num)) {
-					this.mismatch(node.token, Num, type);
-				}
-				if (!type.isAssignable) {
-					this.badAssignment(node.token, type);
-				}
-		}
-	}
-
-	private checkInvocationExpression(node: InvocationExpressionNode): void {
-		const type = node.argumentsType(this.env);
-		// TODO: Add better error handling for invalid action calls
-		const functionName = node.functionName;
-		if (functionName && this.env.functionTable.has(functionName)) {
-			const info = this.env.functionTable.get(functionName)!;
-			// Function types are pre-computed before type checking so this should
-			// be safe
-			const functionType = info.type!;
-			if (!type.satisfiesRecordType(functionType.parameters)) {
-				this.mismatch(node.token, functionType.parameters, type);
-			}
-
-			// TODO: Check for tail recursion so the compiler can output the correct
-			// bytecode for recursive calls
-			if (node.parent instanceof ReturnStatementNode) {
-				// Find the name of the enclosing function
-				const parentFuncName = this.parentFunction(node.parent);
-				if (parentFuncName === node.functionName) {
-					// TODO: Also check for class equivalence to avoid incorrect tail-call
-					// optimizations for methods that are in different classes but share
-					// the same names
-					node.isTailRecursive = true;
-				}
-			}
-		} else {
-			// TODO: Semantic error here for unrecognized function
-			throw new Error("Can't find function " + node.functionName);
-		}
-	}
-
-	private checkPrimitiveExpression(node: PrimitiveExpressionNode): void {
-		if (node.type(this.env) instanceof ErrorType) {
-			this.error(
-				node.token,
-				"Failed to resolve type for " + node.token.lexeme
-			);
+		this.checkNode(node.rhs);
+		const lhsType = node.lhs.type(this.env);
+		const rhsType = node.rhs.type(this.env);
+		if (!lhsType.isAssignable) {
+			this.badAssignment(node.lhs.token, lhsType);
+		} else if (!lhsType.accepts(rhsType)) {
+			this.mismatch(node.lhs.token, lhsType, rhsType);
 		}
 	}
 
@@ -366,6 +203,169 @@ export class TypeChecker {
 		node: BinaryLogicalExpressionNode
 	): void {}
 
+	private checkBlockStatement(node: BlockStatementNode): void {
+		// Scope is entered/exited manually for function blocks
+		// in visitFunctionDeclarationNode
+		if (!node.isFunctionBlock) this.env.symbolTable.enterScope();
+		for (const statement of node.statements) {
+			this.checkNode(statement);
+		}
+		if (!node.isFunctionBlock) this.env.symbolTable.exitScope();
+	}
+
+	private checkDoWhileStatement(node: DoWhileStatementNode): void {
+		this.checkNode(node.block);
+		this.checkNode(node.condition);
+	}
+
+	private checkElseStatement(node: ElseStatementNode): void {
+		if (node.expr) this.checkNode(node.expr);
+		this.checkNode(node.block);
+	}
+
+	private checkExpressionStatement(node: ExpressionStatementNode): void {
+		this.checkNode(node.expr);
+	}
+
+	private checkFunctionDeclaration(node: FunctionDeclarationNode): void {
+		this.env.symbolTable.enterScope();
+		// Compute types for parameters
+		for (const parameter of node.info.parameters) {
+			// Walk through each parameter, find its type information from the
+			// function info object attached to the node, look up the entry in the
+			// function's scope and resolve the parameter types for later use
+			const typeAnnotation = node.info.parameterTypes.get(parameter);
+			const idSymbol = this.env.symbolTable.scope.lookup(parameter);
+			if (typeAnnotation && idSymbol && typeAnnotation.length > 0) {
+				// TODO: Support pass-by-reference assignable parameter types someday
+				const type = Type.construct(typeAnnotation);
+				idSymbol.type = type;
+			} else {
+				throw new TypeCheckError(
+					node.token,
+					"Failed to find type annotation or symbol table entry for parameter " +
+						parameter
+				);
+			}
+		}
+		this.checkNode(node.block);
+		this.env.symbolTable.exitScope();
+	}
+
+	private checkIdExpression(node: IdExpressionNode): void {
+		if (node.usedAsFunction) {
+			// TODO: Id is used as a function reference, make sure function exists
+		} else {
+			const scope = this.env.symbolTable.scope.findScope(node.name);
+			if (!scope) {
+				this.report(
+					new SemanticError(
+						node.token,
+						"Variable " +
+							node.name +
+							" referenced before declaration"
+					)
+				);
+			}
+		}
+	}
+
+	private checkIfStatement(node: IfStatementNode): void {
+		this.checkNode(node.predicate);
+		this.checkNode(node.consequent);
+		for (const alternate of node.alternates) {
+			this.checkNode(alternate);
+		}
+	}
+
+	private checkInvocationExpression(node: InvocationExpressionNode): void {
+		const type = node.argumentsType(this.env);
+		// TODO: Add better error handling for invalid action calls
+		const functionName = node.functionName;
+		if (functionName && this.env.functionTable.has(functionName)) {
+			const info = this.env.functionTable.get(functionName)!;
+			// Function types are pre-computed before type checking so this should
+			// be safe
+			const functionType = info.type!;
+			if (!type.satisfiesRecordType(functionType.parameters)) {
+				this.mismatch(node.token, functionType.parameters, type);
+			}
+
+			// TODO: Check for tail recursion so the compiler can output the correct
+			// bytecode for recursive calls
+			if (node.parent instanceof ReturnStatementNode) {
+				// Find the name of the enclosing function
+				const parentFuncName = this.parentFunction(node.parent);
+				if (parentFuncName === node.functionName) {
+					// TODO: Also check for class equivalence to avoid incorrect tail-call
+					// optimizations for methods that are in different classes but share
+					// the same names
+					node.isTailRecursive = true;
+				}
+			}
+		} else {
+			// TODO: Semantic error here for unrecognized function
+			throw new Error("Can't find function " + node.functionName);
+		}
+	}
+
+	private checkPostfixExpression(node: PostfixExpressionNode): void {
+		this.checkNode(node.lhs);
+		const type = node.type(this.env);
+		switch (node.operatorType) {
+			case TokenType.PlusPlus:
+			case TokenType.MinusMinus:
+				if (!type.equivalent(Num)) {
+					this.mismatch(node.token, Num, type);
+				}
+				if (!type.isAssignable) {
+					this.badAssignment(node.token, type);
+				}
+		}
+	}
+
+	private checkPrefixExpression(node: PrefixExpressionNode): void {
+		this.checkNode(node.rhs);
+		const type = node.type(this.env);
+		switch (node.operatorType) {
+			case TokenType.Bang:
+				return;
+			case TokenType.Plus:
+			case TokenType.Minus:
+				if (!type.equivalent(Num)) {
+					this.mismatch(node.token, Num, type);
+				}
+				break;
+			case TokenType.PlusPlus:
+			case TokenType.MinusMinus:
+				if (!type.equivalent(Num)) {
+					this.mismatch(node.token, Num, type);
+				}
+				if (!type.isAssignable) {
+					this.badAssignment(node.token, type);
+				}
+		}
+	}
+
+	private checkPrimitiveExpression(node: PrimitiveExpressionNode): void {
+		if (node.type(this.env) instanceof ErrorType) {
+			this.error(
+				node.token,
+				"Failed to resolve type for " + node.token.lexeme
+			);
+		}
+	}
+
+	private checkProgram(node: ProgramNode): void {
+		for (const statement of node.statements) {
+			this.checkNode(statement);
+		}
+	}
+
+	private checkReturnStatement(node: ReturnStatementNode): void {
+		if (node.expr) this.checkNode(node.expr);
+	}
+
 	private checkTernaryConditional(node: TernaryConditionalNode): void {
 		this.checkNode(node.predicate);
 		this.checkNode(node.consequent);
@@ -378,29 +378,29 @@ export class TypeChecker {
 		}
 	}
 
-	private checkAssignmentExpression(node: AssignmentExpressionNode): void {
-		this.checkNode(node.lhs);
-		this.checkNode(node.rhs);
-		const lhsType = node.lhs.type(this.env);
-		const rhsType = node.rhs.type(this.env);
-		if (!lhsType.isAssignable) {
-			this.badAssignment(node.lhs.token, lhsType);
-		} else if (!lhsType.accepts(rhsType)) {
-			this.mismatch(node.lhs.token, lhsType, rhsType);
+	private checkVariableDeclaration(node: VariableDeclarationNode): void {
+		const scope = this.env.symbolTable.scope.findScope(node.variableName);
+		if (!scope) {
+			this.report(
+				new SemanticError(node.token, "Variable not found in scope")
+			);
+			return;
 		}
-	}
-
-	private checkReturnStatement(node: ReturnStatementNode): void {
+		// Visit the assignment expression that might follow a variable declaration:
 		if (node.expr) this.checkNode(node.expr);
-	}
-
-	private checkExpressionStatement(node: ExpressionStatementNode): void {
-		this.checkNode(node.expr);
-	}
-
-	private checkDoWhileStatement(node: DoWhileStatementNode): void {
-		this.checkNode(node.block);
-		this.checkNode(node.condition);
+		// If the node has an assigned value and a type assertion, make sure they
+		// are both the same type.
+		if (node.expr && node.typeAnnotation) {
+			const varType = node.variableType(this.env);
+			const exprType = node.expr.type(this.env);
+			const idSymbol = scope.lookup(node.variableName)!;
+			idSymbol.type = varType;
+			if (!varType.equivalent(exprType)) {
+				// Report mismatch between variable's assigned value and variable's
+				// expected value
+				this.mismatch(node.token, varType, exprType);
+			}
+		}
 	}
 
 	private checkWhileStatement(node: WhileStatementNode): void {
