@@ -157,13 +157,13 @@ export class TypeChecker {
 	}
 
 	// MARK: Visitor
-	public visitProgramNode(node: ProgramNode): void {
+	public checkProgram(node: ProgramNode): void {
 		for (const statement of node.statements) {
 			this.checkNode(statement);
 		}
 	}
 
-	public visitBlockStatementNode(node: BlockStatementNode): void {
+	public checkBlockStatement(node: BlockStatementNode): void {
 		// Scope is entered/exited manually for function blocks
 		// in visitFunctionDeclarationNode
 		if (!node.isFunctionBlock) this.env.symbolTable.enterScope();
@@ -173,7 +173,7 @@ export class TypeChecker {
 		if (!node.isFunctionBlock) this.env.symbolTable.exitScope();
 	}
 
-	public visitIfStatementNode(node: IfStatementNode): void {
+	public checkIfStatement(node: IfStatementNode): void {
 		this.checkNode(node.predicate);
 		this.checkNode(node.consequent);
 		for (const alternate of node.alternates) {
@@ -181,12 +181,12 @@ export class TypeChecker {
 		}
 	}
 
-	public visitElseStatementNode(node: ElseStatementNode): void {
+	public checkElseStatement(node: ElseStatementNode): void {
 		if (node.expr) this.checkNode(node.expr);
 		this.checkNode(node.block);
 	}
 
-	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
+	public checkVariableDeclaration(node: VariableDeclarationNode): void {
 		const scope = this.env.symbolTable.scope.findScope(node.variableName);
 		if (!scope) {
 			this.report(
@@ -211,7 +211,7 @@ export class TypeChecker {
 		}
 	}
 
-	public visitIdExpressionNode(node: IdExpressionNode): void {
+	public checkIdExpression(node: IdExpressionNode): void {
 		if (node.usedAsFunction) {
 			// TODO: Id is used as a function reference, make sure function exists
 		} else {
@@ -229,7 +229,7 @@ export class TypeChecker {
 		}
 	}
 
-	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
+	public checkFunctionDeclaration(node: FunctionDeclarationNode): void {
 		this.env.symbolTable.enterScope();
 		// Compute types for parameters
 		for (const parameter of node.info.parameters) {
@@ -254,7 +254,7 @@ export class TypeChecker {
 		this.env.symbolTable.exitScope();
 	}
 
-	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
+	public checkPrefixExpression(node: PrefixExpressionNode): void {
 		this.checkNode(node.rhs);
 		const type = node.type(this.env);
 		switch (node.operatorType) {
@@ -277,7 +277,7 @@ export class TypeChecker {
 		}
 	}
 
-	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
+	public checkPostfixExpression(node: PostfixExpressionNode): void {
 		this.checkNode(node.lhs);
 		const type = node.type(this.env);
 		switch (node.operatorType) {
@@ -292,7 +292,7 @@ export class TypeChecker {
 		}
 	}
 
-	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
+	public checkInvocationExpression(node: InvocationExpressionNode): void {
 		const type = node.argumentsType(this.env);
 		// TODO: Add better error handling for invalid action calls
 		const functionName = node.functionName;
@@ -323,7 +323,7 @@ export class TypeChecker {
 		}
 	}
 
-	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {
+	public checkPrimitiveExpression(node: PrimitiveExpressionNode): void {
 		if (node.type(this.env) instanceof ErrorType) {
 			this.error(
 				node.token,
@@ -332,7 +332,7 @@ export class TypeChecker {
 		}
 	}
 
-	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
+	public checkBinaryExpression(node: BinaryExpressionNode): void {
 		this.checkNode(node.lhs);
 		this.checkNode(node.rhs);
 		const lhsType = node.lhs.type(this.env);
@@ -361,18 +361,23 @@ export class TypeChecker {
 		}
 	}
 
-	public visitBinaryLogicalExpressionNode(
+	public checkBinaryLogicalExpression(
 		node: BinaryLogicalExpressionNode
 	): void {}
 
-	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
-		// TODO: Ensure that consequent and alternate return same type of value
+	public checkTernaryConditional(node: TernaryConditionalNode): void {
 		this.checkNode(node.predicate);
 		this.checkNode(node.consequent);
 		this.checkNode(node.alternate);
+		const consequentType = node.consequent.type(this.env);
+		const alternateType = node.alternate.type(this.env);
+		// Ensure that consequent and alternate return same type of value
+		if (!consequentType.equivalent(alternateType)) {
+			this.mismatch(node.alternate.token, consequentType, alternateType);
+		}
 	}
 
-	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
+	public checkAssignmentExpression(node: AssignmentExpressionNode): void {
 		this.checkNode(node.lhs);
 		this.checkNode(node.rhs);
 		const lhsType = node.lhs.type(this.env);
@@ -384,20 +389,20 @@ export class TypeChecker {
 		}
 	}
 
-	public visitReturnStatementNode(node: ReturnStatementNode): void {
+	public checkReturnStatement(node: ReturnStatementNode): void {
 		if (node.expr) this.checkNode(node.expr);
 	}
 
-	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
+	public checkExpressionStatement(node: ExpressionStatementNode): void {
 		this.checkNode(node.expr);
 	}
 
-	public visitDoWhileStatementNode(node: DoWhileStatementNode): void {
+	public checkDoWhileStatement(node: DoWhileStatementNode): void {
 		this.checkNode(node.block);
 		this.checkNode(node.condition);
 	}
 
-	public visitWhileStatementNode(node: WhileStatementNode): void {
+	public checkWhileStatement(node: WhileStatementNode): void {
 		this.checkNode(node.condition);
 		this.checkNode(node.block);
 	}
@@ -415,77 +420,67 @@ export class TypeChecker {
 	private checkNode(node: Node): void {
 		switch (true) {
 			case node instanceof AssignmentExpressionNode:
-				this.visitAssignmentExpressionNode(
+				this.checkAssignmentExpression(
 					node as AssignmentExpressionNode
 				);
 				break;
 			case node instanceof BinaryExpressionNode:
-				this.visitBinaryExpressionNode(node as BinaryExpressionNode);
+				this.checkBinaryExpression(node as BinaryExpressionNode);
 				break;
 			case node instanceof BinaryLogicalExpressionNode:
-				this.visitBinaryLogicalExpressionNode(
+				this.checkBinaryLogicalExpression(
 					node as BinaryLogicalExpressionNode
 				);
 				break;
 			case node instanceof BlockStatementNode:
-				this.visitBlockStatementNode(node as BlockStatementNode);
+				this.checkBlockStatement(node as BlockStatementNode);
 				break;
 			case node instanceof DoWhileStatementNode:
-				this.visitDoWhileStatementNode(node as DoWhileStatementNode);
+				this.checkDoWhileStatement(node as DoWhileStatementNode);
 				break;
 			case node instanceof ElseStatementNode:
-				this.visitElseStatementNode(node as ElseStatementNode);
+				this.checkElseStatement(node as ElseStatementNode);
 				break;
 			case node instanceof ExpressionStatementNode:
-				this.visitExpressionStatementNode(
-					node as ExpressionStatementNode
-				);
+				this.checkExpressionStatement(node as ExpressionStatementNode);
 				break;
 			case node instanceof FunctionDeclarationNode:
-				this.visitFunctionDeclarationNode(
-					node as FunctionDeclarationNode
-				);
+				this.checkFunctionDeclaration(node as FunctionDeclarationNode);
 				break;
 			case node instanceof IdExpressionNode:
-				this.visitIdExpressionNode(node as IdExpressionNode);
+				this.checkIdExpression(node as IdExpressionNode);
 				break;
 			case node instanceof IfStatementNode:
-				this.visitIfStatementNode(node as IfStatementNode);
+				this.checkIfStatement(node as IfStatementNode);
 				break;
 			case node instanceof InvocationExpressionNode:
-				this.visitInvocationExpressionNode(
+				this.checkInvocationExpression(
 					node as InvocationExpressionNode
 				);
 				break;
 			case node instanceof PostfixExpressionNode:
-				this.visitPostfixExpressionNode(node as PostfixExpressionNode);
+				this.checkPostfixExpression(node as PostfixExpressionNode);
 				break;
 			case node instanceof PrefixExpressionNode:
-				this.visitPrefixExpressionNode(node as PrefixExpressionNode);
+				this.checkPrefixExpression(node as PrefixExpressionNode);
 				break;
 			case node instanceof PrimitiveExpressionNode:
-				this.visitPrimitiveExpressionNode(
-					node as PrimitiveExpressionNode
-				);
+				this.checkPrimitiveExpression(node as PrimitiveExpressionNode);
 				break;
 			case node instanceof ProgramNode:
-				this.visitProgramNode(node as ProgramNode);
+				this.checkProgram(node as ProgramNode);
 				break;
 			case node instanceof ReturnStatementNode:
-				this.visitReturnStatementNode(node as ReturnStatementNode);
+				this.checkReturnStatement(node as ReturnStatementNode);
 				break;
 			case node instanceof TernaryConditionalNode:
-				this.visitTernaryConditionalNode(
-					node as TernaryConditionalNode
-				);
+				this.checkTernaryConditional(node as TernaryConditionalNode);
 				break;
 			case node instanceof VariableDeclarationNode:
-				this.visitVariableDeclarationNode(
-					node as VariableDeclarationNode
-				);
+				this.checkVariableDeclaration(node as VariableDeclarationNode);
 				break;
 			case node instanceof WhileStatementNode:
-				this.visitWhileStatementNode(node as WhileStatementNode);
+				this.checkWhileStatement(node as WhileStatementNode);
 				break;
 		}
 	}
