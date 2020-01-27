@@ -17,6 +17,10 @@ export class BlockStatementNode extends Statement {
 		public readonly isFunctionBlock: boolean
 	) {
 		super(token, start, end);
+		// Set a flag on the last statement
+		if (statements.length > 0) {
+			statements[statements.length - 1].isLast = true;
+		}
 	}
 
 	public setParent(node: Node | undefined): void {

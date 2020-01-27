@@ -25,6 +25,10 @@ export class IfStatementNode extends Statement {
 				? alternates[alternates.length - 1].end
 				: consequent.end
 		);
+		// Set a flag on the last else statement block
+		if (alternates.length > 0) {
+			alternates[alternates.length - 1].isLast = true;
+		}
 	}
 
 	public setParent(node: Node | undefined): void {

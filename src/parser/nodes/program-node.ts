@@ -1,4 +1,4 @@
-import { Node } from "src/language/node";
+import { Node, Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
 import { None, Type } from "src/language/types/type-system";
@@ -12,11 +12,15 @@ export class ProgramNode extends Node {
 		/** End position in the code */
 		end: number,
 		/** Program statements */
-		public readonly statements: Node[]
+		public readonly statements: Statement[]
 	) {
 		super(token, start, end);
 		// Force the whole tree to have back-references to their parent nodes
 		this.setParent(undefined);
+		// Set a flag on the last statement
+		if (statements.length > 0) {
+			statements[statements.length - 1].isLast = true;
+		}
 	}
 
 	public setParent(node: Node | undefined): void {
