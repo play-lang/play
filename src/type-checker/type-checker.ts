@@ -229,6 +229,13 @@ export class TypeChecker {
 
 	private checkFunctionDeclaration(node: FunctionDeclarationNode): void {
 		this.env.symbolTable.enterScope();
+		if (!(node.parent instanceof ProgramNode)) {
+			// TODO: Allow functions to also exist inside models
+			this.error(
+				node.token,
+				"Functions can only be declared at the global level"
+			);
+		}
 		// Compute types for parameters
 		for (const parameter of node.info.parameters) {
 			// Walk through each parameter, find its type information from the

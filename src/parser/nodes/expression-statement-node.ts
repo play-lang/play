@@ -1,10 +1,10 @@
-import { Expression, Node } from "src/language/node";
+import { Expression, Node, Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
 import { None, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
-export class ExpressionStatementNode extends Expression {
+export class ExpressionStatementNode extends Statement {
 	constructor(
 		token: TokenLike,
 		/** Return value, if any */
