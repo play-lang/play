@@ -20,18 +20,20 @@ export class SymbolTable {
 		this._scope = globalScope;
 	}
 
-	/** Enter the next child scope */
-	public enterScope(): void {
+	/** Enter the next child scope and return it */
+	public enterScope(): Scope {
 		const childScopeIndex = this.childScopeIndices[this.scopeDepth++]++;
 		this.childScopeIndices.push(0);
 		this._scope = this.scope.scopes[childScopeIndex];
+		return this._scope;
 	}
 
-	/** Go back to the parent scope */
-	public exitScope(): void {
+	/** Go back to the parent scope and return it */
+	public exitScope(): Scope {
 		this.scopeDepth--;
 		this.childScopeIndices.pop();
 		this._scope = this.scope.enclosingScope || this.globalScope;
+		return this._scope;
 	}
 
 	/**

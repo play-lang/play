@@ -40,6 +40,11 @@ export class Compiler implements Visitor {
 		return this.context.lastInstr;
 	}
 
+	/** Current scope */
+	private get scope(): Scope {
+		return this.ast.env.symbolTable.scope;
+	}
+
 	/** Ast root to compile */
 	public readonly ast: AbstractSyntaxTree;
 	/** Constant pool preceding the code */
@@ -64,14 +69,6 @@ export class Compiler implements Visitor {
 	 */
 	public readonly functionTable: Map<string, FunctionInfo>;
 
-	/** Global scope */
-	private globalScope: Scope;
-	/** Current scope */
-	private scope: Scope;
-	/** Index of the next child scope to visit for each scope level */
-	private childScopeIndices: number[] = [0];
-	/** Number of scopes deep we are--used as an index to childScopeIndices */
-	private scopeDepth: number = 0;
 	/** Registers labels and patches jumps between contexts */
 	private patcher: ContextLabels = new ContextLabels();
 	/** Index of the next label to be generated */
@@ -80,8 +77,6 @@ export class Compiler implements Visitor {
 	constructor(ast: AbstractSyntaxTree) {
 		this.ast = ast;
 		ast.env.symbolTable.reset();
-		this.scope = ast.env.symbolTable.scope;
-		this.globalScope = ast.env.symbolTable.scope;
 		this.contexts.set(
 			this.scope,
 			this.createContext("(main)", this.scope.totalEntries)
@@ -175,8 +170,7 @@ export class Compiler implements Visitor {
 			throw new Error(
 				"Fatal error: Can't find name " +
 					node.variableName +
-					" in symbol table at scope depth" +
-					this.scopeDepth
+					" in symbol table"
 			);
 		}
 		if (!node.expr) {
@@ -603,10 +597,12 @@ export class Compiler implements Visitor {
 	 * context for the added scope with the specified name
 	 */
 	private enterScope(contextName: string = ""): void {
+		// Capture the current context before mutating the way it is computed
 		const context = this.context;
-		const childScopeIndex = this.childScopeIndices[this.scopeDepth++]++;
-		this.childScopeIndices.push(0);
-		this.scope = this.scope.scopes[childScopeIndex];
+		// Use our symbol table to navigate into the current scope
+		this.ast.env.symbolTable.enterScope();
+		// Make sure that the number of variables declared in this scope is reset
+		// so that we can calculate stack offsets correctly
 		this.scope.available = 0;
 		// Add a context entry
 		this.contexts.set(
@@ -623,11 +619,7 @@ export class Compiler implements Visitor {
 	 */
 	private exitScope(): Scope {
 		// Go back up the scope chain
-		this.scopeDepth--;
-		this.childScopeIndices.pop();
-		const scope = this.scope;
-		this.scope = this.scope.enclosingScope || this.globalScope;
-		return scope;
+		return this.ast.env.symbolTable.exitScope();
 	}
 
 	/**
