@@ -19,13 +19,6 @@ export interface NodeState {
 }
 
 export abstract class Node {
-	/** Parent node or undefined if the root node */
-	public state: NodeState = {
-		parent: undefined,
-		isDead: false,
-		isLast: false,
-	};
-
 	/**
 	 * Parent node
 	 *
@@ -62,6 +55,12 @@ export abstract class Node {
 	public get nodeName(): string {
 		return this.constructor.name;
 	}
+	/** Parent node or undefined if the root node */
+	public state: NodeState = {
+		parent: undefined,
+		isDead: false,
+		isLast: false,
+	};
 
 	constructor(
 		public readonly token: TokenLike,

@@ -7,16 +7,25 @@ import {
 	Type,
 } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
+import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
+import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 
 export class InvocationExpressionNode extends Expression {
 	/**
 	 * True if the invocation is a recursive call in tail position
 	 *
-	 * This flag is set accordingly by the type-checker as it relies on a
-	 * fully formed AST to make this designation
+	 * This is true if the invocation is the immediate child of a return statement
+	 * (i.e., happens in the expression immediately before returning) and the
+	 * function being called is the same one that contains this invocation
+	 * expression
 	 */
-	public isTailRecursive: boolean = false;
+	public get isTailRecursive(): boolean {
+		return (
+			this.parent instanceof ReturnStatementNode &&
+			this.parentFunction === this.functionName
+		);
+	}
 
 	/** Name of the function to call */
 	public get functionName(): string | undefined {
@@ -38,6 +47,23 @@ export class InvocationExpressionNode extends Expression {
 		public readonly args: Expression[]
 	) {
 		super(token, start, end);
+	}
+
+	/**
+	 * Find the name of the function which contains the receiver node
+	 *
+	 * If this node is not contained inside a function, it returns the
+	 * main context's name identifier
+	 */
+	public get parentFunction(): string {
+		let n = this.parent;
+		while (n && !(n instanceof FunctionDeclarationNode)) {
+			n = n.parent;
+		}
+		if (n) {
+			return n.info.name;
+		}
+		return "(main)";
 	}
 
 	public setState(state: NodeState): void {

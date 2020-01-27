@@ -40,26 +40,6 @@ export class TypeChecker {
 		public readonly ast: AbstractSyntaxTree
 	) {}
 
-	/**
-	 * Find the name of the function which contains the specified syntax
-	 * tree node
-	 *
-	 * If the node is not contained inside a function, it returns the
-	 * main context's name
-	 *
-	 * @param node The node to find the parent function of
-	 */
-	public parentFunction(node: Node): string {
-		let n = node.parent;
-		while (n && !(n instanceof FunctionDeclarationNode)) {
-			n = n.parent;
-		}
-		if (n) {
-			return n.info.name;
-		}
-		return "(main)";
-	}
-
 	// MARK: Methods
 
 	public check(): boolean {
@@ -296,19 +276,6 @@ export class TypeChecker {
 			const functionType = info.type!;
 			if (!type.satisfiesRecordType(functionType.parameters)) {
 				this.mismatch(node.token, functionType.parameters, type);
-			}
-
-			// TODO: Check for tail recursion so the compiler can output the correct
-			// bytecode for recursive calls
-			if (node.parent instanceof ReturnStatementNode) {
-				// Find the name of the enclosing function
-				const parentFuncName = this.parentFunction(node.parent);
-				if (parentFuncName === node.functionName) {
-					// TODO: Also check for class equivalence to avoid incorrect tail-call
-					// optimizations for methods that are in different classes but share
-					// the same names
-					node.isTailRecursive = true;
-				}
 			}
 		} else {
 			// TODO: Semantic error here for unrecognized function
