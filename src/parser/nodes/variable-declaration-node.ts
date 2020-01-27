@@ -1,4 +1,4 @@
-import { Expression, Node, Statement } from "src/language/node";
+import { Expression, NodeState, Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
 import { None, Type } from "src/language/types/type-system";
@@ -27,9 +27,9 @@ export class VariableDeclarationNode extends Statement {
 		super(token, start, end);
 	}
 
-	public setParent(node: Node | undefined): void {
-		this.parent = node;
-		this.expr?.setParent(this);
+	public setState(state: NodeState): void {
+		this.state = state;
+		this.expr?.setState({ ...state, parent: this });
 	}
 
 	public get typeAnnotation(): string[] {

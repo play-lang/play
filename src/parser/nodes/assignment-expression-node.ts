@@ -1,4 +1,4 @@
-import { Expression, Node } from "src/language/node";
+import { Expression, NodeState } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
@@ -15,10 +15,10 @@ export class AssignmentExpressionNode extends Expression {
 		super(token, lhs.start, rhs.end);
 	}
 
-	public setParent(node: Node | undefined): void {
-		this.parent = node;
-		this.lhs.setParent(this);
-		this.rhs.setParent(this);
+	public setState(state: NodeState): void {
+		this.state = state;
+		this.lhs.setState({ ...state, parent: this });
+		this.rhs.setState({ ...state, parent: this });
 	}
 
 	public type(env: Environment): Type {

@@ -1,4 +1,4 @@
-import { Expression, Node, Statement } from "src/language/node";
+import { Expression, NodeState, Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
 import { None, Type } from "src/language/types/type-system";
@@ -25,17 +25,20 @@ export class IfStatementNode extends Statement {
 				? alternates[alternates.length - 1].end
 				: consequent.end
 		);
-		// Set a flag on the last else statement block
-		if (alternates.length > 0) {
-			alternates[alternates.length - 1].isLast = true;
-		}
 	}
 
-	public setParent(node: Node | undefined): void {
-		this.parent = node;
-		this.predicate.setParent(this);
-		this.consequent.setParent(this);
-		this.alternates.forEach(alternate => alternate.setParent(this));
+	public setState(state: NodeState): void {
+		this.state = state;
+		this.predicate.setState({ ...state, parent: this });
+		this.consequent.setState({ ...state, parent: this });
+		this.alternates.forEach(alternate => {
+			alternate.setState({
+				...state,
+				parent: this,
+				isLast:
+					alternate === this.alternates[this.alternates.length - 1],
+			});
+		});
 	}
 
 	public type(env: Environment): Type {

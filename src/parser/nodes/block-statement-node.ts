@@ -1,8 +1,9 @@
-import { Node, Statement } from "src/language/node";
+import { NodeState, Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
 import { ErrorType, None, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
+import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 
 export class BlockStatementNode extends Statement {
 	constructor(
@@ -17,15 +18,21 @@ export class BlockStatementNode extends Statement {
 		public readonly isFunctionBlock: boolean
 	) {
 		super(token, start, end);
-		// Set a flag on the last statement
-		if (statements.length > 0) {
-			statements[statements.length - 1].isLast = true;
-		}
 	}
 
-	public setParent(node: Node | undefined): void {
-		this.parent = node;
-		this.statements.forEach(statement => statement.setParent(this));
+	public setState(state: NodeState): void {
+		this.state = state;
+		let dead = state.isDead;
+		this.statements.forEach(statement => {
+			statement.setState({
+				...state,
+				parent: this,
+				isDead: dead,
+				isLast:
+					statement === this.statements[this.statements.length - 1],
+			});
+			if (statement instanceof ReturnStatementNode) dead = true;
+		});
 	}
 
 	public type(env: Environment): Type {

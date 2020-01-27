@@ -1,4 +1,4 @@
-import { Expression, Node } from "src/language/node";
+import { Expression, NodeState } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { prefixTypeAnnotations, TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
@@ -20,9 +20,9 @@ export class PrefixExpressionNode extends Expression {
 		this.rhs = rhs;
 	}
 
-	public setParent(node: Node | undefined): void {
-		this.parent = node;
-		this.rhs.setParent(this);
+	public setState(state: NodeState): void {
+		this.state = state;
+		this.rhs.setState({ ...state, parent: this });
 	}
 
 	public type(env: Environment): Type {
