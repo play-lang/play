@@ -1,4 +1,4 @@
-import { Expression, Node } from "src/language/node";
+import { Expression, NodeState } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
 import {
@@ -40,10 +40,16 @@ export class InvocationExpressionNode extends Expression {
 		super(token, start, end);
 	}
 
-	public setParent(node: Node | undefined): void {
-		this.parent = node;
-		this.lhs.setParent(this);
-		this.args.forEach(arg => arg.setParent(this));
+	public setState(state: NodeState): void {
+		this.state = state;
+		this.lhs.setState(state);
+		this.args.forEach(arg =>
+			arg.setState({
+				...state,
+				parent: this,
+				isLast: arg === this.args[this.args.length - 1],
+			})
+		);
 	}
 
 	public type(env: Environment): Type {

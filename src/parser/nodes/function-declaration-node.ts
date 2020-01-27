@@ -1,5 +1,5 @@
 import { FunctionInfo } from "src/language/function-info";
-import { Node, Statement } from "src/language/node";
+import { NodeState, Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
 import { ErrorType, Type } from "src/language/types/type-system";
@@ -19,9 +19,9 @@ export class FunctionDeclarationNode extends Statement {
 		super(token, start, block.end);
 	}
 
-	public setParent(node: Node | undefined): void {
-		this.parent = node;
-		this.block.setParent(this);
+	public setState(state: NodeState): void {
+		this.state = state;
+		this.block.setState({ ...state, parent: this });
 	}
 
 	public type(env: Environment): Type {

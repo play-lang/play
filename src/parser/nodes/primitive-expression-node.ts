@@ -1,4 +1,4 @@
-import { Expression, Node } from "src/language/node";
+import { Expression, NodeState } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { primitiveTypeAnnotations, TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
@@ -20,8 +20,8 @@ export class PrimitiveExpressionNode extends Expression {
 		this.primitiveValue = token.lexeme;
 	}
 
-	public setParent(node: Node | undefined): void {
-		this.parent = node;
+	public setState(state: NodeState): void {
+		this.state = state;
 	}
 
 	public type(env: Environment): Type {

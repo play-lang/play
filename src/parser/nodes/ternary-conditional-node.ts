@@ -1,4 +1,4 @@
-import { Expression, Node } from "src/language/node";
+import { Expression, NodeState } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
 import { Type } from "src/language/types/type-system";
@@ -17,11 +17,11 @@ export class TernaryConditionalNode extends Expression {
 		super(token, predicate.start, alternate.end);
 	}
 
-	public setParent(node: Node | undefined): void {
-		this.parent = node;
-		this.predicate.setParent(this);
-		this.consequent.setParent(this);
-		this.alternate.setParent(this);
+	public setState(state: NodeState): void {
+		this.state = state;
+		this.predicate.setState({ ...state, parent: this });
+		this.consequent.setState({ ...state, parent: this });
+		this.alternate.setState({ ...state, parent: this });
 	}
 
 	public type(env: Environment): Type {

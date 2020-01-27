@@ -1,4 +1,5 @@
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
+import { Node } from "src/language/node";
 import { Describable } from "src/language/token";
 import { TokenType } from "src/language/token-type";
 import { Visitor } from "src/language/visitor";
@@ -53,9 +54,7 @@ export class JSONVisitor implements Visitor, Describable {
 			statements.push(this.stack.pop());
 		}
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			statements,
 		});
 	}
@@ -70,9 +69,7 @@ export class JSONVisitor implements Visitor, Describable {
 			alternates.push(this.stack.pop());
 		}
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			predicate,
 			consequent,
 			alternates,
@@ -87,9 +84,7 @@ export class JSONVisitor implements Visitor, Describable {
 		node.block.accept(this);
 		const block = this.stack.pop();
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			expr,
 			block,
 		});
@@ -101,18 +96,14 @@ export class JSONVisitor implements Visitor, Describable {
 			statements.push(this.stack.pop());
 		}
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			isFunctionBlock: node.isFunctionBlock,
 			statements,
 		});
 	}
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
 		const obj = {
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			name: node.variableName,
 			typeAnnotation: node.typeAnnotation,
 			isImmutable: node.isImmutable,
@@ -130,9 +121,7 @@ export class JSONVisitor implements Visitor, Describable {
 	}
 	public visitIdExpressionNode(node: IdExpressionNode): void {
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			name: node.name,
 			usedAsFunction: node.usedAsFunction,
 		});
@@ -142,9 +131,7 @@ export class JSONVisitor implements Visitor, Describable {
 		const block = this.stack.pop();
 		const parameterTypes = Array.from(node.info.parameterTypes.entries());
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			typeAnnotation: node.info.typeAnnotation,
 			parameterTypes,
 			parameters: [...node.info.parameters],
@@ -155,9 +142,7 @@ export class JSONVisitor implements Visitor, Describable {
 		node.rhs.accept(this);
 		const rhs = this.stack.pop();
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			rhs,
 		});
 	}
@@ -167,9 +152,7 @@ export class JSONVisitor implements Visitor, Describable {
 		const rhs = this.stack.pop();
 		const lhs = this.stack.pop();
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			lhs,
 			rhs,
 		});
@@ -182,9 +165,7 @@ export class JSONVisitor implements Visitor, Describable {
 		const rhs = this.stack.pop();
 		const lhs = this.stack.pop();
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			lhs,
 			rhs,
 		});
@@ -193,9 +174,7 @@ export class JSONVisitor implements Visitor, Describable {
 		node.lhs.accept(this);
 		const lhs = this.stack.pop();
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			lhs,
 		});
 	}
@@ -203,9 +182,7 @@ export class JSONVisitor implements Visitor, Describable {
 		node.lhs.accept(this);
 		const lhs = this.stack.pop();
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			functionName: node.functionName,
 			isTailRecursive: node.isTailRecursive,
 			args: node.args,
@@ -214,9 +191,7 @@ export class JSONVisitor implements Visitor, Describable {
 	}
 	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			literalType: TokenType[node.primitiveType],
 			literalValue: node.primitiveValue,
 		});
@@ -229,9 +204,7 @@ export class JSONVisitor implements Visitor, Describable {
 		const consequent = this.stack.pop();
 		const predicate = this.stack.pop();
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			predicate,
 			consequent,
 			alternate,
@@ -243,9 +216,7 @@ export class JSONVisitor implements Visitor, Describable {
 		const rhs = this.stack.pop();
 		const lhs = this.stack.pop();
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			assignmentType: TokenType[node.assignmentType],
 			lhs,
 			rhs,
@@ -256,16 +227,12 @@ export class JSONVisitor implements Visitor, Describable {
 			node.expr.accept(this);
 			const expr = this.stack.pop();
 			this.stack.push({
-				type: node.nodeName,
-				start: node.start,
-				end: node.end,
+				...def(node),
 				value: expr,
 			});
 		} else {
 			this.stack.push({
-				type: node.nodeName,
-				start: node.start,
-				end: node.end,
+				...def(node),
 			});
 		}
 	}
@@ -273,9 +240,7 @@ export class JSONVisitor implements Visitor, Describable {
 		node.expr.accept(this);
 		const expr = this.stack.pop();
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			expr,
 		});
 	}
@@ -285,9 +250,7 @@ export class JSONVisitor implements Visitor, Describable {
 		node.condition.accept(this);
 		const condition = this.stack.pop();
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			condition,
 			block,
 		});
@@ -298,11 +261,20 @@ export class JSONVisitor implements Visitor, Describable {
 		node.block.accept(this);
 		const block = this.stack.pop();
 		this.stack.push({
-			type: node.nodeName,
-			start: node.start,
-			end: node.end,
+			...def(node),
 			condition,
 			block,
 		});
 	}
+}
+
+function def(node: Node): object {
+	return {
+		type: node.nodeName,
+		start: node.start,
+		end: node.end,
+		parent: node.parent?.nodeName,
+		isDead: node.isDead,
+		isLast: node.isLast,
+	};
 }
