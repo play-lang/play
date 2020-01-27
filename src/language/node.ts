@@ -31,4 +31,10 @@ export abstract class Node {
 }
 
 export abstract class Expression extends Node {}
-export abstract class Statement extends Node {}
+export abstract class Statement extends Node {
+	/**
+	 * True if this node is the last statement in the nearest program node or
+	 *  block node
+	 */
+	public isLast: boolean = false;
+}
