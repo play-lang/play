@@ -41,6 +41,16 @@ export class VirtualMachine {
 		return this.program.constantPool;
 	}
 
+	/** Top value in the stack */
+	private get top(): RuntimeValue {
+		return this.stack[this.stack.length - 1];
+	}
+
+	/** Current stack frame for current function being executed */
+	private get frame(): Frame {
+		return this.frames[this.frames.length - 1];
+	}
+
 	/** Stack */
 	private readonly stack: RuntimeValue[] = [];
 	/** Stack frames */
@@ -55,7 +65,7 @@ export class VirtualMachine {
 	public run(): VMResult {
 		try {
 			while (true) {
-				const instruction = this.readCode();
+				const instruction = this.read();
 				switch (instruction) {
 					default:
 						throw new RuntimeError(
@@ -90,7 +100,7 @@ export class VirtualMachine {
 					case OpCode.Const: {
 						// Read a data value from the data section and push it
 						// to the stack
-						this.push(this.readData());
+						this.push(this.constant(this.read()));
 						break;
 					}
 					case OpCode.Pop: {
@@ -100,26 +110,26 @@ export class VirtualMachine {
 					case OpCode.Drop: {
 						// Drop the specified number of items from the top of the stack
 						// (hopefully more efficient than repeated popping)
-						this.drop(this.readCode());
+						this.drop(this.read());
 						break;
 					}
 					case OpCode.Get: {
 						// Get a local variable
-						this.push(this.getLocal(this.readCode()));
+						this.push(this.getLocal(this.read()));
 						break;
 					}
 					case OpCode.Set: {
 						// Set a local variable
-						this.setLocal(this.readCode(), this.top);
+						this.setLocal(this.read(), this.top);
 						break;
 					}
 					case OpCode.GetGlobal: {
 						// Get a global variable
-						this.push(this.readStack());
+						this.push(this.get(this.read()));
 						break;
 					}
 					case OpCode.SetGlobal: {
-						const index = this.readCode();
+						const index = this.read();
 						this.stack[index] = this.top;
 						break;
 					}
@@ -130,7 +140,7 @@ export class VirtualMachine {
 						break;
 					}
 					case OpCode.Inc: {
-						const index = this.readCode();
+						const index = this.read();
 						const rv = this.getLocal(index);
 						this.setLocal(
 							index,
@@ -139,7 +149,7 @@ export class VirtualMachine {
 						break;
 					}
 					case OpCode.Dec: {
-						const index = this.readCode();
+						const index = this.read();
 						const rv = this.getLocal(index);
 						this.setLocal(
 							index,
@@ -148,7 +158,7 @@ export class VirtualMachine {
 						break;
 					}
 					case OpCode.IncGlobal: {
-						const index = this.readCode();
+						const index = this.read();
 						const rv = this.get(index);
 						this.set(
 							index,
@@ -157,7 +167,7 @@ export class VirtualMachine {
 						break;
 					}
 					case OpCode.DecGlobal: {
-						const index = this.readCode();
+						const index = this.read();
 						const rv = this.get(index);
 						this.set(
 							index,
@@ -277,46 +287,43 @@ export class VirtualMachine {
 					}
 					// Jumps
 					case OpCode.Jmp: {
-						const dest = this.readCode();
+						const dest = this.read();
 						this.ip += dest;
 						break;
 					}
 					case OpCode.JmpFalse: {
-						const dest = this.readCode();
+						const dest = this.read();
 						if (!this.isTruthy(this.top)) this.ip += dest;
 						break;
 					}
 					case OpCode.JmpTrue: {
-						const dest = this.readCode();
+						const dest = this.read();
 						if (this.isTruthy(this.top)) this.ip += dest;
 						break;
 					}
 					case OpCode.JmpFalsePop: {
-						const dest = this.readCode();
+						const dest = this.read();
 						if (!this.isTruthy(this.pop())) this.ip += dest;
 						break;
 					}
 					case OpCode.JmpTruePop: {
-						const dest = this.readCode();
+						const dest = this.read();
 						if (this.isTruthy(this.pop())) this.ip += dest;
 						break;
 					}
 					case OpCode.Loop: {
-						const dest = this.readCode();
+						const dest = this.read();
 						this.ip += dest;
 						break;
 					}
 					case OpCode.Load: {
 						this.push(
-							new RuntimeValue(
-								RuntimeType.Number,
-								this.readCode()
-							)
+							new RuntimeValue(RuntimeType.Number, this.read())
 						);
 						break;
 					}
 					case OpCode.Call: {
-						const numLocals = this.readCode();
+						const numLocals = this.read();
 						const dest = this.pop();
 						if (dest.type !== RuntimeType.Number) {
 							throw new RuntimeError(
@@ -343,7 +350,7 @@ export class VirtualMachine {
 	}
 
 	/** Read the value at ip and increase ip by one */
-	private readCode(): number {
+	private read(): number {
 		return this.bytecode[this.ip++];
 	}
 
@@ -351,23 +358,9 @@ export class VirtualMachine {
 	 * Read the next value from the code and use it as an offset into the
 	 * context data to return context data
 	 */
-	private readData(): RuntimeValue {
-		const index = this.readCode();
+	private constant(index: number): RuntimeValue {
 		const data = this.constantPool[index];
 		return new RuntimeValue(data.type, data.value);
-	}
-
-	/**
-	 * Read a value from the stack using the next number in the code as an
-	 * index into the stack (or the supplied number)
-	 *
-	 * Typically used for reading variables on the stack
-	 * @param index The index to read in the stack, if any
-	 */
-	private readStack(index?: number): RuntimeValue {
-		const i = typeof index === "undefined" ? this.readCode() : index;
-		const rv = this.stack[i];
-		return new RuntimeValue(rv.type, rv.value);
 	}
 
 	/** Pop an item from the stack and return it if possible */
@@ -381,7 +374,7 @@ export class VirtualMachine {
 
 	/**
 	 * Pop the specified number of items off the stack and discard them
-	 * @param numItems The number of items to pop
+	 * @param numItems The number of items to drop
 	 */
 	private drop(numItems: number): void {
 		if (this.stack.length < numItems) {
@@ -398,7 +391,11 @@ export class VirtualMachine {
 		this.stack.splice(-numItems, numItems);
 	}
 
-	/** Drops the stack back down to the specified size */
+	/**
+	 * Drops as many items off the stack as needed to reduce the stack back
+	 * down to a specified length
+	 * @param length The size the stack should be after dropping items
+	 */
 	private dropTo(length: number): void {
 		if (length > this.stack.length) {
 			throw new RuntimeError(
@@ -417,11 +414,6 @@ export class VirtualMachine {
 	/** Push a value to the stack */
 	private push(value: RuntimeValue): void {
 		this.stack.push(value);
-	}
-
-	/** Top value in the stack */
-	private get top(): RuntimeValue {
-		return this.stack[this.stack.length - 1];
 	}
 
 	/** Get a shallow copy of a value from the stack via an absolute index */
@@ -443,10 +435,6 @@ export class VirtualMachine {
 	/** Set a specified relative stack index to a copy of the specified value */
 	private setLocal(index: number, rv: RuntimeValue): void {
 		return this.set(index + this.frame.basePointer, rv);
-	}
-
-	private get frame(): Frame {
-		return this.frames[this.frames.length - 1];
 	}
 
 	/** Returns true if the specified runtime value evaluates to true */
