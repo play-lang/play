@@ -105,14 +105,12 @@ export class VirtualMachine {
 					}
 					case OpCode.Get: {
 						// Get a local variable
-						const index = this.localIndex();
-						this.push(this.readStack(index));
+						this.push(this.getLocal(this.readCode()));
 						break;
 					}
 					case OpCode.Set: {
 						// Set a local variable
-						const index = this.localIndex();
-						this.stack[index] = this.top;
+						this.setLocal(this.readCode(), this.top);
 						break;
 					}
 					case OpCode.GetGlobal: {
@@ -132,34 +130,38 @@ export class VirtualMachine {
 						break;
 					}
 					case OpCode.Inc: {
-						const index = this.localIndex();
-						this.stack[index] = new RuntimeValue(
-							this.stack[index].type,
-							this.stack[index].value + 1
+						const index = this.readCode();
+						const rv = this.getLocal(index);
+						this.setLocal(
+							index,
+							new RuntimeValue(rv.type, rv.value + 1)
 						);
 						break;
 					}
 					case OpCode.Dec: {
-						const index = this.localIndex();
-						this.stack[index] = new RuntimeValue(
-							this.stack[index].type,
-							this.stack[index].value - 1
+						const index = this.readCode();
+						const rv = this.getLocal(index);
+						this.setLocal(
+							index,
+							new RuntimeValue(rv.type, rv.value - 1)
 						);
 						break;
 					}
 					case OpCode.IncGlobal: {
 						const index = this.readCode();
-						this.stack[index] = new RuntimeValue(
-							this.stack[index].type,
-							this.stack[index].value + 1
+						const rv = this.get(index);
+						this.set(
+							index,
+							new RuntimeValue(rv.type, rv.value + 1)
 						);
 						break;
 					}
 					case OpCode.DecGlobal: {
 						const index = this.readCode();
-						this.stack[index] = new RuntimeValue(
-							this.stack[index].type,
-							this.stack[index].value - 1
+						const rv = this.get(index);
+						this.set(
+							index,
+							new RuntimeValue(rv.type, rv.value - 1)
 						);
 						break;
 					}
@@ -368,14 +370,6 @@ export class VirtualMachine {
 		return new RuntimeValue(rv.type, rv.value);
 	}
 
-	/**
-	 * Calculate a variable's stack position based on the offset specified in
-	 * the next "byte" of bytecode
-	 */
-	private localIndex(): number {
-		return this.bytecode[this.ip++] + this.frame.basePointer;
-	}
-
 	/** Pop an item from the stack and return it if possible */
 	private pop(): RuntimeValue {
 		const top = this.stack.pop();
@@ -428,6 +422,27 @@ export class VirtualMachine {
 	/** Top value in the stack */
 	private get top(): RuntimeValue {
 		return this.stack[this.stack.length - 1];
+	}
+
+	/** Get a shallow copy of a value from the stack via an absolute index */
+	private get(index: number): RuntimeValue {
+		const rv = this.stack[index];
+		return new RuntimeValue(rv.type, rv.value);
+	}
+
+	/** Get a shallow copy of a value from the stack via a relative index */
+	private getLocal(index: number): RuntimeValue {
+		return this.get(this.frame.basePointer + index);
+	}
+
+	/** Set a specified absolute stack index to a copy of the specified value */
+	private set(index: number, rv: RuntimeValue): void {
+		this.stack[index] = new RuntimeValue(rv.type, rv.value);
+	}
+
+	/** Set a specified relative stack index to a copy of the specified value */
+	private setLocal(index: number, rv: RuntimeValue): void {
+		return this.set(index + this.frame.basePointer, rv);
 	}
 
 	private get frame(): Frame {
