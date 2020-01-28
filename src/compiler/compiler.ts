@@ -6,6 +6,7 @@ import { FunctionInfo } from "src/language/function-info";
 import { Expression } from "src/language/node";
 import { OpCode } from "src/language/op-code";
 import { Scope } from "src/language/scope";
+import { SymbolTable } from "src/language/symbol-table";
 import { TokenType } from "src/language/token-type";
 import { Visitor } from "src/language/visitor";
 import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression-node";
@@ -35,24 +36,33 @@ export class Compiler implements Visitor {
 	public get context(): Context {
 		return this.contexts.get(this.scope)!;
 	}
-	/** Address of the last instruction */
-	private get lastInstr(): number {
-		return this.context.lastInstr;
-	}
 
 	/** Current scope */
 	private get scope(): Scope {
 		return this.ast.env.symbolTable.scope;
 	}
 
+	/** Function table */
+	public get functionTable(): Map<string, FunctionInfo> {
+		return this.ast.env.functionTable;
+	}
+
+	/** Symbol table */
+	public get symbolTable(): SymbolTable {
+		return this.ast.env.symbolTable;
+	}
+
 	/** Ast root to compile */
 	public readonly ast: AbstractSyntaxTree;
+
 	/** Constant pool preceding the code */
 	public readonly constantPool: RuntimeValue[] = [];
+
 	/**
 	 * Maps constant values to their index in the constant pool to prevent duplicate entries
 	 */
 	public readonly constants: Map<any, number> = new Map();
+
 	/**
 	 * Contains the list of all compiled contexts after compilation
 	 *
@@ -60,28 +70,23 @@ export class Compiler implements Visitor {
 	 * entry point
 	 */
 	public readonly allContexts: Context[] = [];
+
 	/** Map of bytecode contexts keyed by scope */
 	public readonly contexts: Map<Scope, Context> = new Map();
 
-	/**
-	 * Context names mapped to function nodes
-	 * Should be provided from the parser
-	 */
-	public readonly functionTable: Map<string, FunctionInfo>;
-
 	/** Registers labels and patches jumps between contexts */
 	private patcher: ContextLabels = new ContextLabels();
+
 	/** Index of the next label to be generated */
 	private labelId: number = 0;
 
 	constructor(ast: AbstractSyntaxTree) {
 		this.ast = ast;
-		ast.env.symbolTable.reset();
+		this.symbolTable.reset();
 		this.contexts.set(
 			this.scope,
 			this.createContext("(main)", this.scope.totalEntries)
 		);
-		this.functionTable = ast.env.functionTable;
 	}
 
 	// MARK: Visitor
@@ -115,7 +120,7 @@ export class Compiler implements Visitor {
 	public visitIfStatementNode(node: IfStatementNode): void {
 		// Compile if expression predicate
 		node.predicate.accept(this);
-		const falseAddr = this.jumpIfFalseAndPop();
+		const falseAddr = this.context.jumpIfFalseAndPop();
 		// Compile main block
 		node.consequent.accept(this);
 		// Calculate the jump offset required to perform a short (relative)
@@ -132,7 +137,7 @@ export class Compiler implements Visitor {
 		let falseAddr: number = 0;
 		if (node.expr) {
 			node.expr.accept(this);
-			falseAddr = this.jumpIfFalseAndPop();
+			falseAddr = this.context.jumpIfFalseAndPop();
 			shouldJump = true;
 		}
 		node.block.accept(this);
@@ -146,8 +151,8 @@ export class Compiler implements Visitor {
 		const dest = this.emitLabel();
 		node.block.accept(this);
 		node.condition.accept(this);
-		const falseAddr = this.jumpIfFalseAndPop();
-		this.loop(dest - (this.context.bytecode.length + 2));
+		const falseAddr = this.context.jumpIfFalseAndPop();
+		this.context.loop(dest - (this.context.bytecode.length + 2));
 		const offset = this.context.bytecode.length - falseAddr - 1;
 		this.patch(falseAddr, offset);
 	}
@@ -155,12 +160,12 @@ export class Compiler implements Visitor {
 	public visitWhileStatementNode(node: WhileStatementNode): void {
 		const dest = this.emitLabel();
 		node.condition.accept(this);
-		const falseAddr = this.jumpIfFalseAndPop();
+		const falseAddr = this.context.jumpIfFalseAndPop();
 		node.block.accept(this);
 		// Calculate the distance from the emitted loop instruction
 		// to the destination instruction...we have to add 2 because the loop
 		// instruction itself takes up two codes
-		this.loop(dest - (this.context.bytecode.length + 2));
+		this.context.loop(dest - (this.context.bytecode.length + 2));
 		const falseOffset = this.context.bytecode.length - falseAddr - 1;
 		this.patch(falseAddr, falseOffset);
 	}
@@ -429,14 +434,14 @@ export class Compiler implements Visitor {
 		switch (node.operatorType) {
 			// Binary logical operators
 			case TokenType.And: {
-				const addr = this.jumpIfFalse();
+				const addr = this.context.jumpIfFalse();
 				this.emit(OpCode.Pop);
 				node.rhs.accept(this);
 				this.patch(addr, this.context.bytecode.length - addr - 1);
 				break;
 			}
 			case TokenType.Or: {
-				const addr = this.jumpIfTrue();
+				const addr = this.context.jumpIfTrue();
 				this.emit(OpCode.Pop);
 				node.rhs.accept(this);
 				this.patch(addr, this.context.bytecode.length - addr - 1);
@@ -449,9 +454,9 @@ export class Compiler implements Visitor {
 	// Compiler ternary operator: true ? a : b
 	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
 		node.predicate.accept(this);
-		const falseAddr = this.jumpIfFalseAndPop();
+		const falseAddr = this.context.jumpIfFalseAndPop();
 		node.consequent.accept(this);
-		const jumpAddr = this.jump();
+		const jumpAddr = this.context.jump();
 		// Calculate the jump offset required to perform a short (relative)
 		// jump and backpatch it
 		const falseOffset = this.context.bytecode.length - falseAddr - 1;
@@ -513,7 +518,7 @@ export class Compiler implements Visitor {
 	 * @param opcode The opcode to check
 	 */
 	public checkLastEmit(opcode: number): boolean {
-		if (this.context.bytecode[this.lastInstr] === opcode) {
+		if (this.context.lastInstr === opcode) {
 			return true;
 		}
 		return false;
@@ -529,34 +534,6 @@ export class Compiler implements Visitor {
 	 */
 	public emit(opcode: OpCode, param?: number): number {
 		return this.context.emit(opcode, param);
-	}
-
-	public jump(): number {
-		return this.emit(OpCode.Jmp, 0);
-	}
-
-	public jumpIfFalse(): number {
-		return this.emit(OpCode.JmpFalse, 0);
-	}
-
-	public jumpIfTrue(): number {
-		return this.emit(OpCode.JmpTrue, 0);
-	}
-
-	public jumpIfFalseAndPop(): number {
-		return this.emit(OpCode.JmpFalsePop, 0);
-	}
-
-	public jumpIfTrueAndPop(): number {
-		return this.emit(OpCode.JmpTruePop, 0);
-	}
-
-	/**
-	 * Jump backwards by an offset amount
-	 * @param dest The loop destination as an offset to the current ip
-	 */
-	public loop(dest: number): number {
-		return this.emit(OpCode.Loop, dest);
 	}
 
 	/**
@@ -576,12 +553,11 @@ export class Compiler implements Visitor {
 
 	/**
 	 * Output a label at the last instruction and return the index of the
-	 * last instruction
-	 * @returns Index of the last instruction
+	 * last byte
+	 * @returns Index of the last byte
 	 */
 	public emitLabel(): number {
-		this.context.setLabel(this.context.bytecode.length, this.labelId++);
-		return this.context.bytecode.length;
+		return this.context.emitLabel(this.labelId++);
 	}
 
 	/**
@@ -594,7 +570,7 @@ export class Compiler implements Visitor {
 		// Capture the current context before mutating the way it is computed
 		const context = this.context;
 		// Use our symbol table to navigate into the current scope
-		this.ast.env.symbolTable.enterScope();
+		this.symbolTable.enterScope();
 		// Make sure that the number of variables declared in this scope is reset
 		// so that we can calculate stack offsets correctly
 		this.scope.available = 0;
@@ -613,7 +589,7 @@ export class Compiler implements Visitor {
 	 */
 	private exitScope(): Scope {
 		// Go back up the scope chain
-		return this.ast.env.symbolTable.exitScope();
+		return this.symbolTable.exitScope();
 	}
 
 	/**
