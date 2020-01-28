@@ -17,34 +17,34 @@ const False: RuntimeValue = new RuntimeValue(RuntimeType.Boolean, false);
 /** Virtual machine that runs code */
 export class VirtualMachine {
 	/** Current bytecode context */
-	public program: LoadedProgram;
+	private program: LoadedProgram;
 	/**
 	 * Instruction pointer
 	 *
 	 * Always represents the index of the next instruction to be evaluated
 	 */
-	public get ip(): number {
+	private get ip(): number {
 		return this.frame.ip;
 	}
 
-	public set ip(value: number) {
+	private set ip(value: number) {
 		this.frame.ip = value;
 	}
 
 	/** Bytecode of the program */
-	public get bytecode(): number[] {
+	private get bytecode(): number[] {
 		return this.program.bytecode;
 	}
 
 	/** Constant pool of the program */
-	public get constantPool(): RuntimeValue[] {
+	private get constantPool(): RuntimeValue[] {
 		return this.program.constantPool;
 	}
 
 	/** Stack */
-	public readonly stack: RuntimeValue[] = [];
+	private readonly stack: RuntimeValue[] = [];
 	/** Stack frames */
-	public readonly frames: Frame[] = [];
+	private readonly frames: Frame[] = [];
 
 	constructor(program: LoadedProgram) {
 		this.program = program;
@@ -341,7 +341,7 @@ export class VirtualMachine {
 	}
 
 	/** Read the value at ip and increase ip by one */
-	public readCode(): number {
+	private readCode(): number {
 		return this.bytecode[this.ip++];
 	}
 
@@ -349,7 +349,7 @@ export class VirtualMachine {
 	 * Read the next value from the code and use it as an offset into the
 	 * context data to return context data
 	 */
-	public readData(): RuntimeValue {
+	private readData(): RuntimeValue {
 		const index = this.readCode();
 		const data = this.constantPool[index];
 		return new RuntimeValue(data.type, data.value);
@@ -362,7 +362,7 @@ export class VirtualMachine {
 	 * Typically used for reading variables on the stack
 	 * @param index The index to read in the stack, if any
 	 */
-	public readStack(index?: number): RuntimeValue {
+	private readStack(index?: number): RuntimeValue {
 		const i = typeof index === "undefined" ? this.readCode() : index;
 		const rv = this.stack[i];
 		return new RuntimeValue(rv.type, rv.value);
@@ -372,12 +372,12 @@ export class VirtualMachine {
 	 * Calculate a variable's stack position based on the offset specified in
 	 * the next "byte" of bytecode
 	 */
-	public localIndex(): number {
+	private localIndex(): number {
 		return this.bytecode[this.ip++] + this.frame.basePointer;
 	}
 
 	/** Pop an item from the stack and return it if possible */
-	public pop(): RuntimeValue {
+	private pop(): RuntimeValue {
 		const top = this.stack.pop();
 		if (!top) {
 			throw new RuntimeError(VMStatus.StackUnderflow, "Stack underflow");
@@ -389,7 +389,7 @@ export class VirtualMachine {
 	 * Pop the specified number of items off the stack and discard them
 	 * @param numItems The number of items to pop
 	 */
-	public drop(numItems: number): void {
+	private drop(numItems: number): void {
 		if (this.stack.length < numItems) {
 			throw new RuntimeError(
 				VMStatus.StackUnderflow,
@@ -405,7 +405,7 @@ export class VirtualMachine {
 	}
 
 	/** Drops the stack back down to the specified size */
-	public dropTo(length: number): void {
+	private dropTo(length: number): void {
 		if (length > this.stack.length) {
 			throw new RuntimeError(
 				VMStatus.StackUnderflow,
@@ -421,21 +421,21 @@ export class VirtualMachine {
 	}
 
 	/** Push a value to the stack */
-	public push(value: RuntimeValue): void {
+	private push(value: RuntimeValue): void {
 		this.stack.push(value);
 	}
 
 	/** Top value in the stack */
-	public get top(): RuntimeValue {
+	private get top(): RuntimeValue {
 		return this.stack[this.stack.length - 1];
 	}
 
-	public get frame(): Frame {
+	private get frame(): Frame {
 		return this.frames[this.frames.length - 1];
 	}
 
 	/** Returns true if the specified runtime value evaluates to true */
-	public isTruthy(value: RuntimeValue): boolean {
+	private isTruthy(value: RuntimeValue): boolean {
 		switch (value.type) {
 			case RuntimeType.Boolean:
 				return value.value === true;
