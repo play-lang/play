@@ -526,15 +526,9 @@ export class Compiler implements Visitor {
 	 * Optionally specify which context to emit an instruction to
 	 * @param opcode The instruction to emit
 	 * @param param A numeric parameter, if any, to emit for the instruction
-	 * @param context A context, if any, to emit to. Defaults to the current
-	 * context of the compiler based on scope
 	 */
-	public emit(
-		opcode: OpCode,
-		param?: number,
-		context: Context = this.context
-	): number {
-		return context.emit(opcode, param);
+	public emit(opcode: OpCode, param?: number): number {
+		return this.context.emit(opcode, param);
 	}
 
 	public jump(): number {
