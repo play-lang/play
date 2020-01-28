@@ -3,7 +3,7 @@ import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
 import { Context } from "src/language/context";
 import { ContextLabels } from "src/language/context-labels";
 import { FunctionInfo } from "src/language/function-info";
-import { Expression } from "src/language/node";
+import { Expression, Node } from "src/language/node";
 import { OpCode } from "src/language/op-code";
 import { Scope } from "src/language/scope";
 import { SymbolTable } from "src/language/symbol-table";
@@ -93,7 +93,7 @@ export class Compiler implements Visitor {
 
 	public visitProgramNode(node: ProgramNode): void {
 		for (const statement of node.statements) {
-			statement.accept(this);
+			this.accept(statement);
 		}
 	}
 
@@ -103,7 +103,7 @@ export class Compiler implements Visitor {
 		const isFunctionBlock = node.isFunctionBlock;
 		if (!isFunctionBlock) this.enterScope();
 		for (const statement of node.statements) {
-			statement.accept(this);
+			this.accept(statement);
 		}
 		if (!isFunctionBlock) {
 			// We should clean up variables local to this block if we're just a
@@ -119,16 +119,16 @@ export class Compiler implements Visitor {
 
 	public visitIfStatementNode(node: IfStatementNode): void {
 		// Compile if expression predicate
-		node.predicate.accept(this);
+		this.accept(node.predicate);
 		const falseAddr = this.context.jumpIfFalseAndPop();
 		// Compile main block
-		node.consequent.accept(this);
+		this.accept(node.consequent);
 		// Calculate the jump offset required to perform a short (relative)
 		// jump and backpatch it
 		const falseOffset = this.context.bytecode.length - falseAddr - 1;
 		this.patch(falseAddr, falseOffset);
 		for (const alternate of node.alternates) {
-			alternate.accept(this);
+			this.accept(alternate);
 		}
 	}
 
@@ -136,11 +136,11 @@ export class Compiler implements Visitor {
 		let shouldJump = false;
 		let falseAddr: number = 0;
 		if (node.expr) {
-			node.expr.accept(this);
+			this.accept(node.expr);
 			falseAddr = this.context.jumpIfFalseAndPop();
 			shouldJump = true;
 		}
-		node.block.accept(this);
+		this.accept(node.block);
 		if (shouldJump) {
 			const falseOffset = this.context.bytecode.length - falseAddr - 1;
 			this.patch(falseAddr, falseOffset);
@@ -149,8 +149,8 @@ export class Compiler implements Visitor {
 
 	public visitDoWhileStatementNode(node: DoWhileStatementNode): void {
 		const dest = this.emitLabel();
-		node.block.accept(this);
-		node.condition.accept(this);
+		this.accept(node.block);
+		this.accept(node.condition);
 		const falseAddr = this.context.jumpIfFalseAndPop();
 		this.context.loop(dest - (this.context.bytecode.length + 2));
 		const offset = this.context.bytecode.length - falseAddr - 1;
@@ -159,9 +159,9 @@ export class Compiler implements Visitor {
 
 	public visitWhileStatementNode(node: WhileStatementNode): void {
 		const dest = this.emitLabel();
-		node.condition.accept(this);
+		this.accept(node.condition);
 		const falseAddr = this.context.jumpIfFalseAndPop();
-		node.block.accept(this);
+		this.accept(node.block);
 		// Calculate the distance from the emitted loop instruction
 		// to the destination instruction...we have to add 2 because the loop
 		// instruction itself takes up two codes
@@ -196,7 +196,7 @@ export class Compiler implements Visitor {
 			}
 			return;
 		}
-		node.expr.accept(this);
+		this.accept(node.expr);
 		// Mark the next variable as available in the scope since it has now
 		// been declared
 		this.scope.available++;
@@ -205,7 +205,7 @@ export class Compiler implements Visitor {
 	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
 		this.enterScope(node.info.name);
 		this.scope.available += node.info.parameters.length;
-		node.block!.accept(this);
+		this.accept(node.block!);
 		if (!this.checkLastEmit(OpCode.Return)) {
 			this.context.emit(OpCode.Return);
 		}
@@ -259,10 +259,10 @@ export class Compiler implements Visitor {
 		}
 		// Arguments given to function go onto the stack
 		for (const arg of node.args) {
-			arg.accept(this);
+			this.accept(arg);
 		}
 		// Load the function to the stack after loading the arguments
-		node.lhs.accept(this);
+		this.accept(node.lhs);
 		// Emit the call argument to invoke the function
 		this.context.emit(OpCode.Call, node.args.length);
 	}
@@ -270,14 +270,14 @@ export class Compiler implements Visitor {
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
 		switch (node.operatorType) {
 			case TokenType.Bang:
-				node.rhs.accept(this);
+				this.accept(node.rhs);
 				this.context.emit(OpCode.Not);
 				break;
 			case TokenType.Plus:
-				node.rhs.accept(this);
+				this.accept(node.rhs);
 				break;
 			case TokenType.Minus:
-				node.rhs.accept(this);
+				this.accept(node.rhs);
 				this.context.emit(OpCode.Neg);
 				break;
 			case TokenType.PlusPlus:
@@ -288,12 +288,12 @@ export class Compiler implements Visitor {
 				);
 				// To gain prefix functionality we must visit the rhs after
 				// increment/decrementing the variable's value
-				node.rhs.accept(this);
+				this.accept(node.rhs);
 				break;
 		}
 	}
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
-		node.lhs.accept(this);
+		this.accept(node.lhs);
 		switch (node.operatorType) {
 			// Postfix operators
 			case TokenType.PlusPlus:
@@ -386,8 +386,8 @@ export class Compiler implements Visitor {
 	}
 	// Compile a binary operator expression
 	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
-		node.lhs.accept(this);
-		node.rhs.accept(this);
+		this.accept(node.lhs);
+		this.accept(node.rhs);
 		switch (node.operatorType) {
 			// Binary arithmetic operators
 			case TokenType.Plus:
@@ -435,20 +435,20 @@ export class Compiler implements Visitor {
 	public visitBinaryLogicalExpressionNode(
 		node: BinaryLogicalExpressionNode
 	): void {
-		node.lhs.accept(this);
+		this.accept(node.lhs);
 		switch (node.operatorType) {
 			// Binary logical operators
 			case TokenType.And: {
 				const addr = this.context.jumpIfFalse();
 				this.context.emit(OpCode.Pop);
-				node.rhs.accept(this);
+				this.accept(node.rhs);
 				this.patch(addr, this.context.bytecode.length - addr - 1);
 				break;
 			}
 			case TokenType.Or: {
 				const addr = this.context.jumpIfTrue();
 				this.context.emit(OpCode.Pop);
-				node.rhs.accept(this);
+				this.accept(node.rhs);
 				this.patch(addr, this.context.bytecode.length - addr - 1);
 				break;
 			}
@@ -458,22 +458,22 @@ export class Compiler implements Visitor {
 
 	// Compiler ternary operator: true ? a : b
 	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
-		node.predicate.accept(this);
+		this.accept(node.predicate);
 		const falseAddr = this.context.jumpIfFalseAndPop();
-		node.consequent.accept(this);
+		this.accept(node.consequent);
 		const jumpAddr = this.context.jump();
 		// Calculate the jump offset required to perform a short (relative)
 		// jump and backpatch it
 		const falseOffset = this.context.bytecode.length - falseAddr - 1;
 		this.patch(falseAddr, falseOffset);
 		// Set a label for the jump's destination
-		node.alternate.accept(this);
+		this.accept(node.alternate);
 		const jumpOffset = this.context.bytecode.length - jumpAddr - 1;
 		this.patch(jumpAddr, jumpOffset);
 	}
 
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
-		node.rhs.accept(this);
+		this.accept(node.rhs);
 		// TODO: Handle subscripts for collections
 		this.assignToNode(node.lhs);
 	}
@@ -482,7 +482,7 @@ export class Compiler implements Visitor {
 		if (!node.expr) {
 			this.context.emit(OpCode.Nil);
 		} else {
-			node.expr.accept(this);
+			this.accept(node.expr);
 		}
 		this.context.emit(OpCode.Return);
 	}
@@ -492,7 +492,7 @@ export class Compiler implements Visitor {
 		// we are finished with it. All expressions are guaranteed to push their
 		// result to the stack, so this is safe
 		// Even functions without a return value still return nil
-		node.expr.accept(this);
+		this.accept(node.expr);
 		// Pop unused expression result off, unless its an assignment
 		// which doesn't require a pop
 		if (!(node.expr instanceof AssignmentExpressionNode)) {
@@ -616,5 +616,14 @@ export class Compiler implements Visitor {
 			this.constants.set(value.value, this.constantPool.length - 1);
 			return this.constantPool.length - 1;
 		}
+	}
+
+	/**
+	 * Have the compiler have a node visit the compiler (ahem) if and only if
+	 * the node is not marked as unreachable
+	 * @param node The node that accepts the compiler
+	 */
+	private accept(node: Node): void {
+		if (!node.isDead) node.accept(this);
 	}
 }

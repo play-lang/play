@@ -20,8 +20,13 @@ export class FunctionDeclarationNode extends Statement {
 	}
 
 	public setState(state: NodeState): void {
-		this.state = state;
-		this.block.setState({ ...state, parent: this });
+		// Function declarations can occur after a return statement in the main
+		// program
+		//
+		// Make sure we mark ourselves as reachable
+		//
+		this.state = { ...state, isDead: false };
+		this.block.setState({ ...state, isDead: false, parent: this });
 	}
 
 	public type(env: Environment): Type {
