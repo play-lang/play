@@ -6,6 +6,8 @@ export class VMResult {
 		/** Machine execution status */
 		public readonly status: VMStatus,
 		/** Final value returned */
-		public readonly value: RuntimeValue
+		public readonly value: RuntimeValue,
+		/** Execution time in milliseconds */
+		public readonly duration: number
 	) {}
 }

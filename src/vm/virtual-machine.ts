@@ -7,6 +7,12 @@ import { RuntimeValue } from "src/vm/runtime-value";
 import { VMResult } from "src/vm/vm-result";
 import { VMStatus } from "src/vm/vm-status";
 
+interface Performance {
+	now(): number;
+}
+
+const defaultPerformance = { now: () => 0 };
+
 // Make constants for zero values since they are so widely used
 const Nil: RuntimeValue = new RuntimeValue(RuntimeType.Object, null);
 const Zero: RuntimeValue = new RuntimeValue(RuntimeType.Number, 0);
@@ -62,7 +68,8 @@ export class VirtualMachine {
 		this.frames.push(new Frame(0, 0, program.numGlobals));
 	}
 
-	public run(): VMResult {
+	public run(performance: Performance = defaultPerformance): VMResult {
+		const startTime = performance.now();
 		try {
 			while (true) {
 				const instruction = this.read();
@@ -87,7 +94,11 @@ export class VirtualMachine {
 									"Internal error: Execution completed but stack still has values"
 								);
 							}
-							return new VMResult(VMStatus.Success, returnValue);
+							return new VMResult(
+								VMStatus.Success,
+								returnValue,
+								performance.now() - startTime
+							);
 						} else {
 							// Push the return value back on to the stack
 							this.stack.push(returnValue);
@@ -340,12 +351,20 @@ export class VirtualMachine {
 				// Return if we reached the end
 				if (this.ip >= this.bytecode.length) break;
 			}
-			return new VMResult(VMStatus.Success, this.top || Nil);
+			return new VMResult(
+				VMStatus.Success,
+				this.top || Nil,
+				performance.now() - startTime
+			);
 		} catch (e) {
 			const code: VMStatus =
 				e instanceof RuntimeError ? e.code : VMStatus.UnknownFailure;
 			console.error(e);
-			return new VMResult(code, this.top || Nil);
+			return new VMResult(
+				code,
+				this.top || Nil,
+				performance.now() - startTime
+			);
 		}
 	}
 
