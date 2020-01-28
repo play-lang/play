@@ -111,7 +111,7 @@ export class Compiler implements Visitor {
 			// up the stack for us
 			const numLocalsToDrop = this.scope.available;
 			if (numLocalsToDrop > 0) {
-				this.emit(OpCode.Drop, numLocalsToDrop);
+				this.context.emit(OpCode.Drop, numLocalsToDrop);
 			}
 			this.exitScope();
 		}
@@ -183,16 +183,16 @@ export class Compiler implements Visitor {
 			// the "zero value" for that variable's type:
 			switch (node.typeAnnotation[0]) {
 				case "str":
-					this.emit(OpCode.Blank);
+					this.context.emit(OpCode.Blank);
 					break;
 				case "num":
-					this.emit(OpCode.Zero);
+					this.context.emit(OpCode.Zero);
 					break;
 				case "bool":
-					this.emit(OpCode.False);
+					this.context.emit(OpCode.False);
 					break;
 				default:
-					this.emit(OpCode.Nil);
+					this.context.emit(OpCode.Nil);
 			}
 			return;
 		}
@@ -207,7 +207,7 @@ export class Compiler implements Visitor {
 		this.scope.available += node.info.parameters.length;
 		node.block!.accept(this);
 		if (!this.checkLastEmit(OpCode.Return)) {
-			this.emit(OpCode.Return);
+			this.context.emit(OpCode.Return);
 		}
 		this.exitScope();
 	}
@@ -216,7 +216,7 @@ export class Compiler implements Visitor {
 		if (node.usedAsFunction) {
 			if (this.functionTable.has(node.name)) {
 				// Register a function load address to be patched later
-				const index = this.emit(OpCode.Load, -1) - 1;
+				const index = this.context.emit(OpCode.Load, -1) - 1;
 				this.patcher.registerContextAddress(
 					this.context,
 					index,
@@ -240,7 +240,7 @@ export class Compiler implements Visitor {
 			// Emit the proper instruction to push a copy of the variable's value
 			// lower in the stack to the top of the stack
 			const stackPos = this.scope.stackPos(node.name)!;
-			this.emit(
+			this.context.emit(
 				scope.isGlobalScope ? OpCode.GetGlobal : OpCode.Get,
 				stackPos
 			);
@@ -264,21 +264,21 @@ export class Compiler implements Visitor {
 		// Load the function to the stack after loading the arguments
 		node.lhs.accept(this);
 		// Emit the call argument to invoke the function
-		this.emit(OpCode.Call, node.args.length);
+		this.context.emit(OpCode.Call, node.args.length);
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
 		switch (node.operatorType) {
 			case TokenType.Bang:
 				node.rhs.accept(this);
-				this.emit(OpCode.Not);
+				this.context.emit(OpCode.Not);
 				break;
 			case TokenType.Plus:
 				node.rhs.accept(this);
 				break;
 			case TokenType.Minus:
 				node.rhs.accept(this);
-				this.emit(OpCode.Neg);
+				this.context.emit(OpCode.Neg);
 				break;
 			case TokenType.PlusPlus:
 			case TokenType.MinusMinus:
@@ -321,12 +321,15 @@ export class Compiler implements Visitor {
 			const scope = this.scope.findScope(node.name);
 			const stackPos = this.scope.stackPos(node.name)!;
 			if (scope?.isGlobalScope) {
-				this.emit(
+				this.context.emit(
 					shouldIncrement ? OpCode.IncGlobal : OpCode.DecGlobal,
 					stackPos
 				);
 			} else {
-				this.emit(shouldIncrement ? OpCode.Inc : OpCode.Dec, stackPos);
+				this.context.emit(
+					shouldIncrement ? OpCode.Inc : OpCode.Dec,
+					stackPos
+				);
 			}
 		} else {
 			throw new Error("Can't mutate non-variable" + node.token.lexeme);
@@ -342,7 +345,7 @@ export class Compiler implements Visitor {
 		if (node instanceof IdExpressionNode) {
 			const scope = this.scope.findScope(node.name);
 			const stackPos = this.scope.stackPos(node.name)!;
-			this.emit(
+			this.context.emit(
 				scope?.isGlobalScope ? OpCode.SetGlobal : OpCode.Set,
 				stackPos
 			);
@@ -363,21 +366,23 @@ export class Compiler implements Visitor {
 				break;
 			case TokenType.Boolean:
 				value = node.primitiveValue === "true" ? true : false;
-				value ? this.emit(OpCode.True) : this.emit(OpCode.False);
+				value
+					? this.context.emit(OpCode.True)
+					: this.context.emit(OpCode.False);
 				return;
 			case TokenType.Number:
 				value = Number.parseFloat(node.primitiveValue);
 				type = RuntimeType.Number;
 				break;
 			case TokenType.Nil:
-				this.emit(OpCode.Nil);
+				this.context.emit(OpCode.Nil);
 				return;
 		}
 		// Add the literal to the data section of the current context
 		const index = this.constant(new RuntimeValue(type, value));
 		// Have the machine push the value of the data at the specified data index
 		// to the top of the stack when this instruction is encountered
-		this.emit(OpCode.Const, index);
+		this.context.emit(OpCode.Const, index);
 	}
 	// Compile a binary operator expression
 	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
@@ -386,42 +391,42 @@ export class Compiler implements Visitor {
 		switch (node.operatorType) {
 			// Binary arithmetic operators
 			case TokenType.Plus:
-				this.emit(OpCode.Add);
+				this.context.emit(OpCode.Add);
 				break;
 			case TokenType.Minus:
-				this.emit(OpCode.Sub);
+				this.context.emit(OpCode.Sub);
 				break;
 			case TokenType.Asterisk:
-				this.emit(OpCode.Mul);
+				this.context.emit(OpCode.Mul);
 				break;
 			case TokenType.Slash:
-				this.emit(OpCode.Div);
+				this.context.emit(OpCode.Div);
 				break;
 			case TokenType.Percent:
-				this.emit(OpCode.Remain);
+				this.context.emit(OpCode.Remain);
 				break;
 			case TokenType.Caret:
-				this.emit(OpCode.Exp);
+				this.context.emit(OpCode.Exp);
 				break;
 			// Binary relational operators
 			case TokenType.LessThan:
-				this.emit(OpCode.Less);
+				this.context.emit(OpCode.Less);
 				break;
 			case TokenType.LessThanEqual:
-				this.emit(OpCode.LessEqual);
+				this.context.emit(OpCode.LessEqual);
 				break;
 			case TokenType.GreaterThan:
-				this.emit(OpCode.Greater);
+				this.context.emit(OpCode.Greater);
 				break;
 			case TokenType.GreaterThanEqual:
-				this.emit(OpCode.GreaterEqual);
+				this.context.emit(OpCode.GreaterEqual);
 				break;
 			// Binary comparison operators
 			case TokenType.EqualEqual:
-				this.emit(OpCode.Equal);
+				this.context.emit(OpCode.Equal);
 				break;
 			case TokenType.BangEqual:
-				this.emit(OpCode.Unequal);
+				this.context.emit(OpCode.Unequal);
 				break;
 		}
 	}
@@ -435,14 +440,14 @@ export class Compiler implements Visitor {
 			// Binary logical operators
 			case TokenType.And: {
 				const addr = this.context.jumpIfFalse();
-				this.emit(OpCode.Pop);
+				this.context.emit(OpCode.Pop);
 				node.rhs.accept(this);
 				this.patch(addr, this.context.bytecode.length - addr - 1);
 				break;
 			}
 			case TokenType.Or: {
 				const addr = this.context.jumpIfTrue();
-				this.emit(OpCode.Pop);
+				this.context.emit(OpCode.Pop);
 				node.rhs.accept(this);
 				this.patch(addr, this.context.bytecode.length - addr - 1);
 				break;
@@ -475,11 +480,11 @@ export class Compiler implements Visitor {
 
 	public visitReturnStatementNode(node: ReturnStatementNode): void {
 		if (!node.expr) {
-			this.emit(OpCode.Nil);
+			this.context.emit(OpCode.Nil);
 		} else {
 			node.expr.accept(this);
 		}
-		this.emit(OpCode.Return);
+		this.context.emit(OpCode.Return);
 	}
 
 	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
@@ -491,7 +496,7 @@ export class Compiler implements Visitor {
 		// Pop unused expression result off, unless its an assignment
 		// which doesn't require a pop
 		if (!(node.expr instanceof AssignmentExpressionNode)) {
-			this.emit(OpCode.Pop);
+			this.context.emit(OpCode.Pop);
 		}
 	}
 
@@ -503,7 +508,9 @@ export class Compiler implements Visitor {
 	 */
 	public compile(): CompiledProgram {
 		this.ast.root.accept(this);
-		if (!this.checkLastEmit(OpCode.Return)) this.emit(OpCode.Return);
+		if (!this.checkLastEmit(OpCode.Return)) {
+			this.context.emit(OpCode.Return);
+		}
 		return new CompiledProgram(
 			this.allContexts,
 			this.constantPool,
@@ -522,18 +529,6 @@ export class Compiler implements Visitor {
 			return true;
 		}
 		return false;
-	}
-
-	/**
-	 * Emit a bytecode opcode and an optional parameter,
-	 * returning the index of the last emitted byte
-	 *
-	 * Optionally specify which context to emit an instruction to
-	 * @param opcode The instruction to emit
-	 * @param param A numeric parameter, if any, to emit for the instruction
-	 */
-	public emit(opcode: OpCode, param?: number): number {
-		return this.context.emit(opcode, param);
 	}
 
 	/**
