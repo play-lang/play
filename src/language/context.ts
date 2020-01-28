@@ -14,7 +14,12 @@ export class Context {
 	public readonly labels: Map<number, number> = new Map();
 
 	/** Index of the last instruction emitted */
-	public lastInstr: number = -1;
+	public indexLastInstr: number = 0;
+
+	/** The last instruction */
+	public get lastInstr(): number {
+		return this.bytecode[this.indexLastInstr];
+	}
 
 	constructor(
 		/** Context name */
@@ -43,16 +48,66 @@ export class Context {
 	public emit(opcode: OpCode, param?: number): number {
 		if (typeof param !== "undefined") {
 			this.bytecode.push(opcode, param);
-			this.lastInstr = this.bytecode.length - 2;
+			this.indexLastInstr = this.bytecode.length - 2;
 		} else {
 			this.bytecode.push(opcode);
-			this.lastInstr = this.bytecode.length - 1;
+			this.indexLastInstr = this.bytecode.length - 1;
 		}
 		return this.bytecode.length - 1;
 	}
 
+	/**
+	 * Output a label at the last instruction and return the index of the
+	 * last instruction
+	 * @returns Index of the last instruction
+	 */
+	public emitLabel(labelId: number): number {
+		this.setLabel(this.bytecode.length, labelId);
+		return this.bytecode.length;
+	}
+
+	/**
+	 * Mark a particular instruction address as a label
+	 *
+	 * @param ip The instruction pointer to the address represented by
+	 * the label
+	 * @param labelId A globally unique number representing the label id
+	 */
 	public setLabel(ip: number, labelId: number): void {
 		if (this.labels.has(ip)) return;
 		this.labels.set(ip, labelId);
+	}
+
+	/** Emit an unconditional jump instruction to be patched later */
+	public jump(): number {
+		return this.emit(OpCode.Jmp, 0);
+	}
+
+	/** Emit a jump-if-false instruction to be patched later */
+	public jumpIfFalse(): number {
+		return this.emit(OpCode.JmpFalse, 0);
+	}
+
+	/** Emit a jump-if-true instruction to be patched later */
+	public jumpIfTrue(): number {
+		return this.emit(OpCode.JmpTrue, 0);
+	}
+
+	/** Emit a jump-if-false (and pop) instruction to be patched later */
+	public jumpIfFalseAndPop(): number {
+		return this.emit(OpCode.JmpFalsePop, 0);
+	}
+
+	/** Emit a jump-if-true (and pop) instruction to be patched later */
+	public jumpIfTrueAndPop(): number {
+		return this.emit(OpCode.JmpTruePop, 0);
+	}
+
+	/**
+	 * Jump backwards by an offset amount
+	 * @param dest The loop destination as an offset to the current ip
+	 */
+	public loop(dest: number): number {
+		return this.emit(OpCode.Loop, dest);
 	}
 }
