@@ -120,6 +120,10 @@ export abstract class Type implements Describable {
 		return type;
 	}
 
+	public static unify(types: Type[]): void {
+		return;
+	}
+
 	constructor(
 		/**
 		 * True if the type is addressable and assignable

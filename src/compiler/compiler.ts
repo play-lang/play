@@ -25,6 +25,7 @@ import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
 import { ProgramNode } from "src/parser/nodes/program-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
+import { SetOrListNode } from "src/parser/nodes/set-or-list-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
 import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
@@ -531,6 +532,10 @@ export class Compiler implements Visitor {
 			this.accept(node.expr);
 		}
 		this.context.emit(OpCode.Return);
+	}
+
+	public visitSetOrListNode(node: SetOrListNode): void {
+		// TODO: Compile set or list node
 	}
 
 	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
