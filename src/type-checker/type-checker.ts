@@ -21,6 +21,7 @@ import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
 import { ProgramNode } from "src/parser/nodes/program-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
+import { SetOrListNode } from "src/parser/nodes/set-or-list-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
 import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
@@ -351,6 +352,10 @@ export class TypeChecker {
 		if (node.expr) this.checkNode(node.expr);
 	}
 
+	private checkSetOrList(node: SetOrListNode): void {
+		// TODO: Check set/list collection type
+	}
+
 	private checkTernaryConditional(node: TernaryConditionalNode): void {
 		this.checkNode(node.predicate);
 		this.checkNode(node.consequent);
@@ -458,6 +463,9 @@ export class TypeChecker {
 				break;
 			case node instanceof ReturnStatementNode:
 				this.checkReturnStatement(node as ReturnStatementNode);
+				break;
+			case node instanceof SetOrListNode:
+				this.checkSetOrList(node as SetOrListNode);
 				break;
 			case node instanceof TernaryConditionalNode:
 				this.checkTernaryConditional(node as TernaryConditionalNode);

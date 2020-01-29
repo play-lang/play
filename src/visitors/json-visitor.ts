@@ -19,6 +19,10 @@ import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
 import { ProgramNode } from "src/parser/nodes/program-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
+import {
+	RepresentedCollectionType,
+	SetOrListNode,
+} from "src/parser/nodes/set-or-list-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
 import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
@@ -235,6 +239,19 @@ export class JSONVisitor implements Visitor, Describable {
 				...def(node),
 			});
 		}
+	}
+	public visitSetOrListNode(node: SetOrListNode): void {
+		const members = [];
+		for (const member of node.members) {
+			member.accept(this);
+			members.push(this.stack.pop());
+		}
+		this.stack.push({
+			...def(node),
+			representedCollectionType:
+				RepresentedCollectionType[node.representedCollectionType],
+			members,
+		});
 	}
 	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
 		node.expr.accept(this);
