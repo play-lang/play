@@ -45,11 +45,6 @@ export class Compiler implements Visitor {
 		return this.contexts.get(this.scope)!;
 	}
 
-	/** Current scope */
-	private get scope(): Scope {
-		return this.ast.env.symbolTable.scope;
-	}
-
 	/** Function table */
 	public get functionTable(): Map<string, FunctionInfo> {
 		return this.ast.env.functionTable;
@@ -60,13 +55,10 @@ export class Compiler implements Visitor {
 		return this.ast.env.symbolTable;
 	}
 
-	/** Constant pool preceding the code */
-	public readonly constantPool: RuntimeValue[] = [];
-
-	/**
-	 * Maps constant values to their index in the constant pool to prevent duplicate entries
-	 */
-	public readonly constants: Map<any, number> = new Map();
+	/** Current scope */
+	private get scope(): Scope {
+		return this.ast.env.symbolTable.scope;
+	}
 
 	/**
 	 * Contains the list of all compiled contexts after compilation
@@ -75,18 +67,21 @@ export class Compiler implements Visitor {
 	 * entry point
 	 */
 	public readonly allContexts: Context[] = [];
-
+	/** Constant pool preceding the code */
+	public readonly constantPool: RuntimeValue[] = [];
+	/**
+	 * Maps constant values to their index in the constant pool to prevent duplicate entries
+	 */
+	public readonly constants: Map<any, number> = new Map();
 	/** Map of bytecode contexts keyed by scope */
 	public readonly contexts: Map<Scope, Context> = new Map();
-
 	/** Map of scopes keyed by context name */
 	public readonly functionScopes: Map<string, Scope> = new Map();
 
-	/** Registers labels and patches jumps between contexts */
-	private patcher: ContextLabels = new ContextLabels();
-
 	/** Index of the next label to be generated */
 	private labelId: number = 0;
+	/** Registers labels and patches jumps between contexts */
+	private patcher: ContextLabels = new ContextLabels();
 
 	/**
 	 * Compile the parser's output into bytecode
@@ -113,243 +108,64 @@ export class Compiler implements Visitor {
 		this.functionScopes.set("(main)", this.scope);
 	}
 
-	// MARK: Visitor
-
-	public visitProgramNode(node: ProgramNode): void {
-		for (const statement of node.statements) {
-			this.accept(statement);
-		}
-	}
-
-	public visitBlockStatementNode(node: BlockStatementNode): void {
-		// Only enter and exit a scope if we're not inside a function block
-		// Function block scope is handled for us elsewhere
-		const isFunctionBlock = node.isFunctionBlock;
-		if (!isFunctionBlock) this.enterScope();
-		for (const statement of node.statements) {
-			this.accept(statement);
-		}
-		if (!isFunctionBlock) {
-			// We should clean up variables local to this block if we're just a
-			// normal block -- functions get call frames which the VM uses to clean
-			// up the stack for us
-			this.dropLocals(this.scope.available);
-			this.exitScope();
-		}
-	}
-
-	public visitIfStatementNode(node: IfStatementNode): void {
-		// Compile if expression predicate
-		this.accept(node.predicate);
-		const falseAddr = this.context.jumpIfFalseAndPop();
-		// Compile main block
-		this.accept(node.consequent);
-		// Calculate the jump offset required to perform a short (relative)
-		// jump and backpatch it
-		const falseOffset = this.context.bytecode.length - falseAddr - 1;
-		this.patch(falseAddr, falseOffset);
-		for (const alternate of node.alternates) {
-			this.accept(alternate);
-		}
-	}
-
-	public visitElseStatementNode(node: ElseStatementNode): void {
-		let shouldJump = false;
-		let falseAddr: number = 0;
-		if (node.expr) {
-			this.accept(node.expr);
-			falseAddr = this.context.jumpIfFalseAndPop();
-			shouldJump = true;
-		}
-		this.accept(node.block);
-		if (shouldJump) {
-			const falseOffset = this.context.bytecode.length - falseAddr - 1;
-			this.patch(falseAddr, falseOffset);
-		}
-	}
-
-	public visitDoWhileStatementNode(node: DoWhileStatementNode): void {
-		const dest = this.emitLabel();
-		this.accept(node.block);
-		this.accept(node.condition);
-		const falseAddr = this.context.jumpIfFalseAndPop();
-		this.context.loop(dest - (this.context.bytecode.length + 2));
-		const offset = this.context.bytecode.length - falseAddr - 1;
-		this.patch(falseAddr, offset);
-	}
-
-	public visitWhileStatementNode(node: WhileStatementNode): void {
-		const dest = this.emitLabel();
-		this.accept(node.condition);
-		const falseAddr = this.context.jumpIfFalseAndPop();
-		this.accept(node.block);
-		// Calculate the distance from the emitted loop instruction
-		// to the destination instruction...we have to add 2 because the loop
-		// instruction itself takes up two codes
-		this.context.loop(dest - (this.context.bytecode.length + 2));
-		const falseOffset = this.context.bytecode.length - falseAddr - 1;
-		this.patch(falseAddr, falseOffset);
-	}
-
-	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
-		if (!this.scope.entries.has(node.variableName)) {
-			throw new Error(
-				"Fatal error: Can't find name " +
-					node.variableName +
-					" in symbol table"
-			);
-		}
-		if (!node.expr) {
-			// There's no initializing expression for the variable, so emit
-			// the "zero value" for that variable's type:
-			switch (node.typeAnnotation[0]) {
-				case "str":
-					this.context.emit(OpCode.Blank);
-					break;
-				case "num":
-					this.context.emit(OpCode.Zero);
-					break;
-				case "bool":
-					this.context.emit(OpCode.False);
-					break;
-				default:
-					this.context.emit(OpCode.Nil);
-			}
-			return;
-		}
-		this.accept(node.expr);
-		// Mark the next variable as available in the scope since it has now
-		// been declared
-		this.scope.available++;
-	}
-
-	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
-		this.enterScope(node.info.name);
-		this.scope.available += node.info.parameters.length;
-		this.accept(node.block!);
-		if (!this.checkLastEmit(OpCode.Return)) {
-			this.context.emit(OpCode.Nil);
-			this.context.emit(OpCode.Return);
-		}
-		this.exitScope();
-	}
-
-	public visitIdExpressionNode(node: IdExpressionNode): void {
-		if (node.usedAsFunction) {
-			if (this.functionTable.has(node.name)) {
-				// Register a function load address to be patched later
-				const index = this.context.emit(OpCode.Load, -1) - 1;
-				this.patcher.registerContextAddress(
-					this.context,
-					index,
-					node.name
-				);
-			} else {
-				throw new Error(
-					"Cannot compile non-existent function: " + node.name
-				);
-			}
-		} else {
-			// Node represents a variable reference
+	/**
+	 * Output the necessary code to properly update a variable contained
+	 * in the specified node to the value at the top of the stack
+	 * @param node The node containing the variable to mutate
+	 */
+	public assignToNode(node: Expression): void {
+		if (node instanceof IdExpressionNode) {
 			const scope = this.scope.findScope(node.name);
-			if (!scope) {
-				throw new Error(
-					"Cannot compile non-existent variable reference `" +
-						node.name +
-						"`"
-				);
-			}
-			// Emit the proper instruction to push a copy of the variable's value
-			// lower in the stack to the top of the stack
 			const stackPos = this.scope.stackPos(node.name)!;
 			this.context.emit(
-				scope.isGlobalScope ? OpCode.GetGlobal : OpCode.Get,
+				scope?.isGlobalScope ? OpCode.SetGlobal : OpCode.Set,
 				stackPos
+			);
+		} else {
+			throw new Error(
+				"Can't compile assignment of non-variable " + node.token.lexeme
 			);
 		}
 	}
 
-	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
-		if (
-			!(node.lhs instanceof IdExpressionNode) ||
-			!this.functionTable.has(node.lhs.name)
-		) {
-			throw new Error(
-				"Can't compile non-existent function invocation of " +
-					node.lhs.token.lexeme
-			);
+	/**
+	 * Checks to see if the last emitted bytecode in the current context is the
+	 * specified opcode
+	 * @param opcode The opcode to check
+	 */
+	public checkLastEmit(opcode: number): boolean {
+		if (this.context.lastInstr === opcode) {
+			return true;
 		}
-		const info = this.functionTable.get(node.lhs.name)!;
-		// Ensure that the number of arguments in this call match...the
-		// type checker should have caught this beforehand but it's okay
-		// to double-check
-		if (node.args.length !== info.parameters.length) {
-			throw new Error(
-				"Can't compile tail recursive invocation with " +
-					"incorrect number of arguments" +
-					node.lhs.token.lexeme
-			);
+		return false;
+	}
+
+	// MARK: Compiler Methods
+
+	/**
+	 * Compiles the program
+	 * @returns The compiled program, ready to be linked
+	 */
+	public compile(): CompiledProgram {
+		this.ast.root.accept(this);
+		if (!this.checkLastEmit(OpCode.Return)) {
+			this.context.emit(OpCode.Return);
 		}
-		const optimize =
-			this.options.optimizeTailRecursiveCalls && node.isTailRecursive;
-		// Arguments given to function go onto the stack
-		for (const arg of node.args) {
-			this.accept(arg);
-		}
-		if (optimize) {
-			for (let i = node.args.length - 1; i >= 0; i--) {
-				// Update the local variable that argument maps to inside the current
-				// call frame
-				this.context.emit(OpCode.Set, i);
-				// Pop the argument now that the local variable is saved
-				this.context.emit(OpCode.Pop);
-			}
-		}
-		// Load the function to the stack after loading the arguments
-		this.accept(node.lhs);
-		// Emit the proper calling instruction to invoke the function
-		this.context.emit(
-			optimize ? OpCode.Tail : OpCode.Call,
-			node.args.length
+		return new CompiledProgram(
+			this.allContexts,
+			this.constantPool,
+			this.scope.totalEntries,
+			this.patcher
 		);
 	}
 
-	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
-		switch (node.operatorType) {
-			case TokenType.Bang:
-				this.accept(node.rhs);
-				this.context.emit(OpCode.Not);
-				break;
-			case TokenType.Plus:
-				this.accept(node.rhs);
-				break;
-			case TokenType.Minus:
-				this.accept(node.rhs);
-				this.context.emit(OpCode.Neg);
-				break;
-			case TokenType.PlusPlus:
-			case TokenType.MinusMinus:
-				this.incrementOrDecrement(
-					node.rhs,
-					node.operatorType === TokenType.PlusPlus
-				);
-				// To gain prefix functionality we must visit the rhs after
-				// increment/decrementing the variable's value
-				this.accept(node.rhs);
-				break;
-		}
-	}
-	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
-		this.accept(node.lhs);
-		switch (node.operatorType) {
-			// Postfix operators
-			case TokenType.PlusPlus:
-				this.incrementOrDecrement(node.lhs, true);
-				break;
-			case TokenType.MinusMinus:
-				this.incrementOrDecrement(node.lhs, false);
-				break;
-		}
+	/**
+	 * Output a label at the last instruction and return the index of the
+	 * last byte
+	 * @returns Index of the last byte
+	 */
+	public emitLabel(): number {
+		return this.context.emitLabel(this.labelId++);
 	}
 
 	/**
@@ -384,53 +200,26 @@ export class Compiler implements Visitor {
 	}
 
 	/**
-	 * Output the necessary code to properly update a variable contained
-	 * in the specified node to the value at the top of the stack
-	 * @param node The node containing the variable to mutate
+	 * Patches a bytecode address reference in the specified context
+	 * @param index The index of the bytecode parameter to replace
+	 * @param destOffset The jump's destination as an offset to the jump's ip
+	 * @param [context] The context to patch the specified address in
 	 */
-	public assignToNode(node: Expression): void {
-		if (node instanceof IdExpressionNode) {
-			const scope = this.scope.findScope(node.name);
-			const stackPos = this.scope.stackPos(node.name)!;
-			this.context.emit(
-				scope?.isGlobalScope ? OpCode.SetGlobal : OpCode.Set,
-				stackPos
-			);
-		} else {
-			throw new Error(
-				"Can't compile assignment of non-variable " + node.token.lexeme
-			);
-		}
+	public patch(
+		index: number,
+		destOffset: number,
+		context: Context = this.context
+	): void {
+		context.bytecode[index] = destOffset;
+		this.emitLabel();
 	}
 
-	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {
-		let value: any;
-		let type: RuntimeType = RuntimeType.Object;
-		switch (node.primitiveType) {
-			case TokenType.String:
-				value = node.primitiveValue;
-				type = RuntimeType.String;
-				break;
-			case TokenType.Boolean:
-				value = node.primitiveValue === "true" ? true : false;
-				value
-					? this.context.emit(OpCode.True)
-					: this.context.emit(OpCode.False);
-				return;
-			case TokenType.Number:
-				value = Number.parseFloat(node.primitiveValue);
-				type = RuntimeType.Number;
-				break;
-			case TokenType.Nil:
-				this.context.emit(OpCode.Nil);
-				return;
-		}
-		// Add the literal to the data section of the current context
-		const index = this.constant(new RuntimeValue(type, value));
-		// Have the machine push the value of the data at the specified data index
-		// to the top of the stack when this instruction is encountered
-		this.context.emit(OpCode.Const, index);
+	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
+		this.accept(node.rhs);
+		// TODO: Handle subscripts for collections
+		this.assignToNode(node.lhs);
 	}
+
 	// Compile a binary operator expression
 	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
 		this.accept(node.lhs);
@@ -503,6 +292,254 @@ export class Compiler implements Visitor {
 		return;
 	}
 
+	public visitBlockStatementNode(node: BlockStatementNode): void {
+		// Only enter and exit a scope if we're not inside a function block
+		// Function block scope is handled for us elsewhere
+		const isFunctionBlock = node.isFunctionBlock;
+		if (!isFunctionBlock) this.enterScope();
+		for (const statement of node.statements) {
+			this.accept(statement);
+		}
+		if (!isFunctionBlock) {
+			// We should clean up variables local to this block if we're just a
+			// normal block -- functions get call frames which the VM uses to clean
+			// up the stack for us
+			this.dropLocals(this.scope.available);
+			this.exitScope();
+		}
+	}
+
+	public visitDoWhileStatementNode(node: DoWhileStatementNode): void {
+		const dest = this.emitLabel();
+		this.accept(node.block);
+		this.accept(node.condition);
+		const falseAddr = this.context.jumpIfFalseAndPop();
+		this.context.loop(dest - (this.context.bytecode.length + 2));
+		const offset = this.context.bytecode.length - falseAddr - 1;
+		this.patch(falseAddr, offset);
+	}
+
+	public visitElseStatementNode(node: ElseStatementNode): void {
+		let shouldJump = false;
+		let falseAddr: number = 0;
+		if (node.expr) {
+			this.accept(node.expr);
+			falseAddr = this.context.jumpIfFalseAndPop();
+			shouldJump = true;
+		}
+		this.accept(node.block);
+		if (shouldJump) {
+			const falseOffset = this.context.bytecode.length - falseAddr - 1;
+			this.patch(falseAddr, falseOffset);
+		}
+	}
+
+	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
+		// An expression statement is an unused expression, so we pop it off when
+		// we are finished with it. All expressions are guaranteed to push their
+		// result to the stack, so this is safe
+		// Even functions without a return value still return nil
+		this.accept(node.expr);
+		// Pop unused expression result off, unless its an assignment
+		// which doesn't require a pop
+		if (!(node.expr instanceof AssignmentExpressionNode)) {
+			this.context.emit(OpCode.Pop);
+		}
+	}
+
+	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
+		this.enterScope(node.info.name);
+		this.scope.available += node.info.parameters.length;
+		this.accept(node.block!);
+		if (!this.checkLastEmit(OpCode.Return)) {
+			this.context.emit(OpCode.Nil);
+			this.context.emit(OpCode.Return);
+		}
+		this.exitScope();
+	}
+
+	public visitIdExpressionNode(node: IdExpressionNode): void {
+		if (node.usedAsFunction) {
+			if (this.functionTable.has(node.name)) {
+				// Register a function load address to be patched later
+				const index = this.context.emit(OpCode.Load, -1) - 1;
+				this.patcher.registerContextAddress(
+					this.context,
+					index,
+					node.name
+				);
+			} else {
+				throw new Error(
+					"Cannot compile non-existent function: " + node.name
+				);
+			}
+		} else {
+			// Node represents a variable reference
+			const scope = this.scope.findScope(node.name);
+			if (!scope) {
+				throw new Error(
+					"Cannot compile non-existent variable reference `" +
+						node.name +
+						"`"
+				);
+			}
+			// Emit the proper instruction to push a copy of the variable's value
+			// lower in the stack to the top of the stack
+			const stackPos = this.scope.stackPos(node.name)!;
+			this.context.emit(
+				scope.isGlobalScope ? OpCode.GetGlobal : OpCode.Get,
+				stackPos
+			);
+		}
+	}
+
+	public visitIfStatementNode(node: IfStatementNode): void {
+		// Compile if expression predicate
+		this.accept(node.predicate);
+		const falseAddr = this.context.jumpIfFalseAndPop();
+		// Compile main block
+		this.accept(node.consequent);
+		// Calculate the jump offset required to perform a short (relative)
+		// jump and backpatch it
+		const falseOffset = this.context.bytecode.length - falseAddr - 1;
+		this.patch(falseAddr, falseOffset);
+		for (const alternate of node.alternates) {
+			this.accept(alternate);
+		}
+	}
+
+	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
+		if (
+			!(node.lhs instanceof IdExpressionNode) ||
+			!this.functionTable.has(node.lhs.name)
+		) {
+			throw new Error(
+				"Can't compile non-existent function invocation of " +
+					node.lhs.token.lexeme
+			);
+		}
+		const info = this.functionTable.get(node.lhs.name)!;
+		// Ensure that the number of arguments in this call match...the
+		// type checker should have caught this beforehand but it's okay
+		// to double-check
+		if (node.args.length !== info.parameters.length) {
+			throw new Error(
+				"Can't compile tail recursive invocation with " +
+					"incorrect number of arguments" +
+					node.lhs.token.lexeme
+			);
+		}
+		const optimize =
+			this.options.optimizeTailRecursiveCalls && node.isTailRecursive;
+		// Arguments given to function go onto the stack
+		for (const arg of node.args) {
+			this.accept(arg);
+		}
+		if (optimize) {
+			for (let i = node.args.length - 1; i >= 0; i--) {
+				// Update the local variable that argument maps to inside the current
+				// call frame
+				this.context.emit(OpCode.Set, i);
+				// Pop the argument now that the local variable is saved
+				this.context.emit(OpCode.Pop);
+			}
+		}
+		// Load the function to the stack after loading the arguments
+		this.accept(node.lhs);
+		// Emit the proper calling instruction to invoke the function
+		this.context.emit(
+			optimize ? OpCode.Tail : OpCode.Call,
+			node.args.length
+		);
+	}
+
+	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
+		this.accept(node.lhs);
+		switch (node.operatorType) {
+			// Postfix operators
+			case TokenType.PlusPlus:
+				this.incrementOrDecrement(node.lhs, true);
+				break;
+			case TokenType.MinusMinus:
+				this.incrementOrDecrement(node.lhs, false);
+				break;
+		}
+	}
+
+	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
+		switch (node.operatorType) {
+			case TokenType.Bang:
+				this.accept(node.rhs);
+				this.context.emit(OpCode.Not);
+				break;
+			case TokenType.Plus:
+				this.accept(node.rhs);
+				break;
+			case TokenType.Minus:
+				this.accept(node.rhs);
+				this.context.emit(OpCode.Neg);
+				break;
+			case TokenType.PlusPlus:
+			case TokenType.MinusMinus:
+				this.incrementOrDecrement(
+					node.rhs,
+					node.operatorType === TokenType.PlusPlus
+				);
+				// To gain prefix functionality we must visit the rhs after
+				// increment/decrementing the variable's value
+				this.accept(node.rhs);
+				break;
+		}
+	}
+
+	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {
+		let value: any;
+		let type: RuntimeType = RuntimeType.Object;
+		switch (node.primitiveType) {
+			case TokenType.String:
+				value = node.primitiveValue;
+				type = RuntimeType.String;
+				break;
+			case TokenType.Boolean:
+				value = node.primitiveValue === "true" ? true : false;
+				value
+					? this.context.emit(OpCode.True)
+					: this.context.emit(OpCode.False);
+				return;
+			case TokenType.Number:
+				value = Number.parseFloat(node.primitiveValue);
+				type = RuntimeType.Number;
+				break;
+			case TokenType.Nil:
+				this.context.emit(OpCode.Nil);
+				return;
+		}
+		// Add the literal to the data section of the current context
+		const index = this.constant(new RuntimeValue(type, value));
+		// Have the machine push the value of the data at the specified data index
+		// to the top of the stack when this instruction is encountered
+		this.context.emit(OpCode.Const, index);
+	}
+
+	public visitProgramNode(node: ProgramNode): void {
+		for (const statement of node.statements) {
+			this.accept(statement);
+		}
+	}
+
+	public visitReturnStatementNode(node: ReturnStatementNode): void {
+		if (!node.expr) {
+			this.context.emit(OpCode.Nil);
+		} else {
+			this.accept(node.expr);
+		}
+		this.context.emit(OpCode.Return);
+	}
+
+	public visitSetOrListNode(node: SetOrListNode): void {
+		// TODO: Compile set or list node
+	}
+
 	// Compiler ternary operator: true ? a : b
 	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
 		this.accept(node.predicate);
@@ -519,91 +556,99 @@ export class Compiler implements Visitor {
 		this.patch(jumpAddr, jumpOffset);
 	}
 
-	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
-		this.accept(node.rhs);
-		// TODO: Handle subscripts for collections
-		this.assignToNode(node.lhs);
-	}
-
-	public visitReturnStatementNode(node: ReturnStatementNode): void {
+	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
+		if (!this.scope.entries.has(node.variableName)) {
+			throw new Error(
+				"Fatal error: Can't find name " +
+					node.variableName +
+					" in symbol table"
+			);
+		}
 		if (!node.expr) {
-			this.context.emit(OpCode.Nil);
-		} else {
-			this.accept(node.expr);
+			// There's no initializing expression for the variable, so emit
+			// the "zero value" for that variable's type:
+			switch (node.typeAnnotation[0]) {
+				case "str":
+					this.context.emit(OpCode.Blank);
+					break;
+				case "num":
+					this.context.emit(OpCode.Zero);
+					break;
+				case "bool":
+					this.context.emit(OpCode.False);
+					break;
+				default:
+					this.context.emit(OpCode.Nil);
+			}
+			return;
 		}
-		this.context.emit(OpCode.Return);
-	}
-
-	public visitSetOrListNode(node: SetOrListNode): void {
-		// TODO: Compile set or list node
-	}
-
-	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
-		// An expression statement is an unused expression, so we pop it off when
-		// we are finished with it. All expressions are guaranteed to push their
-		// result to the stack, so this is safe
-		// Even functions without a return value still return nil
 		this.accept(node.expr);
-		// Pop unused expression result off, unless its an assignment
-		// which doesn't require a pop
-		if (!(node.expr instanceof AssignmentExpressionNode)) {
-			this.context.emit(OpCode.Pop);
+		// Mark the next variable as available in the scope since it has now
+		// been declared
+		this.scope.available++;
+	}
+
+	public visitWhileStatementNode(node: WhileStatementNode): void {
+		const dest = this.emitLabel();
+		this.accept(node.condition);
+		const falseAddr = this.context.jumpIfFalseAndPop();
+		this.accept(node.block);
+		// Calculate the distance from the emitted loop instruction
+		// to the destination instruction...we have to add 2 because the loop
+		// instruction itself takes up two codes
+		this.context.loop(dest - (this.context.bytecode.length + 2));
+		const falseOffset = this.context.bytecode.length - falseAddr - 1;
+		this.patch(falseAddr, falseOffset);
+	}
+
+	/**
+	 * Have the compiler have a node visit the compiler (ahem) if and only if
+	 * the node is not marked as unreachable
+	 * @param node The node that accepts the compiler
+	 */
+	private accept(node: Node): void {
+		if (!node.isDead) node.accept(this);
+	}
+
+	/**
+	 * Creates a new data constant for a literal and adds it to the
+	 * constant pool
+	 *
+	 * @returns The index to the constant in the constant pool
+	 * @param value The constant's runtime value
+	 */
+	private constant(value: RuntimeValue): number {
+		if (this.constants.has(value.value)) {
+			return this.constants.get(value.value)!;
+		} else {
+			// Unique, new constant
+			this.constantPool.push(value);
+			this.constants.set(value.value, this.constantPool.length - 1);
+			return this.constantPool.length - 1;
 		}
 	}
 
-	// MARK: Compiler Methods
+	/**
+	 * Creates a new context and adds it to the list of contexts so that
+	 * they can be given to the linker later
+	 * @param contextName Name of the context (should be the function name)
+	 * @param constants Shared constants look-up map for avoiding duplicates
+	 */
+	private createContext(contextName: string, numLocals: number): Context {
+		const context = new Context(contextName, numLocals, [], this.labelId++);
+		this.allContexts.push(context);
+		this.patcher.prepare(this.context);
+		return context;
+	}
 
 	/**
-	 * Compiles the program
-	 * @returns The compiled program, ready to be linked
+	 * Drop the specified number of local variables off of the stack
+	 * @param numLocalsToDrop The number of locals that should be dropped
 	 */
-	public compile(): CompiledProgram {
-		this.ast.root.accept(this);
-		if (!this.checkLastEmit(OpCode.Return)) {
-			this.context.emit(OpCode.Return);
+	private dropLocals(numLocalsToDrop: number): void {
+		if (numLocalsToDrop > 0) {
+			this.context.emit(OpCode.Drop, numLocalsToDrop);
 		}
-		return new CompiledProgram(
-			this.allContexts,
-			this.constantPool,
-			this.scope.totalEntries,
-			this.patcher
-		);
-	}
-
-	/**
-	 * Checks to see if the last emitted bytecode in the current context is the
-	 * specified opcode
-	 * @param opcode The opcode to check
-	 */
-	public checkLastEmit(opcode: number): boolean {
-		if (this.context.lastInstr === opcode) {
-			return true;
-		}
-		return false;
-	}
-
-	/**
-	 * Patches a bytecode address reference in the specified context
-	 * @param index The index of the bytecode parameter to replace
-	 * @param destOffset The jump's destination as an offset to the jump's ip
-	 * @param [context] The context to patch the specified address in
-	 */
-	public patch(
-		index: number,
-		destOffset: number,
-		context: Context = this.context
-	): void {
-		context.bytecode[index] = destOffset;
-		this.emitLabel();
-	}
-
-	/**
-	 * Output a label at the last instruction and return the index of the
-	 * last byte
-	 * @returns Index of the last byte
-	 */
-	public emitLabel(): number {
-		return this.context.emitLabel(this.labelId++);
 	}
 
 	/**
@@ -639,55 +684,5 @@ export class Compiler implements Visitor {
 	private exitScope(): Scope {
 		// Go back up the scope chain
 		return this.symbolTable.exitScope();
-	}
-
-	/**
-	 * Creates a new context and adds it to the list of contexts so that
-	 * they can be given to the linker later
-	 * @param contextName Name of the context (should be the function name)
-	 * @param constants Shared constants look-up map for avoiding duplicates
-	 */
-	private createContext(contextName: string, numLocals: number): Context {
-		const context = new Context(contextName, numLocals, [], this.labelId++);
-		this.allContexts.push(context);
-		this.patcher.prepare(this.context);
-		return context;
-	}
-
-	/**
-	 * Creates a new data constant for a literal and adds it to the
-	 * constant pool
-	 *
-	 * @returns The index to the constant in the constant pool
-	 * @param value The constant's runtime value
-	 */
-	private constant(value: RuntimeValue): number {
-		if (this.constants.has(value.value)) {
-			return this.constants.get(value.value)!;
-		} else {
-			// Unique, new constant
-			this.constantPool.push(value);
-			this.constants.set(value.value, this.constantPool.length - 1);
-			return this.constantPool.length - 1;
-		}
-	}
-
-	/**
-	 * Drop the specified number of local variables off of the stack
-	 * @param numLocalsToDrop The number of locals that should be dropped
-	 */
-	private dropLocals(numLocalsToDrop: number): void {
-		if (numLocalsToDrop > 0) {
-			this.context.emit(OpCode.Drop, numLocalsToDrop);
-		}
-	}
-
-	/**
-	 * Have the compiler have a node visit the compiler (ahem) if and only if
-	 * the node is not marked as unreachable
-	 * @param node The node that accepts the compiler
-	 */
-	private accept(node: Node): void {
-		if (!node.isDead) node.accept(this);
 	}
 }
