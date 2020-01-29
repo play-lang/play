@@ -148,10 +148,6 @@ function same(a: num): num {
 			const result = Play.run(code);
 			expect(result.value.value).toBe(null);
 		});
-		test("should handle recursive fibonacci", async () => {
-			const result = await runFile("fib12.play");
-			expect(result).toBe(144);
-		});
 		test("lots of variables", () => {
 			const code = str`
 				let a: num = 10
@@ -185,6 +181,13 @@ function same(a: num): num {
 			`;
 			const result = Play.run(code);
 			expect(result.value.value).toBe(15);
+		});
+	});
+
+	describe("recursion", () => {
+		test("should handle recursive fibonacci", async () => {
+			const result = await runFile("fib12.play");
+			expect(result).toBe(144);
 		});
 	});
 

@@ -80,7 +80,7 @@ export class TypeChecker {
 		const prettyEncounteredType = encounteredType.description;
 		const prefix = this.errorPrefix(token);
 		const hint = `${prefix} Expected \`${token.lexeme}\`${
-			desc ? " (" + desc + ") " : ""
+			desc ? " (" + desc + ") " : " "
 		}to have type ${prettyExpectedType} instead of ${prettyEncounteredType}`;
 		const error = new TypeCheckError(token, hint);
 		this.errors.push(error);
