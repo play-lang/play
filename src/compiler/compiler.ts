@@ -31,6 +31,13 @@ import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
 import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";
 
+export class CompilerOptions {
+	constructor(
+		/** True if the compiler should optimize tail-recursive calls */
+		public readonly optimizeTailRecursiveCalls: boolean = true
+	) {}
+}
+
 export class Compiler implements Visitor {
 	/** Current bytecode context */
 	public get context(): Context {
@@ -52,9 +59,6 @@ export class Compiler implements Visitor {
 		return this.ast.env.symbolTable;
 	}
 
-	/** Ast root to compile */
-	public readonly ast: AbstractSyntaxTree;
-
 	/** Constant pool preceding the code */
 	public readonly constantPool: RuntimeValue[] = [];
 
@@ -74,19 +78,38 @@ export class Compiler implements Visitor {
 	/** Map of bytecode contexts keyed by scope */
 	public readonly contexts: Map<Scope, Context> = new Map();
 
+	/** Map of scopes keyed by context name */
+	public readonly functionScopes: Map<string, Scope> = new Map();
+
 	/** Registers labels and patches jumps between contexts */
 	private patcher: ContextLabels = new ContextLabels();
 
 	/** Index of the next label to be generated */
 	private labelId: number = 0;
 
-	constructor(ast: AbstractSyntaxTree) {
+	/**
+	 * Compile the parser's output into bytecode
+	 *
+	 * Be sure to run the type checker and ensure that there are no errors before
+	 * asking the compiler to compile
+	 *
+	 * @param ast The abstract syntax tree containing the parse tree and
+	 * environment
+	 * @param options Compiler settings
+	 */
+	constructor(
+		/** Abstract syntax tree and parsing environment */
+		public readonly ast: AbstractSyntaxTree,
+		/** Compiler options */
+		public readonly options: CompilerOptions = new CompilerOptions()
+	) {
 		this.ast = ast;
 		this.symbolTable.reset();
 		this.contexts.set(
 			this.scope,
 			this.createContext("(main)", this.scope.totalEntries)
 		);
+		this.functionScopes.set("(main)", this.scope);
 	}
 
 	// MARK: Visitor
@@ -109,10 +132,7 @@ export class Compiler implements Visitor {
 			// We should clean up variables local to this block if we're just a
 			// normal block -- functions get call frames which the VM uses to clean
 			// up the stack for us
-			const numLocalsToDrop = this.scope.available;
-			if (numLocalsToDrop > 0) {
-				this.context.emit(OpCode.Drop, numLocalsToDrop);
-			}
+			this.dropLocals(this.scope.available);
 			this.exitScope();
 		}
 	}
@@ -207,6 +227,7 @@ export class Compiler implements Visitor {
 		this.scope.available += node.info.parameters.length;
 		this.accept(node.block!);
 		if (!this.checkLastEmit(OpCode.Return)) {
+			this.context.emit(OpCode.Nil);
 			this.context.emit(OpCode.Return);
 		}
 		this.exitScope();
@@ -257,14 +278,39 @@ export class Compiler implements Visitor {
 					node.lhs.token.lexeme
 			);
 		}
+		const info = this.functionTable.get(node.lhs.name)!;
+		// Ensure that the number of arguments in this call match...the
+		// type checker should have caught this beforehand but it's okay
+		// to double-check
+		if (node.args.length !== info.parameters.length) {
+			throw new Error(
+				"Can't compile tail recursive invocation with " +
+					"incorrect number of arguments" +
+					node.lhs.token.lexeme
+			);
+		}
+		const optimize =
+			this.options.optimizeTailRecursiveCalls && node.isTailRecursive;
 		// Arguments given to function go onto the stack
 		for (const arg of node.args) {
 			this.accept(arg);
 		}
+		if (optimize) {
+			for (let i = node.args.length - 1; i >= 0; i--) {
+				// Update the local variable that argument maps to inside the current
+				// call frame
+				this.context.emit(OpCode.Set, i);
+				// Pop the argument now that the local variable is saved
+				this.context.emit(OpCode.Pop);
+			}
+		}
 		// Load the function to the stack after loading the arguments
 		this.accept(node.lhs);
-		// Emit the call argument to invoke the function
-		this.context.emit(OpCode.Call, node.args.length);
+		// Emit the proper calling instruction to invoke the function
+		this.context.emit(
+			optimize ? OpCode.Tail : OpCode.Call,
+			node.args.length
+		);
 	}
 
 	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
@@ -572,10 +618,13 @@ export class Compiler implements Visitor {
 		// Add a context entry
 		this.contexts.set(
 			this.scope,
-			contextName === ""
-				? context
-				: this.createContext(contextName, this.scope.totalEntries)
+			contextName
+				? this.createContext(contextName, this.scope.totalEntries)
+				: context
 		);
+		if (contextName) {
+			this.functionScopes.set(contextName, this.scope);
+		}
 	}
 
 	/**
@@ -615,6 +664,16 @@ export class Compiler implements Visitor {
 			this.constantPool.push(value);
 			this.constants.set(value.value, this.constantPool.length - 1);
 			return this.constantPool.length - 1;
+		}
+	}
+
+	/**
+	 * Drop the specified number of local variables off of the stack
+	 * @param numLocalsToDrop The number of locals that should be dropped
+	 */
+	private dropLocals(numLocalsToDrop: number): void {
+		if (numLocalsToDrop > 0) {
+			this.context.emit(OpCode.Drop, numLocalsToDrop);
 		}
 	}
 

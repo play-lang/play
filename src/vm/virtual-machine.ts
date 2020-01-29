@@ -72,12 +72,12 @@ export class VirtualMachine {
 		const startTime = performance.now();
 		try {
 			while (true) {
-				const instruction = this.read();
-				switch (instruction) {
+				const instr = this.read();
+				switch (instr) {
 					default:
 						throw new RuntimeError(
 							VMStatus.InvalidInstruction,
-							"Invalid instruction encountered: " + instruction
+							"Invalid instruction encountered: " + instr
 						);
 					case OpCode.Return: {
 						// Grab the return value so that we can clean up the
@@ -333,6 +333,7 @@ export class VirtualMachine {
 						);
 						break;
 					}
+					case OpCode.Tail:
 					case OpCode.Call: {
 						const numLocals = this.read();
 						const dest = this.pop();
@@ -343,8 +344,16 @@ export class VirtualMachine {
 							);
 						}
 						const ip = dest.value as number;
-						const basePointer = this.stack.length - numLocals;
-						this.frames.push(new Frame(ip, basePointer, numLocals));
+						if (instr === OpCode.Call) {
+							const basePointer = this.stack.length - numLocals;
+							// Only push a new instruction if we are calling a function
+							// If we are tail-calling a recursive function this is unnecessary
+							this.frames.push(
+								new Frame(ip, basePointer, numLocals)
+							);
+						} else {
+							this.ip = ip;
+						}
 						break;
 					}
 				}

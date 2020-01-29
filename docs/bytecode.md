@@ -39,4 +39,5 @@
 | JMPTRUEPOP   | addr       | Jump to specified address and pop if top is true             |
 | LOOP         | addr       | Jump backwards to specified address                          |
 | LOAD         | fnAddr     | Push the specified function address onto the stack           |
+| TAIL         | numLocals  | Same as CALL but does not allocate a new call frame on stack |
 | CALL         | numLocals  | Call address on top with specified number of local variables |
