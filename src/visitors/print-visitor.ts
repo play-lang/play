@@ -27,10 +27,20 @@ import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-n
 import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
 
 export class PrintVisitor implements Visitor, Describable {
-	private indent: number = 0;
 	private desc: string = "";
+	private indent: number = 0;
 
 	constructor(public readonly ast: AbstractSyntaxTree) {}
+
+	public get description(): string {
+		return this.print();
+	}
+
+	// MARK: Utility Methods
+
+	private get spaces(): string {
+		return "  ".repeat(this.indent * 3);
+	}
 
 	public print(): string {
 		this.desc = "";
@@ -38,8 +48,40 @@ export class PrintVisitor implements Visitor, Describable {
 		return this.desc;
 	}
 
-	public visitProgramNode(node: ProgramNode): void {
-		this.desc += "Program\n";
+	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
+		this.desc += "Assignment(" + TokenType[node.assignmentType] + ")\n";
+		this.indent += 1;
+		this.desc += this.spaces + "├── lhs ";
+		node.lhs.accept(this);
+		this.desc += this.spaces + "└── rhs ";
+		node.rhs.accept(this);
+		this.indent -= 1;
+	}
+
+	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
+		this.desc += "Binary(" + TokenType[node.operatorType] + ")\n";
+		this.indent += 1;
+		this.desc += this.spaces + "├── ";
+		node.lhs.accept(this);
+		this.desc += this.spaces + "└── ";
+		node.rhs.accept(this);
+		this.indent -= 1;
+	}
+
+	public visitBinaryLogicalExpressionNode(
+		node: BinaryLogicalExpressionNode
+	): void {
+		this.desc += "BinaryLogical(" + TokenType[node.operatorType] + ")\n";
+		this.indent += 1;
+		this.desc += this.spaces + "├── ";
+		node.lhs.accept(this);
+		this.desc += this.spaces + "└── ";
+		node.rhs.accept(this);
+		this.indent -= 1;
+	}
+
+	public visitBlockStatementNode(node: BlockStatementNode): void {
+		this.desc += "Block\n";
 		this.indent += 1;
 		for (const statement of node.statements) {
 			const last =
@@ -50,25 +92,13 @@ export class PrintVisitor implements Visitor, Describable {
 		this.indent -= 1;
 	}
 
-	public visitIfStatementNode(node: IfStatementNode): void {
-		this.desc += "If\n";
+	public visitDoWhileStatementNode(node: DoWhileStatementNode): void {
+		this.desc += "DoWhileStatement\n";
 		this.indent += 1;
-		this.desc += this.spaces + "├── predicate\n";
-		this.indent += 1;
-		this.desc += this.spaces + "└── ";
-		node.predicate.accept(this);
-		this.indent -= 1;
-		this.desc += this.spaces + "├── then\n";
-		this.indent += 1;
-		this.desc += this.spaces + "└── ";
-		node.consequent.accept(this);
-		this.indent -= 1;
-		for (const alternate of node.alternates) {
-			const last =
-				alternate === node.alternates[node.alternates.length - 1];
-			this.desc += this.spaces + (last ? "└── " : "├── ");
-			alternate.accept(this);
-		}
+		this.desc += this.spaces + "└── do ";
+		node.block.accept(this);
+		this.desc += this.spaces + "├── while ";
+		node.condition.accept(this);
 		this.indent -= 1;
 	}
 
@@ -90,41 +120,12 @@ export class PrintVisitor implements Visitor, Describable {
 		this.indent -= 1;
 	}
 
-	public visitBlockStatementNode(node: BlockStatementNode): void {
-		this.desc += "Block\n";
+	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
+		this.desc += "ExpressionStatement\n";
 		this.indent += 1;
-		for (const statement of node.statements) {
-			const last =
-				statement === node.statements[node.statements.length - 1];
-			this.desc += this.spaces + (last ? "└── " : "├── ");
-			statement.accept(this);
-		}
+		this.desc += this.spaces + "└── ";
+		node.expr.accept(this);
 		this.indent -= 1;
-	}
-
-	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
-		this.desc +=
-			node.constructor.name +
-			"(`" +
-			node.variableName +
-			"`, " +
-			(node.typeAnnotation.join(" ") || "inferred") +
-			")\n";
-		this.indent += 1;
-		if (node.expr) {
-			this.desc += this.spaces + "└── ";
-			node.expr.accept(this);
-		}
-		this.indent -= 1;
-	}
-
-	public visitIdExpressionNode(node: IdExpressionNode): void {
-		this.desc +=
-			"IdExpression(" +
-			node.name +
-			", usedAsFunction=" +
-			node.usedAsFunction +
-			")\n";
 	}
 
 	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
@@ -155,6 +156,37 @@ export class PrintVisitor implements Visitor, Describable {
 		this.indent -= 1;
 	}
 
+	public visitIdExpressionNode(node: IdExpressionNode): void {
+		this.desc +=
+			"IdExpression(" +
+			node.name +
+			", usedAsFunction=" +
+			node.usedAsFunction +
+			")\n";
+	}
+
+	public visitIfStatementNode(node: IfStatementNode): void {
+		this.desc += "If\n";
+		this.indent += 1;
+		this.desc += this.spaces + "├── predicate\n";
+		this.indent += 1;
+		this.desc += this.spaces + "└── ";
+		node.predicate.accept(this);
+		this.indent -= 1;
+		this.desc += this.spaces + "├── then\n";
+		this.indent += 1;
+		this.desc += this.spaces + "└── ";
+		node.consequent.accept(this);
+		this.indent -= 1;
+		for (const alternate of node.alternates) {
+			const last =
+				alternate === node.alternates[node.alternates.length - 1];
+			this.desc += this.spaces + (last ? "└── " : "├── ");
+			alternate.accept(this);
+		}
+		this.indent -= 1;
+	}
+
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
 		this.desc +=
 			"Call(" +
@@ -171,14 +203,6 @@ export class PrintVisitor implements Visitor, Describable {
 		this.indent -= 1;
 	}
 
-	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
-		this.desc += "Prefix(" + TokenType[node.operatorType] + ")\n";
-		this.indent += 1;
-		this.desc += this.spaces + "└── ";
-		node.rhs.accept(this);
-		this.indent -= 1;
-	}
-
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
 		this.desc += "Postfix(" + TokenType[node.operatorType] + ")\n";
 		this.indent += 1;
@@ -187,51 +211,27 @@ export class PrintVisitor implements Visitor, Describable {
 		this.indent -= 1;
 	}
 
+	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
+		this.desc += "Prefix(" + TokenType[node.operatorType] + ")\n";
+		this.indent += 1;
+		this.desc += this.spaces + "└── ";
+		node.rhs.accept(this);
+		this.indent -= 1;
+	}
+
 	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {
 		this.desc += "Literal(`" + node.primitiveValue + "`)\n";
 	}
 
-	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
-		this.desc += "Binary(" + TokenType[node.operatorType] + ")\n";
+	public visitProgramNode(node: ProgramNode): void {
+		this.desc += "Program\n";
 		this.indent += 1;
-		this.desc += this.spaces + "├── ";
-		node.lhs.accept(this);
-		this.desc += this.spaces + "└── ";
-		node.rhs.accept(this);
-		this.indent -= 1;
-	}
-
-	public visitBinaryLogicalExpressionNode(
-		node: BinaryLogicalExpressionNode
-	): void {
-		this.desc += "BinaryLogical(" + TokenType[node.operatorType] + ")\n";
-		this.indent += 1;
-		this.desc += this.spaces + "├── ";
-		node.lhs.accept(this);
-		this.desc += this.spaces + "└── ";
-		node.rhs.accept(this);
-		this.indent -= 1;
-	}
-
-	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
-		this.desc += "TernaryConditional\n";
-		this.indent += 1;
-		this.desc += this.spaces + "├── predicate ";
-		node.predicate.accept(this);
-		this.desc += this.spaces + "├── consequent ";
-		node.consequent.accept(this);
-		this.desc += this.spaces + "└── alternate ";
-		node.alternate.accept(this);
-		this.indent -= 1;
-	}
-
-	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
-		this.desc += "Assignment(" + TokenType[node.assignmentType] + ")\n";
-		this.indent += 1;
-		this.desc += this.spaces + "├── lhs ";
-		node.lhs.accept(this);
-		this.desc += this.spaces + "└── rhs ";
-		node.rhs.accept(this);
+		for (const statement of node.statements) {
+			const last =
+				statement === node.statements[node.statements.length - 1];
+			this.desc += this.spaces + (last ? "└── " : "├── ");
+			statement.accept(this);
+		}
 		this.indent -= 1;
 	}
 
@@ -259,21 +259,31 @@ export class PrintVisitor implements Visitor, Describable {
 		this.indent -= 1;
 	}
 
-	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
-		this.desc += "ExpressionStatement\n";
+	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
+		this.desc += "TernaryConditional\n";
 		this.indent += 1;
-		this.desc += this.spaces + "└── ";
-		node.expr.accept(this);
+		this.desc += this.spaces + "├── predicate ";
+		node.predicate.accept(this);
+		this.desc += this.spaces + "├── consequent ";
+		node.consequent.accept(this);
+		this.desc += this.spaces + "└── alternate ";
+		node.alternate.accept(this);
 		this.indent -= 1;
 	}
 
-	public visitDoWhileStatementNode(node: DoWhileStatementNode): void {
-		this.desc += "DoWhileStatement\n";
+	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
+		this.desc +=
+			node.constructor.name +
+			"(`" +
+			node.variableName +
+			"`, " +
+			(node.typeAnnotation.join(" ") || "inferred") +
+			")\n";
 		this.indent += 1;
-		this.desc += this.spaces + "└── do ";
-		node.block.accept(this);
-		this.desc += this.spaces + "├── while ";
-		node.condition.accept(this);
+		if (node.expr) {
+			this.desc += this.spaces + "└── ";
+			node.expr.accept(this);
+		}
 		this.indent -= 1;
 	}
 
@@ -285,15 +295,5 @@ export class PrintVisitor implements Visitor, Describable {
 		this.desc += this.spaces + "└── do ";
 		node.block.accept(this);
 		this.indent -= 1;
-	}
-
-	// MARK: Utility Methods
-
-	private get spaces(): string {
-		return "  ".repeat(this.indent * 3);
-	}
-
-	public get description(): string {
-		return this.print();
 	}
 }

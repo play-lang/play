@@ -28,17 +28,17 @@ import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-n
 import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
 
 export class JSONVisitor implements Visitor, Describable {
-	// MARK: Describable
-
-	public get description(): string {
-		return JSON.stringify(this.json());
-	}
-
 	// MARK: Properties
 
 	private stack: object[] = [];
 
 	constructor(public readonly ast: AbstractSyntaxTree) {}
+
+	// MARK: Describable
+
+	public get description(): string {
+		return JSON.stringify(this.json());
+	}
 
 	// MARK: Methods
 
@@ -49,9 +49,46 @@ export class JSONVisitor implements Visitor, Describable {
 		return JSON.parse(JSON.stringify(program));
 	}
 
-	// MARK: Visitor
+	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
+		node.lhs.accept(this);
+		node.rhs.accept(this);
+		const rhs = this.stack.pop();
+		const lhs = this.stack.pop();
+		this.stack.push({
+			...def(node),
+			assignmentType: TokenType[node.assignmentType],
+			lhs,
+			rhs,
+		});
+	}
 
-	public visitProgramNode(node: ProgramNode): void {
+	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
+		node.lhs.accept(this);
+		node.rhs.accept(this);
+		const rhs = this.stack.pop();
+		const lhs = this.stack.pop();
+		this.stack.push({
+			...def(node),
+			lhs,
+			rhs,
+		});
+	}
+
+	public visitBinaryLogicalExpressionNode(
+		node: BinaryLogicalExpressionNode
+	): void {
+		node.lhs.accept(this);
+		node.rhs.accept(this);
+		const rhs = this.stack.pop();
+		const lhs = this.stack.pop();
+		this.stack.push({
+			...def(node),
+			lhs,
+			rhs,
+		});
+	}
+
+	public visitBlockStatementNode(node: BlockStatementNode): void {
 		const statements = [];
 		for (const statement of node.statements) {
 			statement.accept(this);
@@ -59,9 +96,68 @@ export class JSONVisitor implements Visitor, Describable {
 		}
 		this.stack.push({
 			...def(node),
+			isFunctionBlock: node.isFunctionBlock,
 			statements,
 		});
 	}
+
+	public visitDoWhileStatementNode(node: DoWhileStatementNode): void {
+		node.block.accept(this);
+		const block = this.stack.pop();
+		node.condition.accept(this);
+		const condition = this.stack.pop();
+		this.stack.push({
+			...def(node),
+			condition,
+			block,
+		});
+	}
+
+	public visitElseStatementNode(node: ElseStatementNode): void {
+		let expr: any | undefined;
+		if (node.expr) {
+			node.expr.accept(this);
+			expr = this.stack.pop();
+		}
+		node.block.accept(this);
+		const block = this.stack.pop();
+		this.stack.push({
+			...def(node),
+			expr,
+			block,
+		});
+	}
+
+	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
+		node.expr.accept(this);
+		const expr = this.stack.pop();
+		this.stack.push({
+			...def(node),
+			expr,
+		});
+	}
+
+	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
+		node.block!.accept(this);
+		const block = this.stack.pop();
+		const parameterTypes = Array.from(node.info.parameterTypes.entries());
+		this.stack.push({
+			...def(node),
+			typeAnnotation: node.info.typeAnnotation,
+			parameterTypes,
+			parameters: [...node.info.parameters],
+			block,
+		});
+	}
+
+	public visitIdExpressionNode(node: IdExpressionNode): void {
+		this.stack.push({
+			...def(node),
+			name: node.name,
+			usedAsFunction: node.usedAsFunction,
+		});
+	}
+
 	public visitIfStatementNode(node: IfStatementNode): void {
 		node.predicate.accept(this);
 		const predicate = this.stack.pop();
@@ -79,21 +175,47 @@ export class JSONVisitor implements Visitor, Describable {
 			alternates,
 		});
 	}
-	public visitElseStatementNode(node: ElseStatementNode): void {
-		let expr: any | undefined;
-		if (node.expr) {
-			node.expr.accept(this);
-			expr = this.stack.pop();
-		}
-		node.block.accept(this);
-		const block = this.stack.pop();
+
+	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
+		node.lhs.accept(this);
+		const lhs = this.stack.pop();
 		this.stack.push({
 			...def(node),
-			expr,
-			block,
+			functionName: node.functionName,
+			isTailRecursive: node.isTailRecursive,
+			args: node.args,
+			lhs,
 		});
 	}
-	public visitBlockStatementNode(node: BlockStatementNode): void {
+
+	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
+		node.lhs.accept(this);
+		const lhs = this.stack.pop();
+		this.stack.push({
+			...def(node),
+			lhs,
+		});
+	}
+
+	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
+		node.rhs.accept(this);
+		const rhs = this.stack.pop();
+		this.stack.push({
+			...def(node),
+			rhs,
+		});
+	}
+
+	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {
+		this.stack.push({
+			...def(node),
+			literalType: TokenType[node.primitiveType],
+			literalValue: node.primitiveValue,
+		});
+	}
+
+	// MARK: Visitor
+	public visitProgramNode(node: ProgramNode): void {
 		const statements = [];
 		for (const statement of node.statements) {
 			statement.accept(this);
@@ -101,10 +223,54 @@ export class JSONVisitor implements Visitor, Describable {
 		}
 		this.stack.push({
 			...def(node),
-			isFunctionBlock: node.isFunctionBlock,
 			statements,
 		});
 	}
+
+	public visitReturnStatementNode(node: ReturnStatementNode): void {
+		if (node.expr) {
+			node.expr.accept(this);
+			const expr = this.stack.pop();
+			this.stack.push({
+				...def(node),
+				value: expr,
+			});
+		} else {
+			this.stack.push({
+				...def(node),
+			});
+		}
+	}
+
+	public visitSetOrListNode(node: SetOrListNode): void {
+		const members = [];
+		for (const member of node.members) {
+			member.accept(this);
+			members.push(this.stack.pop());
+		}
+		this.stack.push({
+			...def(node),
+			representedCollectionType:
+				RepresentedCollectionType[node.representedCollectionType],
+			members,
+		});
+	}
+
+	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
+		node.predicate.accept(this);
+		node.consequent.accept(this);
+		node.alternate.accept(this);
+		const alternate = this.stack.pop();
+		const consequent = this.stack.pop();
+		const predicate = this.stack.pop();
+		this.stack.push({
+			...def(node),
+			predicate,
+			consequent,
+			alternate,
+		});
+	}
+
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
 		const obj = {
 			...def(node),
@@ -123,155 +289,7 @@ export class JSONVisitor implements Visitor, Describable {
 		}
 		this.stack.push(obj);
 	}
-	public visitIdExpressionNode(node: IdExpressionNode): void {
-		this.stack.push({
-			...def(node),
-			name: node.name,
-			usedAsFunction: node.usedAsFunction,
-		});
-	}
-	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
-		node.block!.accept(this);
-		const block = this.stack.pop();
-		const parameterTypes = Array.from(node.info.parameterTypes.entries());
-		this.stack.push({
-			...def(node),
-			typeAnnotation: node.info.typeAnnotation,
-			parameterTypes,
-			parameters: [...node.info.parameters],
-			block,
-		});
-	}
-	public visitPrefixExpressionNode(node: PrefixExpressionNode): void {
-		node.rhs.accept(this);
-		const rhs = this.stack.pop();
-		this.stack.push({
-			...def(node),
-			rhs,
-		});
-	}
-	public visitBinaryExpressionNode(node: BinaryExpressionNode): void {
-		node.lhs.accept(this);
-		node.rhs.accept(this);
-		const rhs = this.stack.pop();
-		const lhs = this.stack.pop();
-		this.stack.push({
-			...def(node),
-			lhs,
-			rhs,
-		});
-	}
-	public visitBinaryLogicalExpressionNode(
-		node: BinaryLogicalExpressionNode
-	): void {
-		node.lhs.accept(this);
-		node.rhs.accept(this);
-		const rhs = this.stack.pop();
-		const lhs = this.stack.pop();
-		this.stack.push({
-			...def(node),
-			lhs,
-			rhs,
-		});
-	}
-	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
-		node.lhs.accept(this);
-		const lhs = this.stack.pop();
-		this.stack.push({
-			...def(node),
-			lhs,
-		});
-	}
-	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
-		node.lhs.accept(this);
-		const lhs = this.stack.pop();
-		this.stack.push({
-			...def(node),
-			functionName: node.functionName,
-			isTailRecursive: node.isTailRecursive,
-			args: node.args,
-			lhs,
-		});
-	}
-	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {
-		this.stack.push({
-			...def(node),
-			literalType: TokenType[node.primitiveType],
-			literalValue: node.primitiveValue,
-		});
-	}
-	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {
-		node.predicate.accept(this);
-		node.consequent.accept(this);
-		node.alternate.accept(this);
-		const alternate = this.stack.pop();
-		const consequent = this.stack.pop();
-		const predicate = this.stack.pop();
-		this.stack.push({
-			...def(node),
-			predicate,
-			consequent,
-			alternate,
-		});
-	}
-	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
-		node.lhs.accept(this);
-		node.rhs.accept(this);
-		const rhs = this.stack.pop();
-		const lhs = this.stack.pop();
-		this.stack.push({
-			...def(node),
-			assignmentType: TokenType[node.assignmentType],
-			lhs,
-			rhs,
-		});
-	}
-	public visitReturnStatementNode(node: ReturnStatementNode): void {
-		if (node.expr) {
-			node.expr.accept(this);
-			const expr = this.stack.pop();
-			this.stack.push({
-				...def(node),
-				value: expr,
-			});
-		} else {
-			this.stack.push({
-				...def(node),
-			});
-		}
-	}
-	public visitSetOrListNode(node: SetOrListNode): void {
-		const members = [];
-		for (const member of node.members) {
-			member.accept(this);
-			members.push(this.stack.pop());
-		}
-		this.stack.push({
-			...def(node),
-			representedCollectionType:
-				RepresentedCollectionType[node.representedCollectionType],
-			members,
-		});
-	}
-	public visitExpressionStatementNode(node: ExpressionStatementNode): void {
-		node.expr.accept(this);
-		const expr = this.stack.pop();
-		this.stack.push({
-			...def(node),
-			expr,
-		});
-	}
-	public visitDoWhileStatementNode(node: DoWhileStatementNode): void {
-		node.block.accept(this);
-		const block = this.stack.pop();
-		node.condition.accept(this);
-		const condition = this.stack.pop();
-		this.stack.push({
-			...def(node),
-			condition,
-			block,
-		});
-	}
+
 	public visitWhileStatementNode(node: WhileStatementNode): void {
 		node.condition.accept(this);
 		const condition = this.stack.pop();
