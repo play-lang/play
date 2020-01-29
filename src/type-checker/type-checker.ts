@@ -67,16 +67,21 @@ export class TypeChecker {
 	 * @param token The token where the error occurred
 	 * @param expectedType The expected type
 	 * @param encounteredType The encountered type
+	 * @param desc Additional information about the token to go inside a
+	 * parenthetical, if any
 	 */
 	private mismatch(
 		token: TokenLike,
 		expectedType: Type,
-		encounteredType: Type
+		encounteredType: Type,
+		desc: string = ""
 	): void {
 		const prettyExpectedType = expectedType.description;
 		const prettyEncounteredType = encounteredType.description;
 		const prefix = this.errorPrefix(token);
-		const hint = `${prefix} Expected ${token.lexeme} to have type ${prettyExpectedType} instead of ${prettyEncounteredType}`;
+		const hint = `${prefix} Expected \`${token.lexeme}\`${
+			desc ? " (" + desc + ") " : ""
+		}to have type ${prettyExpectedType} instead of ${prettyEncounteredType}`;
 		const error = new TypeCheckError(token, hint);
 		this.errors.push(error);
 	}
@@ -132,7 +137,9 @@ export class TypeChecker {
 			token.column +
 			" (" +
 			token.pos +
-			"): ";
+			") with token `" +
+			token.lexeme +
+			"`: ";
 		return prefix;
 	}
 
@@ -267,7 +274,6 @@ export class TypeChecker {
 
 	private checkInvocationExpression(node: InvocationExpressionNode): void {
 		const type = node.argumentsType(this.env);
-		// TODO: Add better error handling for invalid action calls
 		const functionName = node.functionName;
 		if (functionName && this.env.functionTable.has(functionName)) {
 			const info = this.env.functionTable.get(functionName)!;
@@ -275,7 +281,12 @@ export class TypeChecker {
 			// be safe
 			const functionType = info.type!;
 			if (!type.satisfiesRecordType(functionType.parameters)) {
-				this.mismatch(node.token, functionType.parameters, type);
+				this.mismatch(
+					node.lhs.token,
+					functionType.parameters,
+					type,
+					"to be invoked as a function call"
+				);
 			}
 		} else {
 			// TODO: Semantic error here for unrecognized function

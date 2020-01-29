@@ -258,7 +258,6 @@ export class Parser extends TokenParser {
 			);
 		}
 		// Function keyword has already been matched for us
-		const startToken = this.previous;
 		const start = this.previous.pos;
 		const nameToken = this.consume(
 			TokenType.Id,
@@ -338,12 +337,6 @@ export class Parser extends TokenParser {
 
 		// Grab the block of statements inside the function curly braces
 		const block = this.block(true);
-
-		// Ensure that the last statement in the function is a return statement
-		const lastStatement = block.statements[block.statements.length - 1];
-		if (!(lastStatement instanceof ReturnStatementNode)) {
-			block.statements.push(new ReturnStatementNode(startToken));
-		}
 
 		// Pop the scope for this function
 		this.exitScope();

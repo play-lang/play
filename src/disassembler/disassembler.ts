@@ -246,6 +246,7 @@ export class Disassembler {
 					}
 					break;
 				}
+				case OpCode.Tail:
 				case OpCode.Call: {
 					const numLocals = bytecode[p++];
 					out += this.instrParam(op, ip, numLocals);

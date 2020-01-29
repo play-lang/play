@@ -96,6 +96,8 @@ export enum OpCode {
 	 * later consumption with CALL
 	 */
 	Load,
+	/** Call a function without allocating a new stack frame */
+	Tail,
 	/** Call a function */
 	Call,
 }
