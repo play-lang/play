@@ -53,7 +53,6 @@ do {
 } while x > 0
 
 			`;
-			console.log(Play.disassemble(code));
 			expect(Play.run(code).value.value).toBe(0);
 		});
 	});
