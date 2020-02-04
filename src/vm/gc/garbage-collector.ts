@@ -1,5 +1,6 @@
-import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";
+
+// https://www.cs.cornell.edu/courses/cs312/2003fa/lectures/sec24.htm
 
 export interface HeapItem {
 	/** Array of values contained in this heap item cell */
@@ -19,32 +20,28 @@ enum GCState {
 }
 
 export class GarbageCollector {
+	/** From-space */
 	private fromSpace: HeapItem[] = [];
-	/** True if the garbage collector has run at least once */
-	private hasCollectedAtLeastOnce: boolean = false;
-	/**
-	 * How many allocations must occur before the garbage collector kicks in for
-	 * the first time
-	 */
-	private initialMemoryThreshold: number = 100;
+	/** To-space */
+	private toSpace: HeapItem[] = [];
 	/** Index of the next item to be scanned (that is, the next item to have its pointers updated) */
 	private scanPtr: number = 0;
 	/** Garbage collection state */
 	private state: GCState = GCState.Ready;
-	private toSpace: HeapItem[] = [];
+
+	/**
+	 * Number of values allocated
+	 *
+	 * (The sum total of values inside recently allocated heap items)
+	 *
+	 * This allows the garbage collector to determine how many items to scan at
+	 * once when performing incremental collection
+	 */
+	private sizeAllocated: number = 0;
 
 	/** Index of the next item to be allocated */
 	private get allocPtr(): number {
 		return this.toSpace.length;
-	}
-
-	private get shouldCollect(): boolean {
-		if (this.hasCollectedAtLeastOnce) {
-			// TODO
-		} else {
-			if (this.toSpace.length >= this.initialMemoryThreshold) return true;
-		}
-		return false;
 	}
 
 	/**
@@ -52,11 +49,12 @@ export class GarbageCollector {
 	 *
 	 * This will perform a little bit of incremental garbage collection
 	 *
-	 * @param value The value to place on the heap
+	 * @param values The values to place on the heap
 	 */
-	public alloc(value: RuntimeValue, roots: RuntimeValue[]): number {
+	public alloc(values: RuntimeValue[], roots: RuntimeValue[]): number {
 		const addr = this.allocPtr;
-		this.toSpace.push({ forwardAddr: undefined, values: [value] });
+		this.toSpace.push({ forwardAddr: undefined, values });
+		this.sizeAllocated += values.length;
 		this.collect(roots);
 		return addr;
 	}
@@ -75,6 +73,7 @@ export class GarbageCollector {
 				break;
 			case GCState.Scanning:
 				// Continue garbage collection
+				this.scan();
 				break;
 			case GCState.Finishing:
 				// Finish garbage collection
@@ -84,7 +83,12 @@ export class GarbageCollector {
 
 	private copy(fromSpaceIndex: number, fromSpace: HeapItem[]): number {
 		const oldItem = fromSpace[fromSpaceIndex];
-		// Create a copy of the old item
+		if (typeof oldItem.forwardAddr !== "undefined") {
+			// If item is already forwarded (meaning it is already copied), we
+			// should just return the forwarded address
+			return oldItem.forwardAddr;
+		}
+		// Create a copy of the item
 		const item: HeapItem = {
 			forwardAddr: undefined,
 			values: oldItem.values, // share array reference
@@ -92,24 +96,8 @@ export class GarbageCollector {
 		// Place it in to-space:
 		const addr = this.allocPtr;
 		this.toSpace.push(item);
-		// If the old item doesn't have a forwarding address...
-		if (typeof oldItem.forwardAddr === "undefined") {
-			// Set the forwarding address on the old one
-			oldItem.forwardAddr = addr;
-			//
-			// Recursively copy any pointers contained inside the cell
-			// for (let i = 0; i < item.values.length; i++) {
-			// 	const value = item.values[i];
-			// 	const index = value.value as number;
-			// 	if (value.isPointer) {
-			// 		// Replace old pointer with address of new value copied to heap
-			// 		item.values[i] = new RuntimeValue(
-			// 			RuntimeType.Pointer,
-			// 			this.copy(index, fromSpace)
-			// 		);
-			// 	}
-			// }
-		}
+		// Set the forwarding address on the old one
+		oldItem.forwardAddr = addr;
 		return addr;
 	}
 
@@ -147,5 +135,31 @@ export class GarbageCollector {
 
 		// Update state to the next state
 		this.state = GCState.Scanning;
+	}
+
+	private scan(): void {
+		while (this.sizeAllocated > 0 && this.scanPtr < this.allocPtr) {
+			// Keep scanning until we reach our scan limit, which is determined by
+			// the sum of recent allocation sizes
+			const item = this.toSpace[this.scanPtr];
+			for (let i = 0; i < item.values.length; i++) {
+				const value = item.values[i];
+				if (value.isPointer) {
+					// Item contains a pointer--copy the thing it is pointing to and
+					// update the pointer
+					item.values[i] = new RuntimeValue(
+						value.type,
+						this.copy(value.value as number, this.fromSpace)
+					);
+				}
+			}
+			// Reduce the size of recently allocated items by the size of the items
+			// we've scanned...large allocations take longer because the GC collects
+			// proportionally to the size of the allocation O(n) even though actually
+			// placing new items on the heap is O(1)
+			this.sizeAllocated -= item.values.length;
+		}
+		// If the scan pointer caught up to the alloc pointer, we are done scanning!
+		if (this.scanPtr >= this.allocPtr) this.state = GCState.Finishing;
 	}
 }
