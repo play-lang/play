@@ -252,6 +252,14 @@ export class Disassembler {
 					out += this.instrParam(op, ip, numLocals);
 					break;
 				}
+				// Collections
+				case OpCode.MakeList:
+				case OpCode.MakeSet:
+				case OpCode.MakeMap: {
+					const numItems = bytecode[p++];
+					this.instrParam(op, ip, numItems);
+					break;
+				}
 			}
 			ip = p;
 		} // for op of bytecode

@@ -1,9 +1,11 @@
 {
     "[markdown]": {
+        "editor.formatOnSave": true,
+        "editor.rulers": [
+            100
+        ],
         "editor.wordWrap": "bounded",
-        "editor.rulers": [100],
-        "editor.wordWrapColumn": 100,
-        "editor.formatOnSave": true
+        "editor.wordWrapColumn": 100
     },
     "cSpell.words": [
         "API's",
@@ -26,6 +28,9 @@
         "LESSEQUAL",
         "LESSTHAN",
         "LESSTHANEQUAL",
+        "MAKELIST",
+        "MAKEMAP",
+        "MAKESET",
         "Nystrom",
         "Parselets",
         "Ranta",
@@ -49,14 +54,14 @@
     "editor.rulers": [
         80
     ],
-    "editor.wordWrapColumn": 80,
     "editor.wordWrap": "off",
-    "typescript.preferences.importModuleSpecifier": "non-relative",
-    "typescript.tsdk": "./node_modules/typescript/lib",
+    "editor.wordWrapColumn": 80,
     "files.exclude": {
         "**/.classpath": true,
+        "**/.factorypath": true,
         "**/.project": true,
-        "**/.settings": true,
-        "**/.factorypath": true
-    }
+        "**/.settings": true
+    },
+    "typescript.preferences.importModuleSpecifier": "non-relative",
+    "typescript.tsdk": "./node_modules/typescript/lib"
 }
