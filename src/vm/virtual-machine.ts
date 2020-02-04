@@ -14,7 +14,7 @@ interface Performance {
 const defaultPerformance = { now: () => 0 };
 
 // Make constants for zero values since they are so widely used
-const Nil: RuntimeValue = new RuntimeValue(RuntimeType.Object, null);
+const Nil: RuntimeValue = new RuntimeValue(RuntimeType.Pointer, null);
 const Zero: RuntimeValue = new RuntimeValue(RuntimeType.Number, 0);
 const Blank: RuntimeValue = new RuntimeValue(RuntimeType.String, "");
 const True: RuntimeValue = new RuntimeValue(RuntimeType.Boolean, true);
@@ -356,6 +356,22 @@ export class VirtualMachine {
 						}
 						break;
 					}
+					// Collections
+					case OpCode.MakeList: {
+						const numItems = this.read();
+						for (
+							let i = this.stack.length - numItems;
+							i < this.stack.length;
+							i++
+						) {}
+						break;
+					}
+					case OpCode.MakeSet: {
+						break;
+					}
+					case OpCode.MakeMap: {
+						break;
+					}
 				}
 				// Return if we reached the end
 				if (this.ip >= this.bytecode.length) break;
@@ -474,7 +490,7 @@ export class VirtualMachine {
 				return value.value !== 0 && value.value !== -0;
 			case RuntimeType.String:
 				return value.value !== "";
-			case RuntimeType.Object:
+			case RuntimeType.Pointer:
 				return value.value !== null && value.value !== undefined;
 		}
 	}

@@ -353,7 +353,19 @@ export class TypeChecker {
 	}
 
 	private checkSetOrList(node: SetOrListNode): void {
-		// TODO: Check set/list collection type
+		if (node.members.length < 1) return;
+		const itemType = node.members[0].type(this.env);
+		for (let i = 1; i < node.members.length; i++) {
+			const type = node.members[i].type(this.env);
+			if (!itemType.equivalent(type)) {
+				this.mismatch(
+					node.members[i].token,
+					itemType,
+					type,
+					"for collection member"
+				);
+			}
+		}
 	}
 
 	private checkTernaryConditional(node: TernaryConditionalNode): void {
