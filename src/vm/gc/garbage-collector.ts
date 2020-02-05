@@ -20,14 +20,26 @@ enum GCState {
 }
 
 export class GarbageCollector {
+	/** Index of the next item to be allocated */
+	private get allocPtr(): number {
+		return this.toSpace.length;
+	}
 	/** From-space */
 	private fromSpace: HeapItem[] = [];
 	/** To-space */
 	private toSpace: HeapItem[] = [];
-	/** Index of the next item to be scanned (that is, the next item to have its pointers updated) */
+	/**
+	 * Index of the next item to be scanned (that is, the next item to have
+	 *  its pointers updated)
+	 */
 	private scanPtr: number = 0;
 	/** Garbage collection state */
 	private state: GCState = GCState.Ready;
+	/**
+	 * List of items that have already been scanned but have been updated by the
+	 * mutator while scanning
+	 */
+	private updated: Set<number> = new Set();
 
 	/**
 	 * Number of values allocated
@@ -39,17 +51,13 @@ export class GarbageCollector {
 	 */
 	private sizeAllocated: number = 0;
 
-	/** Index of the next item to be allocated */
-	private get allocPtr(): number {
-		return this.toSpace.length;
-	}
-
 	/**
 	 * Allocate a spot on the heap to store the specified data
 	 *
 	 * This will perform a little bit of incremental garbage collection
 	 *
 	 * @param values The values to place on the heap
+	 * @param roots The root set from the mutator
 	 */
 	public alloc(values: RuntimeValue[], roots: RuntimeValue[]): number {
 		const addr = this.allocPtr;
@@ -74,10 +82,79 @@ export class GarbageCollector {
 			case GCState.Scanning:
 				// Continue garbage collection
 				this.scan();
+				// If the scan pointer caught up to the alloc pointer and there's
+				// nothing else on the list of updated entries to re-scan, we are done
+				// scanning and copying!
+				if (this.scanPtr >= this.allocPtr && this.updated.size === 0) {
+					this.state = GCState.Finishing;
+				}
 				break;
 			case GCState.Finishing:
 				// Finish garbage collection
 				break;
+		}
+	}
+
+	/**
+	 * Should be called any time the mutator wants to read an index from the heap
+	 *
+	 * If the item at the specified index does not have a forwarding address,
+	 * it is copied into to-space
+	 *
+	 * @param index The index of the item to read
+	 */
+	public read(index: number): number {
+		if (!this.fromSpace[index]) {
+			throw new Error(
+				"Garbage collector cannot access heap at index " + index
+			);
+		}
+		if (typeof this.fromSpace[index].forwardAddr === "undefined") {
+			return this.copy(index, this.fromSpace);
+		}
+		return index;
+	}
+
+	public write(index: number, fieldIndex: number, value: RuntimeValue): void {
+		if (!value.isPointer) {
+			throw new Error(
+				"Garbage collector only handles pointers in the write barrier"
+			);
+		}
+		// Force the item we are mutating to be copied if it hasn't already
+		const itemAddr = this.read(index);
+		const item = this.toSpace[itemAddr];
+		if (!item) {
+			throw new Error(
+				"Garbage collector cannot access heap at resolved index " +
+					itemAddr +
+					" for index " +
+					index
+			);
+		}
+		const field = item.values[fieldIndex];
+		if (!field || !field.isPointer) {
+			throw new Error(
+				"Garbage collector cannot write to non-pointer field at field index " +
+					fieldIndex +
+					" at heap index " +
+					index +
+					" (resolved to " +
+					itemAddr +
+					")"
+			);
+		}
+		// The address of the item that is being pointed to
+		// If this item hasn't already been copied, it will be now
+		const destAddr = this.read(value.value);
+		// Update the pointer as requested
+		item.values[fieldIndex] = new RuntimeValue(field.type, destAddr);
+		if (itemAddr < this.scanPtr) {
+			// Item was mutated after it has already been scanned, add it to the
+			// list of items to be re-scanned
+			//
+			// This essentially prolongs the current garbage collection cycle
+			this.updated.add(itemAddr);
 		}
 	}
 
@@ -137,11 +214,15 @@ export class GarbageCollector {
 		this.state = GCState.Scanning;
 	}
 
+	/**
+	 * Scan however many objects are needed based on the sum of the sizes of
+	 * recent allocations and copy them as needed
+	 */
 	private scan(): void {
 		while (this.sizeAllocated > 0 && this.scanPtr < this.allocPtr) {
 			// Keep scanning until we reach our scan limit, which is determined by
 			// the sum of recent allocation sizes
-			const item = this.toSpace[this.scanPtr];
+			const item = this.toSpace[this.scanPtr++];
 			for (let i = 0; i < item.values.length; i++) {
 				const value = item.values[i];
 				if (value.isPointer) {
@@ -159,7 +240,5 @@ export class GarbageCollector {
 			// placing new items on the heap is O(1)
 			this.sizeAllocated -= item.values.length;
 		}
-		// If the scan pointer caught up to the alloc pointer, we are done scanning!
-		if (this.scanPtr >= this.allocPtr) this.state = GCState.Finishing;
 	}
 }
