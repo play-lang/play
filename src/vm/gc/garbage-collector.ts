@@ -14,7 +14,7 @@ enum GCState {
 	/** Scanning and copying items */
 	Scanning,
 	/** Cleaning up */
-	Finishing,
+	Finished,
 }
 
 export class GarbageCollector {
@@ -84,11 +84,13 @@ export class GarbageCollector {
 				// nothing else on the list of updated entries to re-scan, we are done
 				// scanning and copying!
 				if (this.scanPtr >= this.allocPtr && this.updated.size === 0) {
-					this.state = GCState.Finishing;
+					this.state = GCState.Finished;
 				}
 				break;
-			case GCState.Finishing:
+			case GCState.Finished:
 				// Finish garbage collection
+				// On the next run, we will start scanning
+				this.state = GCState.Ready;
 				break;
 		}
 	}
@@ -107,8 +109,8 @@ export class GarbageCollector {
 				"Garbage collector cannot access heap at index " + index
 			);
 		}
-		if (typeof this.fromSpace[index].forwardAddr === "undefined") {
-			return this.copy(index, this.fromSpace);
+		if (!this.isForwarded(this.fromSpace[index])) {
+			return this.copy(index);
 		}
 		return index;
 	}
@@ -157,12 +159,12 @@ export class GarbageCollector {
 		}
 	}
 
-	private copy(fromSpaceIndex: number, fromSpace: HeapItem[]): number {
-		const oldItem = fromSpace[fromSpaceIndex];
-		if (typeof oldItem.forwardAddr !== "undefined") {
+	private copy(fromSpaceIndex: number): number {
+		const oldItem = this.fromSpace[fromSpaceIndex];
+		if (this.isForwarded(oldItem)) {
 			// If item is already forwarded (meaning it is already copied), we
 			// should just return the forwarded address
-			return oldItem.forwardAddr;
+			return oldItem.forwardAddr as number;
 		}
 		// Create a copy of the item
 		const item: HeapItem = {
@@ -195,7 +197,7 @@ export class GarbageCollector {
 				// located in to-space:
 				roots[i] = new RuntimeValue(
 					root.type,
-					this.copy(root.value as number, this.fromSpace)
+					this.copy(root.value as number)
 				);
 			}
 		}
@@ -245,12 +247,17 @@ export class GarbageCollector {
 					// update the pointer
 					item.values[i] = new RuntimeValue(
 						value.type,
-						this.copy(value.value as number, this.fromSpace)
+						this.copy(value.value as number)
 					);
 				}
 			}
 			// Decrease how many items we need to scan
 			this.numToScan -= 1;
 		}
+	}
+
+	/** True if the specified heap item has a forwarding address */
+	private isForwarded(item: HeapItem): boolean {
+		return typeof item.forwardAddr !== "undefined";
 	}
 }
