@@ -74,7 +74,7 @@ export class GarbageCollector {
 	public collect(roots: RuntimeValue[]): void {
 		switch (this.state) {
 			case GCState.Ready:
-				// Start garbage collection
+				// Start garbage collection by scanning the roots
 				this.startCollecting(roots);
 				break;
 			case GCState.Scanning:
@@ -89,19 +89,22 @@ export class GarbageCollector {
 				break;
 			case GCState.Finished:
 				// Finish garbage collection
-				// On the next run, we will start scanning
+				// On the next run, we will start scanning the roots
 				this.state = GCState.Ready;
 				break;
 		}
 	}
 
 	/**
+	 * Read barrier
+	 *
 	 * Should be called any time the mutator wants to read an index from the heap
 	 *
 	 * If the item at the specified index does not have a forwarding address,
 	 * it is copied into to-space
 	 *
 	 * @param index The index of the item to read
+	 * @returns The index of the item in to-space, for your convenience
 	 */
 	public read(index: number): number {
 		if (!this.fromSpace[index]) {
@@ -115,6 +118,16 @@ export class GarbageCollector {
 		return index;
 	}
 
+	/**
+	 * Write barrier
+	 *
+	 * Should be called whenever the mutator wants to update a pointer
+	 * inside a heap item
+	 *
+	 * @param index The index of the item in from-space
+	 * @param fieldIndex The index of the child pointer inside the heap item
+	 * @param value The new pointer value
+	 */
 	public write(index: number, fieldIndex: number, value: RuntimeValue): void {
 		if (!value.isPointer) {
 			throw new Error(
@@ -159,6 +172,11 @@ export class GarbageCollector {
 		}
 	}
 
+	/**
+	 * Copies a single item from from-space to to-space (if it is not already
+	 * copied to to-space) and returns the address of the item in to-space
+	 * @param fromSpaceIndex The index of the item to copy in from-space
+	 */
 	private copy(fromSpaceIndex: number): number {
 		const oldItem = this.fromSpace[fromSpaceIndex];
 		if (this.isForwarded(oldItem)) {
@@ -187,9 +205,13 @@ export class GarbageCollector {
 	 * @param roots The mutator roots--these will be updated accordingly
 	 */
 	private flip(roots: RuntimeValue[]): void {
+		// From-space is assigned to be to-space, deleting all the junk that was in
+		// from-space
 		this.fromSpace = this.toSpace;
+		// To-space is reset to be free space
 		this.toSpace = [];
 		this.scanPtr = 0;
+		// Copy all of the roots
 		for (let i = 0; i < roots.length; i++) {
 			const root = roots[i];
 			if (root.isPointer) {
