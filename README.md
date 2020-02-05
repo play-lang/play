@@ -88,3 +88,5 @@ Play would not be possible without the following resources:
 - *[Crafting Interpreters](https://craftinginterpreters.com/)* by Bob Nystrom
 - *[Pratt Parsing: Expression Parsing Made Easy](https://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/)* by Bob Nystrom
 - *[Lecture 7: Type Checking](http://www.cse.chalmers.se/edu/year/2015/course/DAT150/lectures/proglang-07.html)* by Aarne Ranta
+- *[Copying Garbage Collection](https://www.cs.cornell.edu/courses/cs312/2003fa/lectures/sec24.htm)*
+- *[Incremental Garbage Collection I](https://pdfs.semanticscholar.org/df04/221d00a5cca903f59f33c06992bedc1d0ba5.pdf)* by Christian Wirth

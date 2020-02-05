@@ -1,7 +1,5 @@
 import { RuntimeValue } from "src/vm/runtime-value";
 
-// https://www.cs.cornell.edu/courses/cs312/2003fa/lectures/sec24.htm
-
 export interface HeapItem {
 	/** Array of values contained in this heap item cell */
 	readonly values: RuntimeValue[];
@@ -42,14 +40,13 @@ export class GarbageCollector {
 	private updated: Set<number> = new Set();
 
 	/**
-	 * Number of values allocated
+	 * Number of items that the garbage collector thinks should be scanned
 	 *
-	 * (The sum total of values inside recently allocated heap items)
+	 * As various writes and allocations are performed this number is increased
 	 *
-	 * This allows the garbage collector to determine how many items to scan at
-	 * once when performing incremental collection
+	 * As garbage is copied, compacted, and scanned, this number is decreased
 	 */
-	private sizeAllocated: number = 0;
+	private numToScan: number = 0;
 
 	/**
 	 * Allocate a spot on the heap to store the specified data
@@ -62,7 +59,8 @@ export class GarbageCollector {
 	public alloc(values: RuntimeValue[], roots: RuntimeValue[]): number {
 		const addr = this.allocPtr;
 		this.toSpace.push({ forwardAddr: undefined, values });
-		this.sizeAllocated += values.length;
+		// Scan 2 items for every item allocated?
+		this.numToScan += 2;
 		this.collect(roots);
 		return addr;
 	}
@@ -155,6 +153,7 @@ export class GarbageCollector {
 			//
 			// This essentially prolongs the current garbage collection cycle
 			this.updated.add(itemAddr);
+			this.numToScan += 2;
 		}
 	}
 
@@ -219,10 +218,26 @@ export class GarbageCollector {
 	 * recent allocations and copy them as needed
 	 */
 	private scan(): void {
-		while (this.sizeAllocated > 0 && this.scanPtr < this.allocPtr) {
-			// Keep scanning until we reach our scan limit, which is determined by
-			// the sum of recent allocation sizes
-			const item = this.toSpace[this.scanPtr++];
+		// Keep scanning until we reach our scan limit
+		while (
+			this.numToScan > 0 &&
+			(this.scanPtr < this.allocPtr || this.updated.size > 0)
+		) {
+			// Find the address of the next item to scan
+			//
+			// This will come either from the next item after the scan pointer
+			// OR an item from the set of updated items (the items that were updated
+			// after they were scanned but before garbage collection completed)
+			const addr =
+				this.scanPtr < this.allocPtr
+					? this.scanPtr++
+					: (this.updated.values().next().value as number);
+			// Grab item at the specified address
+			const item: HeapItem = this.toSpace[addr];
+			// If that address existed in our updated items list to scan, we
+			// can go ahead and remove it since it is being scanned
+			if (this.updated.has(addr)) this.updated.delete(addr);
+			// Scan each field in the item
 			for (let i = 0; i < item.values.length; i++) {
 				const value = item.values[i];
 				if (value.isPointer) {
@@ -234,11 +249,8 @@ export class GarbageCollector {
 					);
 				}
 			}
-			// Reduce the size of recently allocated items by the size of the items
-			// we've scanned...large allocations take longer because the GC collects
-			// proportionally to the size of the allocation O(n) even though actually
-			// placing new items on the heap is O(1)
-			this.sizeAllocated -= item.values.length;
+			// Decrease how many items we need to scan
+			this.numToScan -= 1;
 		}
 	}
 }
