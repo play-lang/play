@@ -2,7 +2,7 @@ import { RuntimeValue } from "src/vm/runtime-value";
 
 export interface HeapItem {
 	/** Array of values contained in this heap item cell */
-	readonly values: RuntimeValue[];
+	values: RuntimeValue[];
 
 	/** Index of the heap item in to-space */
 	forwardAddr: number | undefined;
@@ -17,6 +17,9 @@ enum GCState {
 	Finished,
 }
 
+/**
+ * A simple conservative, incremental copying/compacting garbage collector
+ */
 export class GarbageCollector {
 	/** Index of the next item to be allocated */
 	private get allocPtr(): number {
@@ -119,16 +122,23 @@ export class GarbageCollector {
 	}
 
 	/**
-	 * Write barrier
+	 * Update a field containing a pointer within the specified heap item
 	 *
 	 * Should be called whenever the mutator wants to update a pointer
 	 * inside a heap item
+	 *
+	 * This will copy the heap item and preserve it for another garbage collection
+	 * cycle
 	 *
 	 * @param index The index of the item in from-space
 	 * @param fieldIndex The index of the child pointer inside the heap item
 	 * @param value The new pointer value
 	 */
-	public write(index: number, fieldIndex: number, value: RuntimeValue): void {
+	public update(
+		index: number,
+		fieldIndex: number,
+		value: RuntimeValue
+	): void {
 		if (!value.isPointer) {
 			throw new Error(
 				"Garbage collector only handles pointers in the write barrier"
@@ -169,6 +179,97 @@ export class GarbageCollector {
 			// This essentially prolongs the current garbage collection cycle
 			this.updated.add(itemAddr);
 			this.numToScan += 2;
+		}
+	}
+
+	/**
+	 * Remove field(s) from the heap item at the specified index
+	 *
+	 * This will copy the heap item and preserve it for another garbage collection
+	 * cycle
+	 * @param index Heap item index
+	 * @param fieldIndex Index of the field to remove from the heap item
+	 * @param numToRemove The number of fields to remove, starting at `fieldIndex`
+	 */
+	public remove(
+		index: number,
+		fieldIndex: number,
+		numToRemove: number = 1
+	): void {
+		const itemAddr = this.read(index);
+		const item = this.toSpace[itemAddr];
+		if (!item) {
+			throw new Error(
+				"Garbage collector cannot access heap at resolved index " +
+					itemAddr +
+					" for index " +
+					index
+			);
+		}
+		if (fieldIndex < 0 || fieldIndex > item.values.length - 1) {
+			throw new Error(
+				"Garbage collector cannot delete out of bounds index range " +
+					fieldIndex +
+					" for item with index " +
+					index +
+					" (resolved " +
+					itemAddr +
+					")"
+			);
+		}
+		// Perform the splice:
+		item.values = [
+			...item.values.slice(0, fieldIndex),
+			...item.values.slice(fieldIndex + numToRemove),
+		];
+	}
+
+	/**
+	 * Insert a field inside the specified heap item
+	 *
+	 * This will copy the heap item and preserve it for another garbage collection
+	 * cycle
+	 * @param index
+	 * @param fieldIndex
+	 */
+	public insert(
+		index: number,
+		fieldIndex: number,
+		values: RuntimeValue[]
+	): void {
+		if (values.length < 1) return;
+		const itemAddr = this.read(index);
+		const item = this.toSpace[itemAddr];
+		if (!item) {
+			throw new Error(
+				"Garbage collector cannot access heap at resolved index " +
+					itemAddr +
+					" for index " +
+					index
+			);
+		}
+		if (fieldIndex < 0 || fieldIndex > item.values.length - 1) {
+			throw new Error(
+				"Garbage collector cannot delete out of bounds index range " +
+					fieldIndex +
+					" for item with index " +
+					index +
+					" (resolved " +
+					itemAddr +
+					")"
+			);
+		}
+		// Add however many values we are inserting as empty elements
+		item.values = [
+			...item.values.slice(0, fieldIndex),
+			...new Array(values.length),
+			...item.values.slice(fieldIndex + 1),
+		];
+		// Go through each of the empty elements and update its value, which will
+		// perform the appropriate garbage collection steps
+		let v = 0;
+		for (let i = fieldIndex; i < values.length; i++) {
+			this.update(index, i, values[v++]);
 		}
 	}
 
