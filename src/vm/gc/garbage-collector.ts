@@ -63,6 +63,13 @@ export class GarbageCollector {
 	 */
 	private numToScan: number = 0;
 
+	/**
+	 * Heap
+	 */
+	public get heap(): HeapItem[] {
+		return this.toSpace;
+	}
+
 	constructor(
 		/** Current size of the heap */
 		public readonly heapSize: number = GCSettings.defaultHeapSize
@@ -110,6 +117,19 @@ export class GarbageCollector {
 	public collectIfNeeded(roots: RuntimeValue[]): void {
 		if (this.state === GCState.Idle) return;
 		this.collect(roots);
+	}
+
+	public collectAll(roots: RuntimeValue[]): void {
+		// Finish the current garbage collection cycle
+		while (this.state !== GCState.Idle) {
+			this.collect(roots);
+		}
+		// Start the next garbage collection cycle
+		this.collect(roots);
+		// Finish the fresh garbage collection cycle
+		while (this.state !== GCState.Idle) {
+			this.collect(roots);
+		}
 	}
 
 	/**
