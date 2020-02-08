@@ -54,10 +54,10 @@ describe("garbage collector", () => {
 		});
 		test("circular references", () => {
 			const gc = new GarbageCollector({ heapSize: 3 });
-			const v1 = new RuntimeValue(RuntimeType.Pointer, null);
-			const a1 = gc.alloc([v1], []);
-			const v2 = new RuntimeValue(RuntimeType.Pointer, a1);
-			const a2 = gc.alloc([v2], mRoots(a1));
+			const p1 = new RuntimeValue(RuntimeType.Pointer, null);
+			const a1 = gc.alloc([p1], []);
+			const p2 = new RuntimeValue(RuntimeType.Pointer, a1);
+			const a2 = gc.alloc([p2], mRoots(a1));
 			// Update the first value to point to the second value to create
 			// a circular reference
 			gc.update(a1, 0, new RuntimeValue(RuntimeType.Pointer, a2));
@@ -76,10 +76,10 @@ describe("garbage collector", () => {
 		});
 		test("circular reference destroyed", () => {
 			const gc = new GarbageCollector({ heapSize: 3 });
-			const v1 = new RuntimeValue(RuntimeType.Pointer, null);
-			const a1 = gc.alloc([v1], []);
-			const v2 = new RuntimeValue(RuntimeType.Pointer, a1);
-			const a2 = gc.alloc([v2], mRoots(a1));
+			const p1 = new RuntimeValue(RuntimeType.Pointer, null);
+			const a1 = gc.alloc([p1], []);
+			const p2 = new RuntimeValue(RuntimeType.Pointer, a1);
+			const a2 = gc.alloc([p2], mRoots(a1));
 			// Update the first value to point to the second value to create
 			// a circular reference
 			gc.update(a1, 0, new RuntimeValue(RuntimeType.Pointer, a2));
