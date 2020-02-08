@@ -3,7 +3,6 @@ import { RuntimeValue } from "src/vm/runtime-value";
 export interface HeapItem {
 	/** Array of values contained in this heap item cell */
 	values: RuntimeValue[];
-
 	/** Index of the heap item in to-space */
 	forwardAddr: number | undefined;
 }
@@ -21,6 +20,13 @@ interface GCConfig {
 /** Garbage collector initialization options */
 export type GCInitConfig = Partial<GCConfig>;
 
+/** Default garbage collector settings */
+const GCDefaults: GCConfig = {
+	heapSize: 1024,
+	numScanPerAlloc: 2,
+	numScanPerUpdate: 2,
+};
+
 enum GCState {
 	/** Garbage collection is finished or has never been started */
 	Starting,
@@ -29,13 +35,6 @@ enum GCState {
 	/** Cleaning up */
 	Idle,
 }
-
-/** Default garbage collector settings */
-const GCDefaults: GCConfig = {
-	heapSize: 1024,
-	numScanPerAlloc: 2,
-	numScanPerUpdate: 2,
-};
 
 /**
  * A simple conservative, incremental copying/compacting garbage collector
