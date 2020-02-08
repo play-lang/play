@@ -90,8 +90,11 @@ export class GarbageCollector {
 			// There isn't any room left on the heap
 			//
 			// Start or continue garbage collection:
-			startedCollection = true;
-			this.collect(roots);
+			if (this.state === GCState.Idle) {
+				startedCollection = true;
+				this.state = GCState.Starting;
+				this.collect(roots); // Copy roots
+			}
 			// This has the (unfortunate) side-effect of creating floating garbage
 			//
 			// Even though this heap item may not live very long, it will be kept
@@ -120,13 +123,13 @@ export class GarbageCollector {
 	}
 
 	public collectAll(roots: RuntimeValue[]): void {
-		// Finish the current garbage collection cycle
+		// Finish any current garbage collection cycle
 		while (this.state !== GCState.Idle) {
 			this.collect(roots);
 		}
 		// Start the next garbage collection cycle
 		this.collect(roots);
-		// Finish the fresh garbage collection cycle
+		// Finish the garbage collection cycle we just started
 		while (this.state !== GCState.Idle) {
 			this.collect(roots);
 		}
