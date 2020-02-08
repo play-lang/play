@@ -15,4 +15,9 @@ export class RuntimeValue {
 	public get isPointer(): boolean {
 		return this.type === RuntimeType.Pointer;
 	}
+
+	/** Create a copy of the runtime value */
+	public copy(): RuntimeValue {
+		return new RuntimeValue(this.type, this.value);
+	}
 }

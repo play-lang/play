@@ -1,3 +1,4 @@
+import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";
 
 export interface HeapItem {
@@ -162,7 +163,10 @@ export class GarbageCollector {
 				// If the scan pointer caught up to the alloc pointer and there's
 				// nothing else on the list of updated entries to re-scan, we are done
 				// scanning and copying!
-				if (this.scanPtr >= this.allocPtr && this.updated.size === 0) {
+				if (
+					this.scanPtr >= this.allocPtr - 1 &&
+					this.updated.size === 0
+				) {
 					this.state = GCState.Idle;
 				}
 				break;
@@ -181,19 +185,22 @@ export class GarbageCollector {
 	 * If the item at the specified index does not have a forwarding address,
 	 * it is copied into to-space
 	 *
-	 * @param index The index of the item to read
+	 * @param addr The address of the heap item
 	 * @returns The index of the item in to-space, for your convenience
 	 */
-	public read(index: number): number {
-		if (!this.fromSpace[index]) {
-			throw new Error(
-				"Garbage collector cannot access heap at index " + index
-			);
+	public read(addr: number): number {
+		if (!this.fromSpace[addr]) {
+			if (!this.toSpace[addr]) {
+				throw new Error(
+					"Garbage collector cannot access heap at index " + addr
+				);
+			}
+			return addr;
 		}
-		if (!this.isForwarded(this.fromSpace[index])) {
-			return this.copy(index);
+		if (!this.isForwarded(this.fromSpace[addr])) {
+			return this.copy(addr);
 		}
-		return index;
+		return addr;
 	}
 
 	/**
@@ -205,48 +212,46 @@ export class GarbageCollector {
 	 * This will copy the heap item and preserve it for another garbage collection
 	 * cycle
 	 *
-	 * @param index The index of the item in from-space
-	 * @param fieldIndex The index of the child pointer inside the heap item
+	 * @param addr The address of the heap item
+	 * @param fieldIndex The index of the child value inside the heap item
 	 * @param value The new pointer value
 	 */
-	public update(
-		index: number,
-		fieldIndex: number,
-		value: RuntimeValue
-	): void {
-		if (!value.isPointer) {
-			throw new Error(
-				"Garbage collector only handles pointers in the write barrier"
-			);
-		}
+	public update(addr: number, fieldIndex: number, value: RuntimeValue): void {
 		// Force the item we are mutating to be copied if it hasn't already
-		const itemAddr = this.read(index);
+		const itemAddr = this.read(addr);
 		const item = this.toSpace[itemAddr];
 		if (!item) {
 			throw new Error(
 				"Garbage collector cannot access heap at resolved index " +
 					itemAddr +
 					" for index " +
-					index
+					addr
 			);
 		}
 		const field = item.values[fieldIndex];
-		if (!field || !field.isPointer) {
+		if (!field) {
 			throw new Error(
-				"Garbage collector cannot write to non-pointer field at field index " +
+				"Garbage collector cannot write to non-existent field at field index " +
 					fieldIndex +
 					" at heap index " +
-					index +
+					addr +
 					" (resolved to " +
 					itemAddr +
 					")"
 			);
 		}
-		// The address of the item that is being pointed to
-		// If this item hasn't already been copied, it will be now
-		const destAddr = this.read(value.value);
-		// Update the pointer as requested
-		item.values[fieldIndex] = new RuntimeValue(field.type, destAddr);
+		if (value.isPointer) {
+			// The address of the item that is being pointed to
+			// If this item hasn't already been copied, it will be now
+			const destAddr = this.read(value.value);
+			// Update the pointer as requested
+			item.values[fieldIndex] = new RuntimeValue(
+				RuntimeType.Pointer,
+				destAddr
+			);
+		} else {
+			item.values[fieldIndex] = value.copy();
+		}
 		if (itemAddr < this.scanPtr) {
 			// Item was mutated after it has already been scanned, add it to the
 			// list of items to be re-scanned
@@ -263,23 +268,23 @@ export class GarbageCollector {
 	 *
 	 * This will copy the heap item and preserve it for another garbage collection
 	 * cycle
-	 * @param index Heap item index
+	 * @param addr The address of the heap item
 	 * @param fieldIndex Index of the field to remove from the heap item
 	 * @param numToRemove The number of fields to remove, starting at `fieldIndex`
 	 */
 	public remove(
-		index: number,
+		addr: number,
 		fieldIndex: number,
 		numToRemove: number = 1
 	): void {
-		const itemAddr = this.read(index);
+		const itemAddr = this.read(addr);
 		const item = this.toSpace[itemAddr];
 		if (!item) {
 			throw new Error(
 				"Garbage collector cannot access heap at resolved index " +
 					itemAddr +
 					" for index " +
-					index
+					addr
 			);
 		}
 		if (fieldIndex < 0 || fieldIndex > item.values.length - 1) {
@@ -287,7 +292,7 @@ export class GarbageCollector {
 				"Garbage collector cannot delete out of bounds index range " +
 					fieldIndex +
 					" for item with index " +
-					index +
+					addr +
 					" (resolved " +
 					itemAddr +
 					")"
@@ -305,23 +310,24 @@ export class GarbageCollector {
 	 *
 	 * This will copy the heap item and preserve it for another garbage collection
 	 * cycle
-	 * @param index
-	 * @param fieldIndex
+	 * @param addr The address of the heap item
+	 * @param fieldIndex The index of the child value inside the heap item that
+	 * will become the index for the first of the inserted values
 	 */
 	public insert(
-		index: number,
+		addr: number,
 		fieldIndex: number,
 		values: RuntimeValue[]
 	): void {
 		if (values.length < 1) return;
-		const itemAddr = this.read(index);
+		const itemAddr = this.read(addr);
 		const item = this.toSpace[itemAddr];
 		if (!item) {
 			throw new Error(
 				"Garbage collector cannot access heap at resolved index " +
 					itemAddr +
 					" for index " +
-					index
+					addr
 			);
 		}
 		if (fieldIndex < 0 || fieldIndex > item.values.length - 1) {
@@ -329,7 +335,7 @@ export class GarbageCollector {
 				"Garbage collector cannot delete out of bounds index range " +
 					fieldIndex +
 					" for item with index " +
-					index +
+					addr +
 					" (resolved " +
 					itemAddr +
 					")"
@@ -345,7 +351,7 @@ export class GarbageCollector {
 		// perform the appropriate garbage collection steps
 		let v = 0;
 		for (let i = fieldIndex; i < values.length; i++) {
-			this.update(index, i, values[v++]);
+			this.update(addr, i, values[v++]);
 		}
 	}
 
@@ -365,10 +371,10 @@ export class GarbageCollector {
 	/**
 	 * Copies a single item from from-space to to-space (if it is not already
 	 * copied to to-space) and returns the address of the item in to-space
-	 * @param fromSpaceIndex The index of the item to copy in from-space
+	 * @param fromSpaceAddr The address of the item to copy in from-space
 	 */
-	private copy(fromSpaceIndex: number): number {
-		const oldItem = this.fromSpace[fromSpaceIndex];
+	private copy(fromSpaceAddr: number): number {
+		const oldItem = this.fromSpace[fromSpaceAddr];
 		if (this.isForwarded(oldItem)) {
 			// If item is already forwarded (meaning it is already copied), we
 			// should just return the forwarded address
