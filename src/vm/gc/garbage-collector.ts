@@ -8,6 +8,19 @@ export interface HeapItem {
 	forwardAddr: number | undefined;
 }
 
+/** Garbage collector configuration */
+interface GCConfig {
+	/** Garbage collector heap size */
+	heapSize: number;
+	/** Number of items to scan for every item allocated */
+	numScanPerAlloc: number;
+	/** Number of items to scan for every item updated */
+	numScanPerUpdate: number;
+}
+
+/** Garbage collector initialization options */
+export type GCInitConfig = Partial<GCConfig>;
+
 enum GCState {
 	/** Garbage collection is finished or has never been started */
 	Starting,
@@ -17,17 +30,10 @@ enum GCState {
 	Idle,
 }
 
-/**
- * Default garbage collector settings
- *
- * These may be tuned as needed
- */
-const GCSettings = {
-	/** The default heap size if none is specified */
-	defaultHeapSize: 1024,
-	/** The number of items on the heap to scan for every item allocated */
+/** Default garbage collector settings */
+const GCDefaults: GCConfig = {
+	heapSize: 1024,
 	numScanPerAlloc: 2,
-	/** The number of items on the heap to scan for every updated item */
 	numScanPerUpdate: 2,
 };
 
@@ -63,6 +69,9 @@ export class GarbageCollector {
 	 */
 	private numToScan: number = 0;
 
+	/** Garbage collector settings */
+	private config: GCConfig;
+
 	/**
 	 * Heap
 	 */
@@ -70,10 +79,9 @@ export class GarbageCollector {
 		return this.toSpace;
 	}
 
-	constructor(
-		/** Current size of the heap */
-		public readonly heapSize: number = GCSettings.defaultHeapSize
-	) {}
+	constructor(settings?: GCInitConfig) {
+		this.config = { ...GCDefaults, ...settings };
+	}
 
 	/**
 	 * Allocate a spot on the heap to store the specified data
@@ -86,7 +94,7 @@ export class GarbageCollector {
 	public alloc(values: RuntimeValue[], roots: RuntimeValue[]): number {
 		let startedCollection = false;
 		let addr: number;
-		if (this.allocPtr > this.heapSize - 1) {
+		if (this.allocPtr > this.config.heapSize - 1) {
 			// There isn't any room left on the heap
 			//
 			// Start or continue garbage collection:
@@ -105,7 +113,7 @@ export class GarbageCollector {
 			this.toSpace.push({ forwardAddr: undefined, values });
 		}
 		// Increase the amount of things we need to scan:
-		this.incNumToScan(GCSettings.numScanPerAlloc);
+		this.incNumToScan(this.config.numScanPerAlloc);
 		// Do a little bit of garbage collection if we haven't already started
 		if (!startedCollection) {
 			this.collectIfNeeded(roots);
@@ -247,7 +255,7 @@ export class GarbageCollector {
 			// This essentially prolongs the current garbage collection cycle
 			this.updated.add(itemAddr);
 			// Increase the amount of things we need to scan
-			this.incNumToScan(GCSettings.numScanPerUpdate);
+			this.incNumToScan(this.config.numScanPerUpdate);
 		}
 	}
 
@@ -350,9 +358,9 @@ export class GarbageCollector {
 	private incNumToScan(amount: number): void {
 		const willBeScanned = this.scanPtr + this.numToScan;
 		this.numToScan +=
-			willBeScanned + amount <= this.heapSize
+			willBeScanned + amount <= this.config.heapSize
 				? amount
-				: Math.max(this.heapSize - willBeScanned, 0);
+				: Math.max(this.config.heapSize - willBeScanned, 0);
 	}
 
 	/**
@@ -386,7 +394,7 @@ export class GarbageCollector {
 		};
 		// Place it in to-space:
 		const addr = this.allocPtr++;
-		if (addr >= this.heapSize) throw new Error("Out of memory");
+		if (addr >= this.config.heapSize) throw new Error("Out of memory");
 		this.toSpace.push(item);
 		return addr;
 	}

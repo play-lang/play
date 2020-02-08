@@ -31,7 +31,7 @@ describe("garbage collector", () => {
 		});
 		test("allocate with limited space", () => {
 			// Garbage collector with a tiny heap size of 3
-			const gc = new GarbageCollector(3);
+			const gc = new GarbageCollector({ heapSize: 3 });
 			const a1 = gc.alloc([v1], []);
 			const a2 = gc.alloc([v2], mRoots(a1));
 			const a3 = gc.alloc([v3], mRoots(a1, a2));
@@ -42,7 +42,7 @@ describe("garbage collector", () => {
 		});
 		test("allocate with not enough space", () => {
 			// Garbage collector with a tiny heap size of 3
-			const gc = new GarbageCollector(3);
+			const gc = new GarbageCollector({ heapSize: 3 });
 			const a1 = gc.alloc([v1], []);
 			const a2 = gc.alloc([v2], mRoots(a1));
 			const a3 = gc.alloc([v3], mRoots(a1, a2));
