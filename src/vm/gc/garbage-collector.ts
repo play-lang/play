@@ -10,21 +10,33 @@ export interface HeapItem {
 
 enum GCState {
 	/** Garbage collection is finished or has never been started */
-	Ready,
+	Starting,
 	/** Scanning and copying items */
 	Scanning,
 	/** Cleaning up */
-	Finished,
+	Idle,
 }
+
+/**
+ * Default garbage collector settings
+ *
+ * These may be tuned as needed
+ */
+const GCSettings = {
+	/** The default heap size if none is specified */
+	defaultHeapSize: 1024,
+	/** The number of items on the heap to scan for every item allocated */
+	numScanPerAlloc: 2,
+	/** The number of items on the heap to scan for every updated item */
+	numScanPerUpdate: 2,
+};
 
 /**
  * A simple conservative, incremental copying/compacting garbage collector
  */
 export class GarbageCollector {
 	/** Index of the next item to be allocated */
-	private get allocPtr(): number {
-		return this.toSpace.length;
-	}
+	private allocPtr: number = 0;
 	/** From-space */
 	private fromSpace: HeapItem[] = [];
 	/** To-space */
@@ -35,7 +47,7 @@ export class GarbageCollector {
 	 */
 	private scanPtr: number = 0;
 	/** Garbage collection state */
-	private state: GCState = GCState.Ready;
+	private state: GCState = GCState.Idle;
 	/**
 	 * List of items that have already been scanned but have been updated by the
 	 * mutator while scanning
@@ -51,6 +63,11 @@ export class GarbageCollector {
 	 */
 	private numToScan: number = 0;
 
+	constructor(
+		/** Current size of the heap */
+		public readonly heapSize: number = GCSettings.defaultHeapSize
+	) {}
+
 	/**
 	 * Allocate a spot on the heap to store the specified data
 	 *
@@ -60,25 +77,54 @@ export class GarbageCollector {
 	 * @param roots The root set from the mutator
 	 */
 	public alloc(values: RuntimeValue[], roots: RuntimeValue[]): number {
-		const addr = this.allocPtr;
-		this.toSpace.push({ forwardAddr: undefined, values });
-		// Scan 2 items for every item allocated?
-		this.numToScan += 2;
-		this.collect(roots);
+		let startedCollection = false;
+		let addr: number;
+		if (this.allocPtr > this.heapSize - 1) {
+			// There isn't any room left on the heap
+			//
+			// Start or continue garbage collection:
+			startedCollection = true;
+			this.collect(roots);
+			// This has the (unfortunate) side-effect of creating floating garbage
+			//
+			// Even though this heap item may not live very long, it will be kept
+			// around until the next garbage collection cycle
+			addr = this.copyIntoToSpace(values);
+		} else {
+			addr = this.allocPtr++;
+			this.toSpace.push({ forwardAddr: undefined, values });
+		}
+		// Increase the amount of things we need to scan:
+		this.incNumToScan(GCSettings.numScanPerAlloc);
+		// Do a little bit of garbage collection if we haven't already started
+		if (!startedCollection) {
+			this.collectIfNeeded(roots);
+		}
 		return addr;
 	}
 
 	/**
-	 * Collect a little bit of garbage
+	 * Run the garbage collector only if it isn't idle
+	 * @param roots The mutator roots
+	 */
+	public collectIfNeeded(roots: RuntimeValue[]): void {
+		if (this.state === GCState.Idle) return;
+		this.collect(roots);
+	}
+
+	/**
+	 * Start garbage collection if a cycle is not already underway
 	 *
-	 * This examines the garbage collection state and performs a little bit of
-	 * incremental garbage collection
+	 * If a garbage collection cycle is active, this will attempt to collect a
+	 * little bit of garbage as part of the incremental collection process
 	 */
 	public collect(roots: RuntimeValue[]): void {
 		switch (this.state) {
-			case GCState.Ready:
+			case GCState.Starting:
 				// Start garbage collection by scanning the roots
 				this.startCollecting(roots);
+				// Roots are copied so we move to the scan state
+				this.state = GCState.Scanning;
 				break;
 			case GCState.Scanning:
 				// Continue garbage collection
@@ -87,13 +133,12 @@ export class GarbageCollector {
 				// nothing else on the list of updated entries to re-scan, we are done
 				// scanning and copying!
 				if (this.scanPtr >= this.allocPtr && this.updated.size === 0) {
-					this.state = GCState.Finished;
+					this.state = GCState.Idle;
 				}
 				break;
-			case GCState.Finished:
-				// Finish garbage collection
-				// On the next run, we will start scanning the roots
-				this.state = GCState.Ready;
+			case GCState.Idle:
+				// Start garbage collecting!
+				this.state = GCState.Starting;
 				break;
 		}
 	}
@@ -178,7 +223,8 @@ export class GarbageCollector {
 			//
 			// This essentially prolongs the current garbage collection cycle
 			this.updated.add(itemAddr);
-			this.numToScan += 2;
+			// Increase the amount of things we need to scan
+			this.incNumToScan(GCSettings.numScanPerUpdate);
 		}
 	}
 
@@ -274,6 +320,19 @@ export class GarbageCollector {
 	}
 
 	/**
+	 * Increase the number of items we need to scan by the specified amount
+	 * or however many items are left in the heap
+	 * @param amount The amount to increase the number of items to scan by
+	 */
+	private incNumToScan(amount: number): void {
+		const willBeScanned = this.scanPtr + this.numToScan;
+		this.numToScan +=
+			willBeScanned + amount <= this.heapSize
+				? amount
+				: Math.max(this.heapSize - willBeScanned, 0);
+	}
+
+	/**
 	 * Copies a single item from from-space to to-space (if it is not already
 	 * copied to to-space) and returns the address of the item in to-space
 	 * @param fromSpaceIndex The index of the item to copy in from-space
@@ -285,16 +344,27 @@ export class GarbageCollector {
 			// should just return the forwarded address
 			return oldItem.forwardAddr as number;
 		}
+		const addr = this.copyIntoToSpace(oldItem.values);
+		// Set the forwarding address on the old one
+		oldItem.forwardAddr = addr;
+		return addr;
+	}
+
+	/**
+	 * Copy a heap item's values into to-space and return the forwarding
+	 * address
+	 * @param values The values contained in the heap item
+	 */
+	private copyIntoToSpace(values: RuntimeValue[]): number {
 		// Create a copy of the item
 		const item: HeapItem = {
 			forwardAddr: undefined,
-			values: oldItem.values, // share array reference
+			values, // Don't copy array, use the same reference
 		};
 		// Place it in to-space:
-		const addr = this.allocPtr;
+		const addr = this.allocPtr++;
+		if (addr >= this.heapSize) throw new Error("Out of memory");
 		this.toSpace.push(item);
-		// Set the forwarding address on the old one
-		oldItem.forwardAddr = addr;
 		return addr;
 	}
 
@@ -312,6 +382,7 @@ export class GarbageCollector {
 		// To-space is reset to be free space
 		this.toSpace = [];
 		this.scanPtr = 0;
+		this.allocPtr = 0;
 		// Copy all of the roots
 		for (let i = 0; i < roots.length; i++) {
 			const root = roots[i];
@@ -333,9 +404,6 @@ export class GarbageCollector {
 	private startCollecting(roots: RuntimeValue[]): void {
 		// Flip from/to space, copy roots, reset scan and alloc pointers
 		this.flip(roots);
-
-		// Update state to the next state
-		this.state = GCState.Scanning;
 	}
 
 	/**

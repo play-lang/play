@@ -494,7 +494,7 @@ export class Compiler implements Visitor {
 
 	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {
 		let value: any;
-		let type: RuntimeType = RuntimeType.Object;
+		let type: RuntimeType = RuntimeType.Pointer;
 		switch (node.primitiveType) {
 			case TokenType.String:
 				value = node.primitiveValue;
