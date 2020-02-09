@@ -94,6 +94,7 @@ export class GarbageCollector {
 	public alloc(values: RuntimeValue[], roots: RuntimeValue[]): number {
 		let startedCollection = false;
 		let addr: number;
+		let item: HeapItem;
 		if (this.allocPtr > this.config.heapSize - 1) {
 			// There isn't any room left on the heap
 			//
@@ -112,6 +113,8 @@ export class GarbageCollector {
 			addr = this.allocPtr++;
 			this.toSpace.push({ forwardAddr: undefined, values });
 		}
+		item = this.toSpace[addr];
+		this.scanItem(item);
 		// Increase the amount of things we need to scan:
 		this.incNumToScan(this.config.numScanPerAlloc);
 		// Do a little bit of garbage collection if we haven't already started
@@ -130,6 +133,10 @@ export class GarbageCollector {
 		this.collect(roots);
 	}
 
+	/**
+	 * Collect all garbage all at once (stop-the-world style)
+	 * @param roots The mutator roots
+	 */
 	public collectAll(roots: RuntimeValue[]): void {
 		// Finish any current garbage collection cycle
 		while (this.state !== GCState.Idle) {
@@ -371,18 +378,21 @@ export class GarbageCollector {
 	/**
 	 * Copies a single item from from-space to to-space (if it is not already
 	 * copied to to-space) and returns the address of the item in to-space
-	 * @param fromSpaceAddr The address of the item to copy in from-space
+	 * @param addr The address of the item to copy in from-space
 	 */
-	private copy(fromSpaceAddr: number): number {
-		const oldItem = this.fromSpace[fromSpaceAddr];
-		if (this.isForwarded(oldItem)) {
-			// If item is already forwarded (meaning it is already copied), we
-			// should just return the forwarded address
-			return oldItem.forwardAddr as number;
+	private copy(addr: number): number {
+		const oldItem = this.fromSpace[addr];
+		if (oldItem) {
+			if (this.isForwarded(oldItem)) {
+				// If item is already forwarded (meaning it is already copied), we
+				// should just return the forwarded address
+				return oldItem.forwardAddr as number;
+			}
+			const newAddr = this.copyIntoToSpace(oldItem.values);
+			// Set the forwarding address on the old one
+			oldItem.forwardAddr = newAddr;
 		}
-		const addr = this.copyIntoToSpace(oldItem.values);
-		// Set the forwarding address on the old one
-		oldItem.forwardAddr = addr;
+		// Address doesn't exist in from-space so it must be a to-space address
 		return addr;
 	}
 
@@ -467,19 +477,27 @@ export class GarbageCollector {
 			// can go ahead and remove it since it is being scanned
 			if (this.updated.has(addr)) this.updated.delete(addr);
 			// Scan each field in the item
-			for (let i = 0; i < item.values.length; i++) {
-				const value = item.values[i];
-				if (value.isPointer) {
-					// Item contains a pointer--copy the thing it is pointing to and
-					// update the pointer
-					item.values[i] = new RuntimeValue(
-						value.type,
-						this.copy(value.value as number)
-					);
-				}
-			}
+			this.scanItem(item);
 			// Decrease how many items we need to scan
 			this.numToScan -= 1;
+		}
+	}
+
+	private scanItem(item: HeapItem): void {
+		for (let i = 0; i < item.values.length; i++) {
+			const value = item.values[i];
+			if (
+				value.isPointer &&
+				typeof value.value !== "undefined" &&
+				value.value !== null
+			) {
+				// Item contains a pointer--copy the thing it is pointing to and
+				// update the pointer
+				item.values[i] = new RuntimeValue(
+					value.type,
+					this.copy(value.value as number)
+				);
+			}
 		}
 	}
 
