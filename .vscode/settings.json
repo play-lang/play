@@ -52,6 +52,7 @@
         "performant",
         "ptrs",
         "quotemark",
+        "strs",
         "subtrees"
     ],
     "editor.codeActionsOnSave": {

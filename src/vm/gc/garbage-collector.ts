@@ -19,6 +19,8 @@ interface GCConfig {
 	numScanPerUpdate: number;
 	/** Number of items to scan for every root pointer given when gc starts */
 	numScanPerRoot: number;
+	/** True if diagnostics logging should be enabled */
+	debug: boolean;
 }
 
 /** Garbage collector initialization options */
@@ -30,6 +32,7 @@ const GCDefaults: GCConfig = {
 	numScanPerAlloc: 1,
 	numScanPerUpdate: 1,
 	numScanPerRoot: 1,
+	debug: true,
 };
 
 enum GCState {
@@ -76,9 +79,9 @@ export class GarbageCollector implements Describable {
 	/** Garbage collector settings */
 	private config: GCConfig;
 
-	/**
-	 * Heap
-	 */
+	private log: string[] = [];
+
+	/** Heap used by the garbage collector */
 	public get heap(): HeapItem[] {
 		return this.toSpace;
 	}
@@ -125,6 +128,16 @@ export class GarbageCollector implements Describable {
 		if (!startedCollection) {
 			this.collectIfNeeded(roots);
 		}
+		if (this.config.debug) {
+			this.log.push(
+				"alloc [" +
+					values.map(v => v.description).join(",") +
+					"] with roots [" +
+					roots.map(r => r.description).join(",") +
+					"] at " +
+					addr
+			);
+		}
 		return addr;
 	}
 
@@ -134,6 +147,9 @@ export class GarbageCollector implements Describable {
 	 */
 	public collectIfNeeded(roots: RuntimeValue[]): void {
 		if (this.state === GCState.Idle) return;
+		if (this.config.debug) {
+			this.log.push("collectIfNeeded: true");
+		}
 		this.collect(roots);
 	}
 
@@ -142,6 +158,7 @@ export class GarbageCollector implements Describable {
 	 * @param roots The mutator roots
 	 */
 	public collectAll(roots: RuntimeValue[]): void {
+		if (this.config.debug) this.log.push("collectAll");
 		// Finish any current garbage collection cycle
 		while (this.state !== GCState.Idle) {
 			this.collect(roots);
@@ -161,6 +178,7 @@ export class GarbageCollector implements Describable {
 	 * little bit of garbage as part of the incremental collection process
 	 */
 	public collect(roots: RuntimeValue[]): void {
+		const oldState = this.state;
 		switch (this.state) {
 			case GCState.Starting:
 				// Start garbage collection by scanning the roots
@@ -186,6 +204,16 @@ export class GarbageCollector implements Describable {
 				this.state = GCState.Starting;
 				break;
 		}
+		if (this.config.debug) {
+			this.log.push(
+				"collect roots [" +
+					roots.map(r => r.description).join(",") +
+					"], " +
+					GCState[oldState] +
+					" -> " +
+					GCState[this.state]
+			);
+		}
 	}
 
 	/**
@@ -206,12 +234,25 @@ export class GarbageCollector implements Describable {
 					"Garbage collector cannot access heap at index " + addr
 				);
 			}
+			if (this.config.debug) {
+				this.log.push("read to-space " + addr);
+			}
 			return addr;
 		}
 		if (!this.isForwarded(this.fromSpace[addr])) {
-			return this.copy(addr);
+			const copy = this.copy(addr);
+			if (this.config.debug) {
+				this.log.push(
+					"read from-space " + addr + " and copy to " + copy
+				);
+			}
+			return copy;
 		}
-		return addr;
+		const forward = this.fromSpace[addr].forwardAddr as number;
+		if (this.config.debug) {
+			this.log.push("read forward from " + addr + " to " + forward);
+		}
+		return forward;
 	}
 
 	/**
@@ -231,14 +272,6 @@ export class GarbageCollector implements Describable {
 		// Force the item we are mutating to be copied if it hasn't already
 		const itemAddr = this.read(addr);
 		const item = this.toSpace[itemAddr];
-		if (!item) {
-			throw new Error(
-				"Garbage collector cannot access heap at resolved index " +
-					itemAddr +
-					" for index " +
-					addr
-			);
-		}
 		const field = item.values[fieldIndex];
 		if (!field) {
 			throw new Error(
@@ -271,6 +304,18 @@ export class GarbageCollector implements Describable {
 			this.updated.add(itemAddr);
 			// Increase the amount of things we need to scan
 			this.incNumToScan(this.config.numScanPerUpdate);
+		}
+		if (this.config.debug) {
+			this.log.push(
+				"update (" +
+					addr +
+					" loc at " +
+					itemAddr +
+					") field " +
+					fieldIndex +
+					" to " +
+					value.description
+			);
 		}
 	}
 
@@ -372,11 +417,17 @@ export class GarbageCollector implements Describable {
 	 * @param amount The amount to increase the number of items to scan by
 	 */
 	private incNumToScan(amount: number): void {
+		const oldNum = this.numToScan;
 		const willBeScanned = this.scanPtr + this.numToScan;
 		this.numToScan +=
 			willBeScanned + amount <= this.config.heapSize
 				? amount
 				: Math.max(this.config.heapSize - willBeScanned, 0);
+		if (this.config.debug) {
+			this.log.push(
+				"incNumToScan from " + oldNum + " to " + this.numToScan
+			);
+		}
 	}
 
 	/**
@@ -390,13 +441,26 @@ export class GarbageCollector implements Describable {
 			if (this.isForwarded(oldItem)) {
 				// If item is already forwarded (meaning it is already copied), we
 				// should just return the forwarded address
-				return oldItem.forwardAddr as number;
+				const forward = oldItem.forwardAddr as number;
+				if (this.config.debug) {
+					this.log.push(
+						"copy forward from " + addr + " to " + forward
+					);
+				}
+				return forward;
 			}
 			const newAddr = this.copyIntoToSpace(oldItem.values);
 			// Set the forwarding address on the old one
 			oldItem.forwardAddr = newAddr;
+			if (this.config.debug) {
+				this.log.push("copy from " + addr + " to " + newAddr);
+			}
+			return newAddr;
 		}
 		// Address doesn't exist in from-space so it must be a to-space address
+		if (this.config.debug) {
+			this.log.push("copy nothing at " + addr);
+		}
 		return addr;
 	}
 
@@ -430,12 +494,15 @@ export class GarbageCollector implements Describable {
 	private flip(roots: RuntimeValue[]): void {
 		// From-space is assigned to be to-space, deleting all the junk that was in
 		// from-space
-		this.fromSpace = this.toSpace;
+		this.fromSpace = [...this.toSpace];
 		// To-space is reset to be free space
 		this.toSpace = [];
 		this.scanPtr = 0;
 		this.allocPtr = 0;
 		this.numToScan = 0;
+		if (this.config.debug) {
+			this.log.push("flip");
+		}
 		// Copy all of the roots
 		for (let i = 0; i < roots.length; i++) {
 			const root = roots[i];
@@ -450,7 +517,7 @@ export class GarbageCollector implements Describable {
 					root.type,
 					this.copy(root.value as number)
 				);
-				this.numToScan++;
+				this.incNumToScan(this.config.numScanPerRoot);
 			}
 		}
 	}
@@ -479,6 +546,9 @@ export class GarbageCollector implements Describable {
 			// If that address existed in our updated items list to scan, we
 			// can go ahead and remove it since it is being scanned
 			if (this.updated.has(addr)) this.updated.delete(addr);
+			if (this.config.debug) {
+				this.log.push("scan " + addr);
+			}
 			// Scan each field in the item
 			this.scanItem(item);
 			// Decrease how many items we need to scan
@@ -498,8 +568,8 @@ export class GarbageCollector implements Describable {
 				typeof value.value !== "undefined" &&
 				value.value !== null
 			) {
-				// Item contains a pointer--copy the thing it is pointing to and
-				// update the pointer
+				// Item contains a pointer--copy the thing it is pointing to (if
+				// needed) and update the pointer
 				item.values[i] = new RuntimeValue(
 					value.type,
 					this.copy(value.value as number)
@@ -513,23 +583,35 @@ export class GarbageCollector implements Describable {
 		return typeof item.forwardAddr !== "undefined";
 	}
 
-	// MARK: Describable
-
-	public get description(): string {
-		let desc = "GC HEAP:\n";
-		for (let i = 0; i < this.heap.length; i++) {
-			const item = this.heap[i];
-			desc +=
-				String(i).padStart(4, "0") +
-				(this.isForwarded(item)
-					? " <fwd: " + String(item.forwardAddr) + ">"
-					: "") +
-				(item.values.length > 0 ? ":" : "") +
-				"\n";
+	private _heapDescription(heap: HeapItem[]): string {
+		let desc = (heap === this.toSpace ? "TO-SPACE" : "FROM-SPACE") + ":\n";
+		for (let i = 0; i < heap.length; i++) {
+			const item = heap[i];
+			desc += String(i).padStart(4, "0");
+			if (heap === this.toSpace && this.updated.has(i)) desc += "*";
+			if (item.values.length > 0) desc += ":";
+			desc += "\n";
 			for (const value of item.values) {
 				desc += "    " + value.description + "\n";
 			}
 		}
 		return desc;
+	}
+
+	// MARK: Describable
+
+	public get description(): string {
+		return (
+			"GC (" +
+			GCState[this.state] +
+			")\n" +
+			this.log
+				.map((l, i) => String(i).padStart(4, "0") + ": " + l)
+				.join("\n") +
+			"\n" +
+			this._heapDescription(this.fromSpace) +
+			" ----------- \n" +
+			this._heapDescription(this.toSpace)
+		);
 	}
 }
