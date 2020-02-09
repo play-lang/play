@@ -1,6 +1,7 @@
+import { Describable } from "src/common/describable";
 import { RuntimeType } from "src/vm/runtime-type";
 
-export class RuntimeValue {
+export class RuntimeValue implements Describable {
 	constructor(
 		/** Runtime type */
 		public readonly type: RuntimeType,
@@ -19,5 +20,11 @@ export class RuntimeValue {
 	/** Create a copy of the runtime value */
 	public copy(): RuntimeValue {
 		return new RuntimeValue(this.type, this.value);
+	}
+
+	// MARK: Describable
+
+	public get description(): string {
+		return "(" + RuntimeType[this.type] + ", " + this.value + ")";
 	}
 }

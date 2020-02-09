@@ -1,3 +1,4 @@
+import { Describable } from "src/common/describable";
 import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";
 
@@ -16,6 +17,8 @@ interface GCConfig {
 	numScanPerAlloc: number;
 	/** Number of items to scan for every item updated */
 	numScanPerUpdate: number;
+	/** Number of items to scan for every root pointer given when gc starts */
+	numScanPerRoot: number;
 }
 
 /** Garbage collector initialization options */
@@ -24,8 +27,9 @@ export type GCInitConfig = Partial<GCConfig>;
 /** Default garbage collector settings */
 const GCDefaults: GCConfig = {
 	heapSize: 1024,
-	numScanPerAlloc: 2,
-	numScanPerUpdate: 2,
+	numScanPerAlloc: 1,
+	numScanPerUpdate: 1,
+	numScanPerRoot: 1,
 };
 
 enum GCState {
@@ -40,7 +44,7 @@ enum GCState {
 /**
  * A simple conservative, incremental copying/compacting garbage collector
  */
-export class GarbageCollector {
+export class GarbageCollector implements Describable {
 	/** Index of the next item to be allocated */
 	private allocPtr: number = 0;
 	/** From-space */
@@ -160,7 +164,7 @@ export class GarbageCollector {
 		switch (this.state) {
 			case GCState.Starting:
 				// Start garbage collection by scanning the roots
-				this.startCollecting(roots);
+				this.flip(roots);
 				// Roots are copied so we move to the scan state
 				this.state = GCState.Scanning;
 				break;
@@ -417,6 +421,8 @@ export class GarbageCollector {
 	/**
 	 * Flip "from" and "to" space and reset scan and alloc pointers
 	 *
+	 * This begins a garbage collection cycle
+	 *
 	 * Copies roots to the new "to" space
 	 *
 	 * @param roots The mutator roots--these will be updated accordingly
@@ -429,27 +435,24 @@ export class GarbageCollector {
 		this.toSpace = [];
 		this.scanPtr = 0;
 		this.allocPtr = 0;
+		this.numToScan = 0;
 		// Copy all of the roots
 		for (let i = 0; i < roots.length; i++) {
 			const root = roots[i];
-			if (root.isPointer) {
+			if (
+				root.isPointer &&
+				typeof root.value !== "undefined" &&
+				root.value !== null
+			) {
 				// Replace this pointer with the correct pointer to the new item
 				// located in to-space:
 				roots[i] = new RuntimeValue(
 					root.type,
 					this.copy(root.value as number)
 				);
+				this.numToScan++;
 			}
 		}
-	}
-
-	/**
-	 * Begin collecting garbage and update the garbage collector state
-	 * @param roots The mutator roots
-	 */
-	private startCollecting(roots: RuntimeValue[]): void {
-		// Flip from/to space, copy roots, reset scan and alloc pointers
-		this.flip(roots);
 	}
 
 	/**
@@ -483,6 +486,10 @@ export class GarbageCollector {
 		}
 	}
 
+	/**
+	 * Scan a single item
+	 * @param item The heap item to scan
+	 */
 	private scanItem(item: HeapItem): void {
 		for (let i = 0; i < item.values.length; i++) {
 			const value = item.values[i];
@@ -504,5 +511,25 @@ export class GarbageCollector {
 	/** True if the specified heap item has a forwarding address */
 	private isForwarded(item: HeapItem): boolean {
 		return typeof item.forwardAddr !== "undefined";
+	}
+
+	// MARK: Describable
+
+	public get description(): string {
+		let desc = "GC HEAP:\n";
+		for (let i = 0; i < this.heap.length; i++) {
+			const item = this.heap[i];
+			desc +=
+				String(i).padStart(4, "0") +
+				(this.isForwarded(item)
+					? " <fwd: " + String(item.forwardAddr) + ">"
+					: "") +
+				(item.values.length > 0 ? ":" : "") +
+				"\n";
+			for (const value of item.values) {
+				desc += "    " + value.description + "\n";
+			}
+		}
+		return desc;
 	}
 }
