@@ -111,7 +111,7 @@ describe("garbage collector", () => {
 			const gc = new GarbageCollector();
 			expect(() => gc.read(0)).toThrow();
 		});
-		test("force copy on read", () => {
+		test("force reads on complex allocations", () => {
 			const gc = new GarbageCollector({ heapSize: 10 });
 
 			const a1 = gc.alloc([v1], []);
@@ -132,7 +132,6 @@ describe("garbage collector", () => {
 			expect(gc.heap).toHaveLength(10);
 			const o3 = ptrs(a5, a10); // Object containing other large objects
 			/* const a11 = */ gc.alloc(o3, ptrs(a5, a10));
-			console.log(JSON.stringify(gc.heap, null, "\t"));
 		});
 	});
 	describe("update", () => {

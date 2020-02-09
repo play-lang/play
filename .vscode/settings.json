@@ -1,6 +1,8 @@
 {
     "[markdown]": {
         "editor.formatOnSave": true,
+        "editor.formatOnPaste": true,
+        "editor.formatOnType": true,
         "editor.rulers": [
             100
         ],
@@ -48,6 +50,7 @@
         "parselet",
         "parser's",
         "performant",
+        "ptrs",
         "quotemark",
         "subtrees"
     ],
