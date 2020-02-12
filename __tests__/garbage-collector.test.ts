@@ -180,16 +180,29 @@ describe("garbage collector", () => {
 	});
 	describe("scanning", () => {
 		const gc = new GarbageCollector({
-			heapSize: 4,
+			heapSize: 15,
 			numScanPerAlloc: 1,
 			numScanPerRoot: 1,
 			numScanPerUpdate: 1,
 		});
 		const o0 = gc.alloc(strs("a", "b"), []);
-		console.log(gc.description);
-		const o1 = gc.alloc([...strs("c", "d"), ...ptrs(o0)], ptrs(o0));
-		const o2 = gc.alloc([...strs("e", "f"), ...ptrs(o0, o1)], []);
-		console.log(o2);
+		/* const o1 = */ gc.alloc([...strs("c", "d"), ...ptrs(o0)], ptrs(o0));
+		const o2 = gc.alloc([...strs("e", "f"), ...ptrs(o0)], []);
+		const o3 = gc.alloc(ptrs(o2, -1), []);
+		const o4 = gc.alloc(strs("g"), ptrs(o2, o3));
+		gc.alloc(strs("g"), ptrs(o2, o3));
+		gc.alloc(strs("h"), ptrs(o2, o3));
+		gc.alloc(strs("i"), ptrs(o2, o3));
+		gc.alloc(strs("j"), ptrs(o2, o3));
+		gc.alloc(strs("k"), ptrs(o2, o3));
+		gc.alloc(strs("l"), ptrs(o2, o3));
+		gc.alloc(strs("m"), ptrs(o2, o3));
+		gc.alloc(strs("n"), ptrs(o2, o3));
+		gc.alloc(strs("o"), ptrs(o2, o3));
+		gc.alloc(strs("p"), ptrs(o2, o3));
+		gc.alloc(strs("q"), ptrs(o2, o3));
+		gc.update(o3, 1, ptrs(o4)[0]);
+		console.log(o4);
 		console.log(gc.description);
 	});
 });
