@@ -1,5 +1,5 @@
+import { Describable } from "src/common/describable";
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
-import { Describable } from "src/language/token";
 import { TokenType } from "src/language/token-type";
 import { Visitor } from "src/language/visitor";
 import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression-node";
