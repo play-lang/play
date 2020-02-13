@@ -1,4 +1,5 @@
 import { Describable } from "src/common/describable";
+import { RuntimePointer } from "src/vm/runtime-pointer";
 import { RuntimeType } from "src/vm/runtime-type";
 
 export class RuntimeValue implements Describable {
@@ -25,6 +26,16 @@ export class RuntimeValue implements Describable {
 	// MARK: Describable
 
 	public get description(): string {
-		return "(" + RuntimeType[this.type] + ", " + this.value + ")";
+		switch (this.type) {
+			case RuntimeType.Boolean:
+				return this.value === true ? "true" : "false";
+			case RuntimeType.Number:
+				return String(this.value);
+			case RuntimeType.String:
+				return this.value;
+			case RuntimeType.Pointer:
+				const ptr = this.value as RuntimePointer;
+				return "&<" + (ptr.toSpace ? "to" : "from") + ">" + ptr.addr;
+		}
 	}
 }
