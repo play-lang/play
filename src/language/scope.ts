@@ -1,6 +1,6 @@
+import { Describable } from "src/common/describable";
 import { LinkedHashMap } from "src/common/linked-hash-map";
 import { IdentifierSymbol } from "src/language/identifier-symbol";
-import { Describable } from "src/language/token";
 
 /**
  * Represents a scope node, a recursive data type that helps represent a tree
