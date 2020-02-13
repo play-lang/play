@@ -29,12 +29,6 @@
 			"jest"
 		]
 	},
-	"exclude": [
-		"node_modules",
-		"dist",
-		"__tests__"
-	],
-	"include": [
-		"src/**/*.ts"
-	],
+	"include": ["src", "shared", "__tests__"],
+	"exclude": ["node_modules"]
 }
