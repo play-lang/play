@@ -38,16 +38,14 @@ const defaults: Config = {
 };
 
 export class GarbageCollector implements Describable {
-	// MARK: Public getters
+	/** From-space */
+	public fromSpace: Cell[] = [];
+	/** To-space */
+	public toSpace: Cell[] = [];
 
 	/** True if actively collecting garbage */
 	public get isCollecting(): boolean {
 		return this.state !== State.Idle;
-	}
-
-	/** Active heap space */
-	public get heap(): Cell[] {
-		return this.toSpace;
 	}
 
 	// MARK: Private fields
@@ -56,10 +54,6 @@ export class GarbageCollector implements Describable {
 	private numAllocs: number = 0;
 	/** Number of allocations needed (since last cycle to trigger collection  */
 	private numAllocsRequired: number;
-	/** From-space */
-	private fromSpace: Cell[] = [];
-	/** To-space */
-	private toSpace: Cell[] = [];
 	/** Address of next cell to scan in to-space */
 	private scanPtr: number = 0;
 	/** Garbage collection state */
@@ -71,6 +65,8 @@ export class GarbageCollector implements Describable {
 	private updated: Set<number> = new Set();
 	/** Garbage collector settings */
 	private config: Config;
+
+	// MARK: Constructor and Public Methods
 
 	constructor(settings?: GCInitConfig) {
 		this.config = { ...defaults, ...settings };
