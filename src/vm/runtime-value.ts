@@ -1,5 +1,4 @@
 import { Describable } from "src/common/describable";
-import { RuntimePointer } from "src/vm/runtime-pointer";
 import { RuntimeType } from "src/vm/runtime-type";
 
 export class RuntimeValue implements Describable {
@@ -12,17 +11,6 @@ export class RuntimeValue implements Describable {
 		 */
 		public readonly value: any
 	) {}
-
-	/**
-	 * The value as a pointer, if relevant
-	 * 
-	 * Mostly used for tests
-	 */
-	public get ptr(): RuntimePointer | undefined {
-		if (this.type === RuntimeType.Pointer) {
-			return this.value as RuntimePointer;
-		}
-	}
 
 	/** True if the runtime value points to a value on the heap */
 	public get isPointer(): boolean {
@@ -45,8 +33,8 @@ export class RuntimeValue implements Describable {
 			case RuntimeType.String:
 				return this.value;
 			case RuntimeType.Pointer:
-				const ptr = this.value as RuntimePointer;
-				return "&<" + (ptr.toSpace ? "to" : "from") + ">" + ptr.addr;
+				const ptr = this.value as number;
+				return "&" + String(ptr);
 		}
 	}
 }
