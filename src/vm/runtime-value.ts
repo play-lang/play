@@ -13,6 +13,17 @@ export class RuntimeValue implements Describable {
 		public readonly value: any
 	) {}
 
+	/**
+	 * The value as a pointer, if relevant
+	 * 
+	 * Mostly used for tests
+	 */
+	public get ptr(): RuntimePointer | undefined {
+		if (this.type === RuntimeType.Pointer) {
+			return this.value as RuntimePointer;
+		}
+	}
+
 	/** True if the runtime value points to a value on the heap */
 	public get isPointer(): boolean {
 		return this.type === RuntimeType.Pointer;

@@ -19,19 +19,19 @@ enum State {
 	Idle,
 }
 
-interface Config {
+export interface GCConfig {
 	/** Garbage collector heap size */
 	heapSize: number;
-	/** Number of items to scan during each increment of garbage collection */
+	/** Number of cells to scan during each increment of garbage collection */
 	numScanPerInc: number;
 	/** True if diagnostics logging should be enabled */
 	debug: boolean;
 }
 
 /** Garbage collector initialization options */
-export type GCInitConfig = Partial<Config>;
+export type GCInitConfig = Partial<GCConfig>;
 
-const defaults: Config = {
+const defaults: GCConfig = {
 	heapSize: 1024,
 	numScanPerInc: 2,
 	debug: true,
@@ -64,7 +64,7 @@ export class GarbageCollector implements Describable {
 	 */
 	private updated: Set<number> = new Set();
 	/** Garbage collector settings */
-	private config: Config;
+	private config: GCConfig;
 
 	// MARK: Constructor and Public Methods
 
@@ -142,6 +142,9 @@ export class GarbageCollector implements Describable {
 			case State.Scanning:
 				this.scanSome(this.config.numScanPerInc);
 				if (this.scanPtr >= this.fromSpace.length) {
+					// Garbage collection has finished!
+					// Clear old data and update state
+					this.fromSpace = [];
 					this.state = State.Idle;
 				}
 				return;
@@ -168,9 +171,10 @@ export class GarbageCollector implements Describable {
 		// while also updating the root pointers themselves
 		for (let i = 0; i < roots.length; i++) {
 			const root = roots[i];
-			if (this.shouldUpdatePointerValue(root)) {
-				roots[i] = this.makePointerValue(
-					this.resolve(root.value as RuntimePointer)
+			if (root.isPointer && root.value instanceof RuntimePointer) {
+				roots[i] = new RuntimeValue(
+					RuntimeType.Pointer,
+					this.resolve(new RuntimePointer(false, root.value.addr))
 				);
 			}
 		}
@@ -270,11 +274,14 @@ export class GarbageCollector implements Describable {
 	 * represents a cell in from-space
 	 * @param value A root runtime value
 	 */
-	private shouldUpdatePointerValue(value: RuntimeValue): boolean {
+	private shouldUpdatePointerValue(
+		value: RuntimeValue,
+		ignoreToSpaceCheck: boolean = false
+	): boolean {
 		return (
 			value.isPointer &&
 			value.value instanceof RuntimePointer &&
-			!value.value.toSpace
+			(ignoreToSpaceCheck ? true : !value.value.toSpace)
 		);
 	}
 
@@ -311,13 +318,19 @@ export class GarbageCollector implements Describable {
 	private _heapDescription(heap: Cell[]): string {
 		let desc = (heap === this.toSpace ? "TO-SPACE" : "FROM-SPACE") + ":\n";
 		for (let i = 0; i < heap.length; i++) {
-			const item = heap[i];
+			const cell = heap[i];
 			desc += String(i).padStart(4, "0");
 			if (heap === this.toSpace && this.updated.has(i)) desc += "*";
-			if (item.values.length > 0) desc += ":";
+			if (cell.values.length > 0) desc += ":";
 			desc += "\n";
-			for (const value of item.values) {
-				desc += "    " + value.description + "\n";
+			const j = 0;
+			for (const value of cell.values) {
+				desc +=
+					"    " +
+					String(j).padStart(4) +
+					": " +
+					value.description +
+					"\n";
 			}
 		}
 		return desc;
