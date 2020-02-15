@@ -32,8 +32,17 @@ const defaults: GCConfig = {
 };
 
 /**
- * Simple, abstracted implementation of an incremental Baker copying/compacting
- * garbage collector
+ * A simple implementation of an incremental copying/compacting garbage
+ * collector utilizing Baker's algorithm with a read barrier
+ *
+ * Note that this is not a real-time collector—it is only incremental and the
+ * allocation times are not bounded as memory increases
+ *
+ * It is fairly conservative, so garbage created in one cycle cannot be
+ * collected until the next cycle (floating garbage)
+ *
+ * This essentially performs a little bit of garbage collection every time new
+ * heap space is allocated
  *
  * Made possible by the following book:
  * *Garbage Collection: Algorithms for Automatic and Dynamic Memory Management*
@@ -135,7 +144,7 @@ export class GarbageCollector implements Describable {
 		const cell = this.toSpace[this.scanPtr++];
 		for (let v = 0; v < cell.values.length; v++) {
 			const value = cell.values[v];
-			if (value.isPointer) {
+			if (value.isPointer && typeof value.value === "number") {
 				cell.values[v] = new RuntimeValue(
 					RuntimeType.Pointer,
 					this.copy(this.fromSpace[value.value as number])
@@ -156,7 +165,7 @@ export class GarbageCollector implements Describable {
 		let r = 0;
 		// Copy and update root set
 		for (const root of roots) {
-			if (root.isPointer) {
+			if (root.isPointer && typeof root.value === "number") {
 				roots[r++] = new RuntimeValue(
 					RuntimeType.Pointer,
 					this.copy(this.fromSpace[root.value as number])
