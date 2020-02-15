@@ -33,7 +33,8 @@ const defaults: GCConfig = {
 
 /**
  * A simple implementation of an incremental copying/compacting garbage
- * collector utilizing Baker's algorithm with a read barrier
+ * collector utilizing Baker's algorithm with a read barrier (and Cheney's
+ * copying algorithm)
  *
  * Note that this is not a real-time collector—it is only incremental and the
  * allocation times are not bounded as memory increases
