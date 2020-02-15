@@ -32,7 +32,7 @@ describe("garbage collector", () => {
 		// Check that objects still point to each other:
 		expect(read(gc, p0, 0).value).toBe(p1);
 		expect(read(gc, p1, 0).value).toBe(p0);
-		// Collect with no roots
+		// Collect with no roots, should delete all data
 		gc.collect([]);
 		expect(gc.numActiveCells).toBe(0);
 		console.log(gc.description);
