@@ -45,9 +45,13 @@ export class GarbageCollector implements Describable {
 	/** To-space */
 	public toSpace: Cell[];
 
+	/** The address of the next item to be scanned in to-space */
 	private scanPtr: number = 0;
+	/** The address of the next item to be copied into to-space */
 	private evacPtr: number = 0;
+	/** The address of the next item to be allocated in to-space */
 	private allocPtr: number;
+	/** True if garbage collection has happened at least once */
 	private hasFlipped: boolean = false;
 
 	/** Size of each heap space */
@@ -55,6 +59,7 @@ export class GarbageCollector implements Describable {
 		return Math.floor(this.config.heapSize / 2);
 	}
 
+	/** Number of active cells (how much memory is being used) */
 	public get numActiveCells(): number {
 		// Compute number of active cells by adding all the scanned,
 		// waiting-to-be-scanned, and newly allocated cells up
@@ -62,7 +67,7 @@ export class GarbageCollector implements Describable {
 	}
 
 	/** Number of cells to scan per allocation */
-	public get k(): number {
+	public get numToScan(): number {
 		// Compute number of cells to scan per allocation to prevent mutator
 		// from starving (p. 184 in Garbage Collection by Jones & Lins)
 		return Math.ceil(
@@ -90,7 +95,7 @@ export class GarbageCollector implements Describable {
 			// We're out of heap space
 			this.flip(roots);
 		}
-		let k = this.k;
+		let k = this.numToScan;
 		// Do a little bit of scanning
 		while (k > 0 && this.scanPtr < this.evacPtr) {
 			// Scan each cell
@@ -125,6 +130,7 @@ export class GarbageCollector implements Describable {
 		);
 	}
 
+	/** Scan the next cell waiting to be scanned */
 	private scan(): void {
 		const cell = this.toSpace[this.scanPtr++];
 		for (let v = 0; v < cell.values.length; v++) {
@@ -138,6 +144,7 @@ export class GarbageCollector implements Describable {
 		}
 	}
 
+	/** Start garbage collection by flipping the heap semi-spaces */
 	private flip(roots: RuntimeValue[]): void {
 		this.hasFlipped = true;
 		this.fromSpace = this.toSpace;
@@ -158,6 +165,10 @@ export class GarbageCollector implements Describable {
 		}
 	}
 
+	/**
+	 * Copy a cell from from-space into to-space, leaving behind a forwarding
+	 * address in from-space
+	 */
 	private copy(cell: Cell): number {
 		// If this cell is already forwarded it need not be copied
 		if (cell.hasFwd) return cell.fwd!;

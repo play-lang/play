@@ -10,6 +10,7 @@ describe("garbage collector", () => {
 	});
 	test("allocate", () => {
 		const gc = new GarbageCollector();
+		expect(gc.numActiveCells).toBe(0);
 		let p0 = gc.alloc([num(1)], []);
 		let p1 = gc.alloc([num(2)], []);
 		p0 = gc.read(p0);
@@ -35,7 +36,6 @@ describe("garbage collector", () => {
 		// Collect with no roots, should delete all data
 		gc.collect([]);
 		expect(gc.numActiveCells).toBe(0);
-		console.log(gc.description);
 	});
 });
 
