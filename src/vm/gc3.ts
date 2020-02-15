@@ -45,14 +45,29 @@ export class GarbageCollector implements Describable {
 	/** To-space */
 	public toSpace: Cell[];
 
-	private scan: number = 0;
-	private evac: number = 0;
-	private alloc: number;
+	private scanPtr: number = 0;
+	private evacPtr: number = 0;
+	private allocPtr: number;
 	private hasFlipped: boolean = false;
 
 	/** Size of each heap space */
 	public get heapSize(): number {
 		return Math.floor(this.config.heapSize / 2);
+	}
+
+	public get numActiveCells(): number {
+		// Compute number of active cells by adding all the scanned,
+		// waiting-to-be-scanned, and newly allocated cells up
+		return this.evacPtr + (this.heapSize - (this.allocPtr + 1));
+	}
+
+	/** Number of cells to scan per allocation */
+	public get k(): number {
+		// Compute number of cells to scan per allocation to prevent mutator
+		// from starving (p. 184 in Garbage Collection by Jones & Lins)
+		return Math.ceil(
+			this.numActiveCells / (this.heapSize - this.numActiveCells)
+		);
 	}
 
 	/** Garbage collector settings */
@@ -64,45 +79,37 @@ export class GarbageCollector implements Describable {
 		this.config = { ...defaults, ...settings };
 		this.fromSpace = new Array<Cell>(this.heapSize);
 		this.toSpace = new Array<Cell>(this.heapSize);
-		this.alloc = this.heapSize - 1;
+		this.allocPtr = this.heapSize - 1;
 	}
 
-	public allocate(values: RuntimeValue[], roots: RuntimeValue[]): number {
-		if (this.evac >= this.alloc - 1) {
-			if (this.scan < this.evac) {
+	public alloc(values: RuntimeValue[], roots: RuntimeValue[]): number {
+		if (this.evacPtr >= this.allocPtr - 1) {
+			if (this.scanPtr < this.evacPtr) {
 				throw new Error("Scanning incomplete");
 			}
 			// We're out of heap space
 			this.flip(roots);
 		}
-		// if (this.hasFlipped) {
-		// Compute number of active cells by adding all the scanned,
-		// waiting-to-be-scanned, and newly allocated cells up
-		const activeCells = this.evac + (this.heapSize - this.alloc);
-		// Compute number of cells to scan per allocation to prevent mutator
-		// from starving (p. 184 in Garbage Collection by Jones & Lins)
-		const k = Math.ceil(activeCells / (this.heapSize - activeCells));
+		let k = this.k;
 		// Do a little bit of scanning
-		while (k > 0 && this.scan < this.evac) {
+		while (k > 0 && this.scanPtr < this.evacPtr) {
 			// Scan each cell
-			const cell = this.toSpace[this.scan++];
-			for (let v = 0; v < cell.values.length; v++) {
-				const value = cell.values[v];
-				if (value.isPointer) {
-					cell.values[v] = new RuntimeValue(
-						RuntimeType.Pointer,
-						this.copy(this.fromSpace[value.value as number])
-					);
-				}
-			}
+			this.scan();
+			k--;
 		}
-		// }
-
-		if (this.evac === this.alloc) {
+		if (this.evacPtr === this.allocPtr) {
 			throw new Error("Heap full");
 		}
-		this.toSpace[this.alloc] = new Cell(values);
-		return this.alloc--;
+		this.toSpace[this.allocPtr] = new Cell(values);
+		return this.allocPtr--;
+	}
+
+	/** Collect all garbage, stop-the-world style */
+	public collect(roots: RuntimeValue[]): void {
+		this.flip(roots);
+		while (this.scanPtr < this.evacPtr) {
+			this.scan();
+		}
 	}
 
 	/**
@@ -118,14 +125,27 @@ export class GarbageCollector implements Describable {
 		);
 	}
 
+	private scan(): void {
+		const cell = this.toSpace[this.scanPtr++];
+		for (let v = 0; v < cell.values.length; v++) {
+			const value = cell.values[v];
+			if (value.isPointer) {
+				cell.values[v] = new RuntimeValue(
+					RuntimeType.Pointer,
+					this.copy(this.fromSpace[value.value as number])
+				);
+			}
+		}
+	}
+
 	private flip(roots: RuntimeValue[]): void {
 		this.hasFlipped = true;
 		this.fromSpace = this.toSpace;
 		this.toSpace = new Array<Cell>(this.heapSize);
-		this.scan = 0;
-		this.evac = 0;
+		this.scanPtr = 0;
+		this.evacPtr = 0;
 		// Allocate from the end of the heap towards the start
-		this.alloc = this.heapSize - 1;
+		this.allocPtr = this.heapSize - 1;
 		let r = 0;
 		// Copy and update root set
 		for (const root of roots) {
@@ -143,9 +163,9 @@ export class GarbageCollector implements Describable {
 		if (cell.hasFwd) return cell.fwd!;
 		// Create a copy of the cell without a forwarding address and put it in
 		// to-space
-		this.toSpace[this.evac++] = new Cell(cell.values);
+		this.toSpace[this.evacPtr] = new Cell(cell.values);
 		// Update the forwarding address of the old cell
-		cell.fwd = this.toSpace.length - 1;
+		cell.fwd = this.evacPtr++;
 		// Return the address of the cell's copy in to-space
 		return cell.fwd;
 	}
@@ -156,6 +176,9 @@ export class GarbageCollector implements Describable {
 			const cell = heap[i];
 			if (cell) {
 				desc += String(i).padStart(4, "0");
+				if (cell.hasFwd) {
+					desc += " (" + String(cell.fwd as number) + ")";
+				}
 				// if (heap === this.toSpace && this.updated.has(i)) desc += "*";
 				if (cell.values.length > 0) desc += ":";
 				desc += "\n";
@@ -183,7 +206,7 @@ export class GarbageCollector implements Describable {
 			// 	.join("\n") +
 			// "\n" +
 			this._heapDescription(this.fromSpace) +
-			" ----------- \n" +
+			"----------- \n" +
 			this._heapDescription(this.toSpace)
 		);
 	}
