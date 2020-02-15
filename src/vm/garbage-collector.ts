@@ -171,7 +171,7 @@ export class GarbageCollector implements Describable {
 		// while also updating the root pointers themselves
 		for (let i = 0; i < roots.length; i++) {
 			const root = roots[i];
-			if (root.isPointer && root.value instanceof RuntimePointer) {
+			if (this.shouldUpdatePointerValue(root)) {
 				roots[i] = new RuntimeValue(
 					RuntimeType.Pointer,
 					this.resolve(new RuntimePointer(false, root.value.addr))
@@ -195,7 +195,7 @@ export class GarbageCollector implements Describable {
 		if (typeof ptr.addr === "undefined") {
 			return new RuntimePointer(true, undefined);
 		}
-		if (!ptr.toSpace) {
+		if (!ptr.toSpace || ptr.addr >= this.toSpace.length) {
 			// Pointer points to from-space
 			// We must be actively collecting garbage
 			if (typeof this.fromSpace[ptr.addr].fwd !== "undefined") {
@@ -274,15 +274,8 @@ export class GarbageCollector implements Describable {
 	 * represents a cell in from-space
 	 * @param value A root runtime value
 	 */
-	private shouldUpdatePointerValue(
-		value: RuntimeValue,
-		ignoreToSpaceCheck: boolean = false
-	): boolean {
-		return (
-			value.isPointer &&
-			value.value instanceof RuntimePointer &&
-			(ignoreToSpaceCheck ? true : !value.value.toSpace)
-		);
+	private shouldUpdatePointerValue(value: RuntimeValue): boolean {
+		return value.isPointer && value.value instanceof RuntimePointer;
 	}
 
 	/**

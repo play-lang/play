@@ -31,6 +31,7 @@ describe("garbage collector", () => {
 			const ptrs = setupCircularPointers(gc);
 			expect(gc.toSpace).toHaveLength(2);
 			expect(gc.fromSpace).toHaveLength(0);
+			console.log(gc.description);
 			// This should collect nothing:
 			gc.collectAll([ptrs[0]]);
 			console.log(gc.description);
