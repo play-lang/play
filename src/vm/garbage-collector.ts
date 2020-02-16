@@ -2,7 +2,8 @@ import { Exception } from "src/common/exception";
 import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";
 
-class Cell {
+/** Represents a single heap cell containing data */
+export class Cell {
 	public constructor(
 		/** Array of values contained in this heap cell */
 		public values: RuntimeValue[],
@@ -16,11 +17,10 @@ class Cell {
 	}
 }
 
+/** Garbage collector settings */
 export interface GCConfig {
 	/** Garbage collector heap size */
 	heapSize: number;
-	/** True if diagnostics logging should be enabled */
-	debug: boolean;
 }
 
 /** Garbage collector initialization options */
@@ -28,12 +28,12 @@ export type GCInitConfig = Partial<GCConfig>;
 
 const defaults: GCConfig = {
 	heapSize: 2048,
-	debug: true,
 };
 
 enum GCErrors {
 	OutOfMemory = "Out of Memory",
 	ScanningIncomplete = "Scanning Incomplete",
+	InvalidPointer = "Invalid Pointer",
 }
 
 export class GCError extends Exception {
@@ -66,11 +66,11 @@ export class GarbageCollector {
 	/** To-space */
 	public toSpace: Cell[];
 
-	/** The address of the next item to be scanned in to-space */
+	/** The address of the next cell to be scanned in to-space */
 	private scanPtr: number = 0;
-	/** The address of the next item to be copied into to-space */
+	/** The address of the next cell to be copied into to-space */
 	private evacPtr: number = 0;
-	/** The address of the next item to be allocated in to-space */
+	/** The address of the next cell to be allocated in to-space */
 	private allocPtr: number;
 	/** True if garbage collection has happened at least once */
 	private hasFlipped: boolean = false;
@@ -113,6 +113,14 @@ export class GarbageCollector {
 		this.allocPtr = this.heapSize - 1;
 	}
 
+	/**
+	 * Allocate a cell of space on the heap to hold the specified values
+	 *
+	 * This will perform some garbage collection if necessary
+	 *
+	 * @param values Values to be contained in the new cell
+	 * @param roots Current mutator roots, in case garbage collection is initiated
+	 */
 	public alloc(values: RuntimeValue[], roots: RuntimeValue[]): number {
 		if (this.outOfMemory) {
 			/* istanbul ignore next */
@@ -136,6 +144,51 @@ export class GarbageCollector {
 		}
 		this.toSpace[this.allocPtr] = new Cell(values);
 		return this.allocPtr--;
+	}
+
+	/**
+	 * Remove a child value from the cell at the specified index
+	 * @param addr Address of the cell—must be resolved via read() first
+	 * @param offset Index at which to remove the value(s)
+	 * @param numToRemove The number of items to remove
+	 */
+	public remove(addr: number, offset: number, numToRemove: number): boolean {
+		if (numToRemove < 1) return false;
+		const cell = this.toSpace[addr];
+		if (!cell || offset < 0 || offset > cell.values.length) {
+			throw new GCError(GCErrors.InvalidPointer);
+		}
+		const oldLength = cell.values.length;
+		cell.values = [
+			...cell.values.slice(0, offset),
+			...cell.values.slice(offset + numToRemove),
+		];
+		return oldLength !== cell.values.length;
+	}
+
+	/**
+	 * Insert a child value in a cell at the specified index
+	 * @param addr Address of the cell—must be resolved via read() first
+	 * @param values Values to insert
+	 * @param offset Index at which to insert the new value(s)
+	 */
+	public insert(addr: number, values: RuntimeValue[], offset?: number): void {
+		if (values.length < 1) return;
+		const cell = this.toSpace[addr];
+		if (
+			!cell ||
+			(typeof offset === "number" &&
+				(offset < 0 || offset > cell.values.length))
+		) {
+			throw new GCError(GCErrors.InvalidPointer);
+		}
+		if (typeof offset !== "number") offset = cell.values.length;
+		cell.values = [
+			...cell.values.slice(0, offset),
+			...[...values],
+			...cell.values.slice(offset + 1),
+		];
+		return;
 	}
 
 	/** Collect all garbage, stop-the-world style */

@@ -64,6 +64,29 @@ describe("garbage collector", () => {
 		gc.collect([num(100), ...ptrs(p0, p2)]);
 		expect(gc.numActiveCells).toBe(4);
 	});
+	test("insert", () => {
+		const gc = new GarbageCollector();
+		const p0 = gc.alloc([], []);
+		const p1 = gc.alloc([], []);
+		const p2 = gc.alloc(nums(1, 2, 3), []);
+		const p3 = gc.alloc(nums(3, 4, 5), []);
+		// const p3 = gc.alloc(nums(3, 4, 5), []);
+		gc.insert(p0, nums(1, 2, 3, 4, 5));
+		expect(gc.toSpace[p0].values).toEqual(nums(1, 2, 3, 4, 5));
+		gc.insert(p1, nums(1, 2, 3, 4, 5), 0);
+		expect(gc.toSpace[p1].values).toEqual(nums(1, 2, 3, 4, 5));
+		gc.insert(p2, nums(4, 5), 3);
+		expect(gc.toSpace[p2].values).toEqual(nums(1, 2, 3, 4, 5));
+		gc.insert(p3, nums(1, 2, 3), 0);
+		expect(gc.toSpace[p3].values).toEqual(nums(1, 2, 3, 4, 5));
+		// Insert nothing should do nothing:
+		gc.insert(p3, [], 3);
+		expect(gc.toSpace[p3].values).toEqual(nums(1, 2, 3, 4, 5));
+		// Out-of-bounds (invalid pointer)
+		expect(() => {
+			gc.insert(p3, nums(1, 2, 3, 4, 5), 8);
+		}).toThrow();
+	});
 });
 
 function read(gc: GarbageCollector, addr: number, child: number): RuntimeValue {
@@ -80,4 +103,8 @@ function ptrs(...addresses: number[]): RuntimeValue[] {
 
 function num(value: number): RuntimeValue {
 	return new RuntimeValue(RuntimeType.Number, value);
+}
+
+function nums(...values: number[]): RuntimeValue[] {
+	return values.map(value => num(value));
 }
