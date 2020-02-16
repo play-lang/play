@@ -210,44 +210,46 @@ export class GarbageCollector {
 		return cell.fwd;
 	}
 
-	// private _heapDescription(heap: Cell[]): string {
-	// 	let desc = (heap === this.toSpace ? "TO-SPACE" : "FROM-SPACE") + ":\n";
-	// 	for (let i = 0; i < heap.length; i++) {
-	// 		const cell = heap[i];
-	// 		if (cell) {
-	// 			desc += String(i).padStart(4, "0");
-	// 			if (cell.hasFwd) {
-	// 				desc += " (" + String(cell.fwd as number) + ")";
-	// 			}
-	// 			// if (heap === this.toSpace && this.updated.has(i)) desc += "*";
-	// 			if (cell.values.length > 0) desc += ":";
-	// 			desc += "\n";
-	// 			const j = 0;
-	// 			for (const value of cell.values) {
-	// 				desc +=
-	// 					"    " +
-	// 					String(j).padStart(4) +
-	// 					": " +
-	// 					value.description +
-	// 					"\n";
-	// 			}
-	// 		}
-	// 	}
-	// 	return desc;
-	// }
+	/*
+	private _heapDescription(heap: Cell[]): string {
+		let desc = (heap === this.toSpace ? "TO-SPACE" : "FROM-SPACE") + ":\n";
+		for (let i = 0; i < heap.length; i++) {
+			const cell = heap[i];
+			if (cell) {
+				desc += String(i).padStart(4, "0");
+				if (cell.hasFwd) {
+					desc += " (" + String(cell.fwd as number) + ")";
+				}
+				// if (heap === this.toSpace && this.updated.has(i)) desc += "*";
+				if (cell.values.length > 0) desc += ":";
+				desc += "\n";
+				const j = 0;
+				for (const value of cell.values) {
+					desc +=
+						"    " +
+						String(j).padStart(4) +
+						": " +
+						value.description +
+						"\n";
+				}
+			}
+		}
+		return desc;
+	}
 
-	// // MARK: Describable
+	// MARK: Describable
 
-	// public get description(): string {
-	// 	return (
-	// 		"GC\n" +
-	// 		// this.log
-	// 		// 	.map((l, i) => String(i).padStart(4, "0") + ": " + l)
-	// 		// 	.join("\n") +
-	// 		// "\n" +
-	// 		this._heapDescription(this.fromSpace) +
-	// 		"----------- \n" +
-	// 		this._heapDescription(this.toSpace)
-	// 	);
-	// }
+	public get description(): string {
+		return (
+			"GC\n" +
+			// this.log
+			// 	.map((l, i) => String(i).padStart(4, "0") + ": " + l)
+			// 	.join("\n") +
+			// "\n" +
+			this._heapDescription(this.fromSpace) +
+			"----------- \n" +
+			this._heapDescription(this.toSpace)
+		);
+	}
+	*/
 }
