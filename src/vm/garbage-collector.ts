@@ -1,4 +1,3 @@
-import { Describable } from "src/common/describable";
 import { Exception } from "src/common/exception";
 import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";
@@ -61,7 +60,7 @@ export class GCError extends Exception {
  * *Garbage Collection: Algorithms for Automatic and Dynamic Memory Management*
  * by Richard Jones and Rafael Lins (© 1996)
  */
-export class GarbageCollector implements Describable {
+export class GarbageCollector {
 	/** From-space */
 	public fromSpace: Cell[];
 	/** To-space */
@@ -116,6 +115,7 @@ export class GarbageCollector implements Describable {
 
 	public alloc(values: RuntimeValue[], roots: RuntimeValue[]): number {
 		if (this.outOfMemory) {
+			/* istanbul ignore next */
 			if (this.scanPtr < this.evacPtr) {
 				// Theoretically shouldn't ever happen
 				throw new GCError(GCErrors.ScanningIncomplete);
@@ -199,9 +199,6 @@ export class GarbageCollector implements Describable {
 	 * address in from-space
 	 */
 	private copy(cell: Cell): number {
-		if (this.outOfMemory) {
-			throw new GCError(GCErrors.OutOfMemory);
-		}
 		// If this cell is already forwarded it need not be copied
 		if (cell.hasFwd) return cell.fwd!;
 		// Create a copy of the cell without a forwarding address and put it in
@@ -213,44 +210,44 @@ export class GarbageCollector implements Describable {
 		return cell.fwd;
 	}
 
-	private _heapDescription(heap: Cell[]): string {
-		let desc = (heap === this.toSpace ? "TO-SPACE" : "FROM-SPACE") + ":\n";
-		for (let i = 0; i < heap.length; i++) {
-			const cell = heap[i];
-			if (cell) {
-				desc += String(i).padStart(4, "0");
-				if (cell.hasFwd) {
-					desc += " (" + String(cell.fwd as number) + ")";
-				}
-				// if (heap === this.toSpace && this.updated.has(i)) desc += "*";
-				if (cell.values.length > 0) desc += ":";
-				desc += "\n";
-				const j = 0;
-				for (const value of cell.values) {
-					desc +=
-						"    " +
-						String(j).padStart(4) +
-						": " +
-						value.description +
-						"\n";
-				}
-			}
-		}
-		return desc;
-	}
+	// private _heapDescription(heap: Cell[]): string {
+	// 	let desc = (heap === this.toSpace ? "TO-SPACE" : "FROM-SPACE") + ":\n";
+	// 	for (let i = 0; i < heap.length; i++) {
+	// 		const cell = heap[i];
+	// 		if (cell) {
+	// 			desc += String(i).padStart(4, "0");
+	// 			if (cell.hasFwd) {
+	// 				desc += " (" + String(cell.fwd as number) + ")";
+	// 			}
+	// 			// if (heap === this.toSpace && this.updated.has(i)) desc += "*";
+	// 			if (cell.values.length > 0) desc += ":";
+	// 			desc += "\n";
+	// 			const j = 0;
+	// 			for (const value of cell.values) {
+	// 				desc +=
+	// 					"    " +
+	// 					String(j).padStart(4) +
+	// 					": " +
+	// 					value.description +
+	// 					"\n";
+	// 			}
+	// 		}
+	// 	}
+	// 	return desc;
+	// }
 
-	// MARK: Describable
+	// // MARK: Describable
 
-	public get description(): string {
-		return (
-			"GC\n" +
-			// this.log
-			// 	.map((l, i) => String(i).padStart(4, "0") + ": " + l)
-			// 	.join("\n") +
-			// "\n" +
-			this._heapDescription(this.fromSpace) +
-			"----------- \n" +
-			this._heapDescription(this.toSpace)
-		);
-	}
+	// public get description(): string {
+	// 	return (
+	// 		"GC\n" +
+	// 		// this.log
+	// 		// 	.map((l, i) => String(i).padStart(4, "0") + ": " + l)
+	// 		// 	.join("\n") +
+	// 		// "\n" +
+	// 		this._heapDescription(this.fromSpace) +
+	// 		"----------- \n" +
+	// 		this._heapDescription(this.toSpace)
+	// 	);
+	// }
 }
