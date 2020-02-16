@@ -87,6 +87,35 @@ describe("garbage collector", () => {
 			gc.insert(p3, nums(1, 2, 3, 4, 5), 8);
 		}).toThrow();
 	});
+	test("remove", () => {
+		const gc = new GarbageCollector();
+		// Remove nothing from nothing
+		const p0 = gc.alloc([], []);
+		expect(gc.remove(p0, 0, 1)).toBe(false);
+		expect(gc.toSpace[p0].values).toEqual([]);
+		// Remove everything
+		const p1 = gc.alloc(nums(1, 2, 3, 4, 5), []);
+		expect(gc.remove(p1, 0, 5)).toBe(true);
+		expect(gc.toSpace[p1].values).toEqual([]);
+		// Remove last
+		const p2 = gc.alloc(nums(1, 2, 3, 4, 5), []);
+		expect(gc.remove(p2, 4)).toBe(true);
+		expect(gc.toSpace[p2].values).toEqual(nums(1, 2, 3, 4));
+		// Remove first
+		const p3 = gc.alloc(nums(1, 2, 3, 4, 5), []);
+		expect(gc.remove(p3, 0, 1)).toBe(true);
+		expect(gc.toSpace[p3].values).toEqual(nums(2, 3, 4, 5));
+		// Remove middle
+		const p4 = gc.alloc(nums(1, 2, 3, 4, 5), []);
+		expect(gc.remove(p4, 2, 1)).toBe(true);
+		expect(gc.toSpace[p4].values).toEqual(nums(1, 2, 4, 5));
+		// Invalid pointer
+		const p5 = gc.alloc(nums(1, 2, 3, 4, 5), []);
+		expect(() => {
+			gc.remove(p5, 10, 1);
+		}).toThrow();
+		expect(gc.remove(p5, 0, 0)).toBe(false);
+	});
 });
 
 function read(gc: GarbageCollector, addr: number, child: number): RuntimeValue {

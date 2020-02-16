@@ -152,7 +152,11 @@ export class GarbageCollector {
 	 * @param offset Index at which to remove the value(s)
 	 * @param numToRemove The number of items to remove
 	 */
-	public remove(addr: number, offset: number, numToRemove: number): boolean {
+	public remove(
+		addr: number,
+		offset: number,
+		numToRemove: number = 1
+	): boolean {
 		if (numToRemove < 1) return false;
 		const cell = this.toSpace[addr];
 		if (!cell || offset < 0 || offset > cell.values.length) {
