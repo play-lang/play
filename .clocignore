@@ -4,4 +4,4 @@ package.json
 dist
 .vscode
 .git
-__tests__
+coverage

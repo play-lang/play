@@ -14,4 +14,4 @@ echo ""
 echo "About to run cloc"
 echo ""
 
-cloc ./src --force-lang="TypeScript",ts --progress-rate=1 --by-file --exclude-dir=$(tr '\n' ',' < .clocignore)
+cloc ./src/ --force-lang="TypeScript",ts --progress-rate=1 --by-file --exclude-dir=$(tr '\n' ',' < .clocignore)
