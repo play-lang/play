@@ -18,8 +18,8 @@ describe("garbage collector", () => {
 	});
 	test("circular cleanup", () => {
 		const gc = new GarbageCollector();
-		let p0 = gc.alloc([new RuntimeValue(RuntimeType.Pointer, -1)], []);
-		let p1 = gc.alloc([new RuntimeValue(RuntimeType.Pointer, -1)], []);
+		let p0 = gc.alloc([ptr(-1)], []);
+		let p1 = gc.alloc([ptr(-1)], []);
 		gc.toSpace[p0].values[0] = ptr(p1);
 		gc.toSpace[p1].values[0] = ptr(p0);
 		expect(gc.numActiveCells).toBe(2);
@@ -35,6 +35,42 @@ describe("garbage collector", () => {
 		gc.collect([]);
 		expect(gc.numActiveCells).toBe(0);
 	});
+	test("out of memory (alloc)", () => {
+		const gc = new GarbageCollector({ heapSize: 4 });
+		const p0 = gc.alloc([num(1)], []);
+		const p1 = gc.alloc([num(2)], [ptr(p0)]);
+		expect(() => {
+			gc.alloc([num(3)], ptrs(p0, p1));
+		}).toThrow();
+	});
+	test("out of memory (copy)", () => {
+		const gc = new GarbageCollector({ heapSize: 8 });
+		const p0 = gc.alloc([ptr(-1)], []);
+		const p1 = gc.alloc([ptr(-1)], []);
+		gc.toSpace[p0].values[0] = ptr(p1);
+		gc.toSpace[p1].values[0] = ptr(p0);
+
+		const p2 = gc.alloc([ptr(-1)], []);
+		const p3 = gc.alloc([ptr(-1)], []);
+		gc.toSpace[p2].values[0] = ptr(p3);
+		gc.toSpace[p3].values[0] = ptr(p2);
+
+		const p4 = gc.alloc([ptr(-1)], []);
+		const p5 = gc.alloc([ptr(-1)], []);
+		gc.toSpace[p4].values[0] = ptr(p5);
+		gc.toSpace[p5].values[0] = ptr(p4);
+
+		const p6 = gc.alloc([ptr(-1)], []);
+		/* const p7 = */ gc.alloc([num(100)], []);
+
+		// This should force the start of a collection
+		expect(() => {
+			/* const p8 = */ gc.alloc(
+				[ptr(-1)],
+				ptrs(p0, p1, p2, p3, p4, p5, p6)
+			);
+		}).toThrow();
+	});
 });
 
 function read(gc: GarbageCollector, addr: number, child: number): RuntimeValue {
@@ -43,6 +79,10 @@ function read(gc: GarbageCollector, addr: number, child: number): RuntimeValue {
 
 function ptr(addr: number): RuntimeValue {
 	return new RuntimeValue(RuntimeType.Pointer, addr);
+}
+
+function ptrs(...addresses: number[]): RuntimeValue[] {
+	return addresses.map(addr => ptr(addr));
 }
 
 function num(value: number): RuntimeValue {

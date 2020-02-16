@@ -1,4 +1,5 @@
 import { Describable } from "src/common/describable";
+import { Exception } from "src/common/exception";
 import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";
 
@@ -30,6 +31,17 @@ const defaults: GCConfig = {
 	heapSize: 2048,
 	debug: true,
 };
+
+enum GCErrors {
+	OutOfMemory = "Out of Memory",
+	ScanningIncomplete = "Scanning Incomplete",
+}
+
+export class GCError extends Exception {
+	constructor(type: GCErrors) {
+		super(type);
+	}
+}
 
 /**
  * A simple implementation of an incremental copying/compacting garbage
@@ -69,6 +81,11 @@ export class GarbageCollector implements Describable {
 		return Math.floor(this.config.heapSize / 2);
 	}
 
+	/** True if there are is no more memory available in to-space */
+	public get outOfMemory(): boolean {
+		return this.evacPtr > this.allocPtr;
+	}
+
 	/** Number of active cells (how much memory is being used) */
 	public get numActiveCells(): number {
 		// Compute number of active cells by adding all the scanned,
@@ -98,9 +115,10 @@ export class GarbageCollector implements Describable {
 	}
 
 	public alloc(values: RuntimeValue[], roots: RuntimeValue[]): number {
-		if (this.evacPtr >= this.allocPtr - 1) {
+		if (this.outOfMemory) {
 			if (this.scanPtr < this.evacPtr) {
-				throw new Error("Scanning incomplete");
+				// Theoretically shouldn't ever happen
+				throw new GCError(GCErrors.ScanningIncomplete);
 			}
 			// We're out of heap space
 			this.flip(roots);
@@ -112,8 +130,9 @@ export class GarbageCollector implements Describable {
 			this.scan();
 			k--;
 		}
-		if (this.evacPtr === this.allocPtr) {
-			throw new Error("Heap full");
+		if (this.outOfMemory) {
+			// Still out of memory after copying roots
+			throw new GCError(GCErrors.OutOfMemory);
 		}
 		this.toSpace[this.allocPtr] = new Cell(values);
 		return this.allocPtr--;
@@ -180,6 +199,9 @@ export class GarbageCollector implements Describable {
 	 * address in from-space
 	 */
 	private copy(cell: Cell): number {
+		if (this.outOfMemory) {
+			throw new GCError(GCErrors.OutOfMemory);
+		}
 		// If this cell is already forwarded it need not be copied
 		if (cell.hasFwd) return cell.fwd!;
 		// Create a copy of the cell without a forwarding address and put it in
