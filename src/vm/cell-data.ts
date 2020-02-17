@@ -41,9 +41,8 @@ export class CellData implements Iterable<[string | number, RuntimeValue]> {
 			case this.data instanceof Map: {
 				const data = this.data as Map<string, RuntimeValue>;
 				for (const [key, value] of data) {
-					return [key, value];
+					yield [key, value];
 				}
-				break;
 			}
 		}
 	}
@@ -56,7 +55,6 @@ export class CellData implements Iterable<[string | number, RuntimeValue]> {
 				break;
 			case this.data instanceof Map:
 				(this.data as Map<string, RuntimeValue>).set(key as string, value);
-				break;
 		}
 	}
 
@@ -73,6 +71,7 @@ export class CellData implements Iterable<[string | number, RuntimeValue]> {
 	/** Length/size of the underlying array or map */
 	public get length(): number {
 		switch (true) {
+			/* istanbul ignore next */
 			default:
 			case Array.isArray(this.data):
 				return (this.data as RuntimeValue[]).length;

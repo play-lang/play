@@ -308,7 +308,7 @@ export class GarbageCollector {
 		if (cell.hasFwd) return cell.fwd!;
 		// Create a copy of the cell without a forwarding address and put it in
 		// to-space
-		this.toSpace[this.evacPtr] = new Cell(cell.values);
+		this.toSpace[this.evacPtr] = new Cell(new CellData(cell.values.data));
 		// Update the forwarding address of the old cell
 		cell.fwd = this.evacPtr++;
 		// Return the address of the cell's copy in to-space
@@ -328,14 +328,8 @@ export class GarbageCollector {
 				// if (heap === this.toSpace && this.updated.has(i)) desc += "*";
 				if (cell.values.length > 0) desc += ":";
 				desc += "\n";
-				const j = 0;
-				for (const value of cell.values) {
-					desc +=
-						"    " +
-						String(j).padStart(4) +
-						": " +
-						value.description +
-						"\n";
+				for (const [v, value] of cell.values) {
+					desc += "    " + String(v) + ": " + value.description + "\n";
 				}
 			}
 		}
