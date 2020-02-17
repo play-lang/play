@@ -1,16 +1,22 @@
 import { RuntimeValue } from "src/vm/runtime-value";
 
-export class CellData
-	implements Iterable<[string | number | RuntimeValue, RuntimeValue]> {
+/**
+ * Represents data stored in a heap cell
+ *
+ * Data can be represented in a cell as an array or a map and this poses as
+ * a common iterable interface to either so that the garbage collector need
+ * not care about what kind of data a cell is storing (it only needs to be
+ * able to iterate through the data to scan for pointers)
+ *
+ * I'm not super proud of this duktape, but it gets the job done
+ */
+export class CellData implements Iterable<[string | number, RuntimeValue]> {
 	constructor(
-		public readonly data:
-			| RuntimeValue[]
-			| Map<string, RuntimeValue>
-			| Set<RuntimeValue>
+		public readonly data: RuntimeValue[] | Map<string, RuntimeValue>
 	) {}
 
 	public [Symbol.iterator](): Iterator<
-		[string | number | RuntimeValue, RuntimeValue],
+		[string | number, RuntimeValue],
 		any,
 		undefined
 	> {
@@ -18,7 +24,7 @@ export class CellData
 	}
 
 	public *iterator(): Iterator<
-		[string | number | RuntimeValue, RuntimeValue],
+		[string | number, RuntimeValue],
 		any,
 		undefined
 	> {
@@ -37,13 +43,33 @@ export class CellData
 				}
 				break;
 			}
-			case this.data instanceof Set: {
-				const data = this.data as Set<RuntimeValue>;
-				for (const value of data) {
-					return [value, value];
-				}
+			// case this.data instanceof Set: {
+			// 	const data = this.data as Set<RuntimeValue>;
+			// 	for (const value of data) {
+			// 		return [value, value];
+			// 	}
+			// 	break;
+			// }
+		}
+	}
+
+	public update(key: string | number, value: RuntimeValue): void {
+		switch (true) {
+			case Array.isArray(this.data):
+				(this.data as RuntimeValue[])[key as number] = value;
 				break;
-			}
+			case this.data instanceof Map:
+				(this.data as Map<string, RuntimeValue>).set(key as string, value);
+				break;
+		}
+	}
+
+	public get(key: string | number): RuntimeValue | undefined {
+		switch (true) {
+			case Array.isArray(this.data):
+				return (this.data as RuntimeValue[])[key as number];
+			case this.data instanceof Map:
+				return (this.data as Map<string, RuntimeValue>).get(key as string);
 		}
 	}
 
@@ -54,8 +80,8 @@ export class CellData
 				return (this.data as RuntimeValue[]).length;
 			case this.data instanceof Map:
 				return (this.data as Map<string, RuntimeValue>).size;
-			case this.data instanceof Set:
-				return (this.data as Set<RuntimeValue>).size;
+			// case this.data instanceof Set:
+			// 	return (this.data as Set<RuntimeValue>).size;
 		}
 	}
 }

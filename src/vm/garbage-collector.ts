@@ -1,4 +1,5 @@
 import { Exception } from "src/common/exception";
+import { CellData } from "src/vm/cell-data";
 import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";
 
@@ -6,7 +7,7 @@ import { RuntimeValue } from "src/vm/runtime-value";
 export class Cell {
 	public constructor(
 		/** Array of values contained in this heap cell */
-		public values: RuntimeValue[],
+		public values: CellData,
 		/** Forwarding address of the cell in to-space, if any */
 		public fwd?: number
 	) {}
@@ -115,15 +116,23 @@ export class GarbageCollector {
 		this.allocPtr = this.heapSize - 1;
 	}
 
+	public heap(addr: number, index: number | string): RuntimeValue | undefined {
+		return this.toSpace[addr].values.get(index);
+	}
+
 	/**
 	 * Allocate a cell of space on the heap to hold the specified values
 	 *
 	 * This will perform some garbage collection if necessary
 	 *
-	 * @param values Values to be contained in the new cell
+	 * @param values Values to be contained in the new cell (either an array or
+	 * a map)
 	 * @param roots Current mutator roots, in case garbage collection is initiated
 	 */
-	public alloc(values: RuntimeValue[], roots: RuntimeValue[]): number {
+	public alloc(
+		values: RuntimeValue[] | Map<string, RuntimeValue>,
+		roots: RuntimeValue[]
+	): number {
 		if (this.outOfMemory) {
 			/* istanbul ignore next */
 			if (this.scanPtr < this.evacPtr) {
@@ -144,12 +153,12 @@ export class GarbageCollector {
 			// Still out of memory after copying roots
 			throw new GCError(GCErrors.OutOfMemory);
 		}
-		this.toSpace[this.allocPtr] = new Cell(values);
+		this.toSpace[this.allocPtr] = new Cell(new CellData(values));
 		return this.allocPtr--;
 	}
 
 	/**
-	 * Remove a child value from the cell at the specified index
+	 * Remove a child value from the list cell at the specified index
 	 * @param addr Address of the cell—must be resolved via read() first
 	 * @param offset Index at which to remove the value(s)
 	 * @param numToRemove The number of items to remove
@@ -164,16 +173,19 @@ export class GarbageCollector {
 		if (!cell || offset < 0 || offset > cell.values.length) {
 			throw new GCError(GCErrors.InvalidPointer);
 		}
+		if (!Array.isArray(cell.values.data)) {
+			throw new GCError(GCErrors.InvalidListOperation);
+		}
 		const oldLength = cell.values.length;
-		cell.values = [
-			...cell.values.slice(0, offset),
-			...cell.values.slice(offset + numToRemove),
-		];
+		cell.values = new CellData([
+			...cell.values.data.slice(0, offset),
+			...cell.values.data.slice(offset + numToRemove),
+		]);
 		return oldLength !== cell.values.length;
 	}
 
 	/**
-	 * Insert a child value in a cell at the specified index
+	 * Insert a child value in a list cell at the specified index
 	 * @param addr Address of the cell—must be resolved via read() first
 	 * @param values Values to insert
 	 * @param offset Index at which to insert the new value(s)
@@ -188,13 +200,45 @@ export class GarbageCollector {
 		) {
 			throw new GCError(GCErrors.InvalidPointer);
 		}
+		if (!Array.isArray(cell.values.data)) {
+			throw new GCError(GCErrors.InvalidListOperation);
+		}
 		if (typeof offset !== "number") offset = cell.values.length;
-		cell.values = [
-			...cell.values.slice(0, offset),
+		cell.values = new CellData([
+			...cell.values.data.slice(0, offset),
 			...[...values],
-			...cell.values.slice(offset + 1),
-		];
+			...cell.values.data.slice(offset + 1),
+		]);
 		return;
+	}
+
+	/**
+	 * Delete an entry from a map cell with the specified key
+	 * @param addr Address of the cell—must be resolved via read() first
+	 * @param key Key to delete in the cell's values
+	 */
+	public delete(addr: number, key: string): boolean {
+		const cell = this.toSpace[addr];
+		if (!cell) throw new GCError(GCErrors.InvalidPointer);
+		if (!(cell.values.data instanceof Map)) {
+			throw new GCError(GCErrors.InvalidMapOperation);
+		}
+		return cell.values.data.delete(key);
+	}
+
+	/**
+	 * Set or update an entry's value in a map cell
+	 * @param addr Address of the cell—must be resolved via read() first
+	 * @param key Key to set in the cell's values
+	 * @param value The value to set in the cell's values
+	 */
+	public set(addr: number, key: string, value: RuntimeValue): void {
+		const cell = this.toSpace[addr];
+		if (!cell) throw new GCError(GCErrors.InvalidPointer);
+		if (!(cell.values.data instanceof Map)) {
+			throw new GCError(GCErrors.InvalidMapOperation);
+		}
+		cell.values.data.set(key, value);
 	}
 
 	/** Collect all garbage, stop-the-world style */
@@ -221,12 +265,14 @@ export class GarbageCollector {
 	/** Scan the next cell waiting to be scanned */
 	private scan(): void {
 		const cell = this.toSpace[this.scanPtr++];
-		for (let v = 0; v < cell.values.length; v++) {
-			const value = cell.values[v];
+		for (const [v, value] of cell.values) {
 			if (value.isPointer && typeof value.value === "number") {
-				cell.values[v] = new RuntimeValue(
-					RuntimeType.Pointer,
-					this.copy(this.fromSpace[value.value as number])
+				cell.values.update(
+					v,
+					new RuntimeValue(
+						RuntimeType.Pointer,
+						this.copy(this.fromSpace[value.value as number])
+					)
 				);
 			}
 		}
