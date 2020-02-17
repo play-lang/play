@@ -47,6 +47,7 @@
         "backpatch",
         "bytecode",
         "cloc",
+        "duktape",
         "evac",
         "josephessin",
         "nums",

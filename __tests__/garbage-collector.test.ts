@@ -20,8 +20,8 @@ describe("garbage collector", () => {
 		const gc = new GarbageCollector();
 		let p0 = gc.alloc([ptr(-1)], []);
 		let p1 = gc.alloc([ptr(-1)], []);
-		gc.toSpace[p0].values[0] = ptr(p1);
-		gc.toSpace[p1].values[0] = ptr(p0);
+		gc.toSpace[p0].values.update(0, ptr(p1));
+		gc.toSpace[p1].values.update(0, ptr(p0));
 		expect(gc.numActiveCells).toBe(2);
 		gc.collect([ptr(p0)]);
 		expect(gc.numActiveCells).toBe(2);
@@ -47,13 +47,13 @@ describe("garbage collector", () => {
 		const gc = new GarbageCollector({ heapSize: 8 });
 		const p0 = gc.alloc([ptr(-1)], []);
 		const p1 = gc.alloc([ptr(-1), num(100)], ptrs(p0));
-		gc.toSpace[p0].values[0] = ptr(p1);
-		gc.toSpace[p1].values[0] = ptr(p0);
+		gc.toSpace[p0].values.update(0, ptr(p1));
+		gc.toSpace[p1].values.update(0, ptr(p0));
 
 		const p2 = gc.alloc([ptr(-1)], ptrs(p0, p1));
 		const p3 = gc.alloc([ptr(-1)], ptrs(p0, p1, p2));
-		gc.toSpace[p2].values[0] = ptr(p3);
-		gc.toSpace[p3].values[0] = ptr(p2);
+		gc.toSpace[p2].values.update(0, ptr(p3));
+		gc.toSpace[p3].values.update(0, ptr(p2));
 
 		// This should force the start of a collection
 		expect(() => {
@@ -72,16 +72,16 @@ describe("garbage collector", () => {
 		const p3 = gc.alloc(nums(3, 4, 5), []);
 		// const p3 = gc.alloc(nums(3, 4, 5), []);
 		gc.insert(p0, nums(1, 2, 3, 4, 5));
-		expect(gc.toSpace[p0].values).toEqual(nums(1, 2, 3, 4, 5));
+		expect(gc.toSpace[p0].values.data).toEqual(nums(1, 2, 3, 4, 5));
 		gc.insert(p1, nums(1, 2, 3, 4, 5), 0);
-		expect(gc.toSpace[p1].values).toEqual(nums(1, 2, 3, 4, 5));
+		expect(gc.toSpace[p1].values.data).toEqual(nums(1, 2, 3, 4, 5));
 		gc.insert(p2, nums(4, 5), 3);
-		expect(gc.toSpace[p2].values).toEqual(nums(1, 2, 3, 4, 5));
+		expect(gc.toSpace[p2].values.data).toEqual(nums(1, 2, 3, 4, 5));
 		gc.insert(p3, nums(1, 2, 3), 0);
-		expect(gc.toSpace[p3].values).toEqual(nums(1, 2, 3, 4, 5));
+		expect(gc.toSpace[p3].values.data).toEqual(nums(1, 2, 3, 4, 5));
 		// Insert nothing should do nothing:
 		gc.insert(p3, [], 3);
-		expect(gc.toSpace[p3].values).toEqual(nums(1, 2, 3, 4, 5));
+		expect(gc.toSpace[p3].values.data).toEqual(nums(1, 2, 3, 4, 5));
 		// Out-of-bounds (invalid pointer)
 		expect(() => {
 			gc.insert(p3, nums(1, 2, 3, 4, 5), 8);
@@ -92,23 +92,23 @@ describe("garbage collector", () => {
 		// Remove nothing from nothing
 		const p0 = gc.alloc([], []);
 		expect(gc.remove(p0, 0, 1)).toBe(false);
-		expect(gc.toSpace[p0].values).toEqual([]);
+		expect(gc.toSpace[p0].values.data).toEqual([]);
 		// Remove everything
 		const p1 = gc.alloc(nums(1, 2, 3, 4, 5), []);
 		expect(gc.remove(p1, 0, 5)).toBe(true);
-		expect(gc.toSpace[p1].values).toEqual([]);
+		expect(gc.toSpace[p1].values.data).toEqual([]);
 		// Remove last
 		const p2 = gc.alloc(nums(1, 2, 3, 4, 5), []);
 		expect(gc.remove(p2, 4)).toBe(true);
-		expect(gc.toSpace[p2].values).toEqual(nums(1, 2, 3, 4));
+		expect(gc.toSpace[p2].values.data).toEqual(nums(1, 2, 3, 4));
 		// Remove first
 		const p3 = gc.alloc(nums(1, 2, 3, 4, 5), []);
 		expect(gc.remove(p3, 0, 1)).toBe(true);
-		expect(gc.toSpace[p3].values).toEqual(nums(2, 3, 4, 5));
+		expect(gc.toSpace[p3].values.data).toEqual(nums(2, 3, 4, 5));
 		// Remove middle
 		const p4 = gc.alloc(nums(1, 2, 3, 4, 5), []);
 		expect(gc.remove(p4, 2, 1)).toBe(true);
-		expect(gc.toSpace[p4].values).toEqual(nums(1, 2, 4, 5));
+		expect(gc.toSpace[p4].values.data).toEqual(nums(1, 2, 4, 5));
 		// Invalid pointer
 		const p5 = gc.alloc(nums(1, 2, 3, 4, 5), []);
 		expect(() => {
@@ -119,7 +119,7 @@ describe("garbage collector", () => {
 });
 
 function read(gc: GarbageCollector, addr: number, child: number): RuntimeValue {
-	return gc.toSpace[addr].values[child];
+	return gc.toSpace[addr].values.get(child)!;
 }
 
 function ptr(addr: number): RuntimeValue {
