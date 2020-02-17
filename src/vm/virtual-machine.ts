@@ -82,8 +82,7 @@ export class VirtualMachine {
 					case OpCode.Return: {
 						// Grab the return value so that we can clean up the
 						// locals below it
-						const returnValue =
-							this.stack.length > 0 ? this.pop() : Zero;
+						const returnValue = this.stack.length > 0 ? this.pop() : Zero;
 						// Clean up locals (or globals) created for this call
 						// frame
 						this.dropTo(this.frame.basePointer);
@@ -153,85 +152,61 @@ export class VirtualMachine {
 					case OpCode.Inc: {
 						const index = this.read();
 						const rv = this.getLocal(index);
-						this.setLocal(
-							index,
-							new RuntimeValue(rv.type, rv.value + 1)
-						);
+						this.setLocal(index, new RuntimeValue(rv.type, rv.value + 1));
 						break;
 					}
 					case OpCode.Dec: {
 						const index = this.read();
 						const rv = this.getLocal(index);
-						this.setLocal(
-							index,
-							new RuntimeValue(rv.type, rv.value - 1)
-						);
+						this.setLocal(index, new RuntimeValue(rv.type, rv.value - 1));
 						break;
 					}
 					case OpCode.IncGlobal: {
 						const index = this.read();
 						const rv = this.get(index);
-						this.set(
-							index,
-							new RuntimeValue(rv.type, rv.value + 1)
-						);
+						this.set(index, new RuntimeValue(rv.type, rv.value + 1));
 						break;
 					}
 					case OpCode.DecGlobal: {
 						const index = this.read();
 						const rv = this.get(index);
-						this.set(
-							index,
-							new RuntimeValue(rv.type, rv.value - 1)
-						);
+						this.set(index, new RuntimeValue(rv.type, rv.value - 1));
 						break;
 					}
 					case OpCode.Add: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(
-							new RuntimeValue(rhs.type, lhs.value + rhs.value)
-						);
+						this.push(new RuntimeValue(rhs.type, lhs.value + rhs.value));
 						break;
 					}
 					case OpCode.Sub: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(
-							new RuntimeValue(rhs.type, lhs.value - rhs.value)
-						);
+						this.push(new RuntimeValue(rhs.type, lhs.value - rhs.value));
 						break;
 					}
 					case OpCode.Mul: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(
-							new RuntimeValue(rhs.type, lhs.value * rhs.value)
-						);
+						this.push(new RuntimeValue(rhs.type, lhs.value * rhs.value));
 						break;
 					}
 					case OpCode.Div: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(
-							new RuntimeValue(rhs.type, lhs.value / rhs.value)
-						);
+						this.push(new RuntimeValue(rhs.type, lhs.value / rhs.value));
 						break;
 					}
 					case OpCode.Remain: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(
-							new RuntimeValue(rhs.type, lhs.value % rhs.value)
-						);
+						this.push(new RuntimeValue(rhs.type, lhs.value % rhs.value));
 						break;
 					}
 					case OpCode.Exp: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(
-							new RuntimeValue(rhs.type, lhs.value ** rhs.value)
-						);
+						this.push(new RuntimeValue(rhs.type, lhs.value ** rhs.value));
 						break;
 					}
 					case OpCode.Less: {
@@ -328,9 +303,7 @@ export class VirtualMachine {
 						break;
 					}
 					case OpCode.Load: {
-						this.push(
-							new RuntimeValue(RuntimeType.Number, this.read())
-						);
+						this.push(new RuntimeValue(RuntimeType.Number, this.read()));
 						break;
 					}
 					case OpCode.Tail:
@@ -348,9 +321,7 @@ export class VirtualMachine {
 							const basePointer = this.stack.length - numLocals;
 							// Only push a new instruction if we are calling a function
 							// If we are tail-calling a recursive function this is unnecessary
-							this.frames.push(
-								new Frame(ip, basePointer, numLocals)
-							);
+							this.frames.push(new Frame(ip, basePointer, numLocals));
 						} else {
 							this.ip = ip;
 						}
@@ -385,11 +356,7 @@ export class VirtualMachine {
 			const code: VMStatus =
 				e instanceof RuntimeError ? e.code : VMStatus.UnknownFailure;
 			console.error(e);
-			return new VMResult(
-				code,
-				this.top || Nil,
-				performance.now() - startTime
-			);
+			return new VMResult(code, this.top || Nil, performance.now() - startTime);
 		}
 	}
 

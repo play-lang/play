@@ -28,8 +28,7 @@ export class BlockStatementNode extends Statement {
 				...state,
 				parent: this,
 				isDead: dead,
-				isLast:
-					statement === this.statements[this.statements.length - 1],
+				isLast: statement === this.statements[this.statements.length - 1],
 			});
 			if (statement instanceof ReturnStatementNode) dead = true;
 		});

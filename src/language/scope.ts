@@ -32,10 +32,7 @@ export class Scope implements Describable {
 	 *
 	 * A LinkedHashMap is used to maintain insertion order
 	 */
-	public entries: LinkedHashMap<
-		string,
-		IdentifierSymbol
-	> = new LinkedHashMap();
+	public entries: LinkedHashMap<string, IdentifierSymbol> = new LinkedHashMap();
 
 	/**
 	 * True if this scope is the global scope containing all other scopes
@@ -63,10 +60,7 @@ export class Scope implements Describable {
 	 * @param id The identifier to check
 	 */
 	public findScope(id: string): Scope | undefined {
-		if (
-			this.entries.has(id) &&
-			this.entries.ordinal(id)! < this.available
-		) {
+		if (this.entries.has(id) && this.entries.ordinal(id)! < this.available) {
 			return this;
 		}
 		if (!this.enclosingScope) return;
@@ -111,10 +105,7 @@ export class Scope implements Describable {
 	 * @returns The corresponding identifier entry if the identifier was found
 	 */
 	public lookup(id: string): IdentifierSymbol | undefined {
-		if (
-			this.entries.has(id) &&
-			this.entries.ordinal(id)! < this.available
-		) {
+		if (this.entries.has(id) && this.entries.ordinal(id)! < this.available) {
 			return this.entries.get(id);
 		}
 		if (!this.enclosingScope) return;
@@ -139,10 +130,7 @@ export class Scope implements Describable {
 	 * @param id The variable name to look up
 	 */
 	public stackPos(id: string): number | undefined {
-		if (
-			this.entries.has(id) &&
-			this.entries.ordinal(id)! < this.available
-		) {
+		if (this.entries.has(id) && this.entries.ordinal(id)! < this.available) {
 			let scope = this.enclosingScope;
 			let stackPos = 0;
 			while (scope && !scope.isGlobalScope) {
@@ -179,8 +167,7 @@ export class Scope implements Describable {
 		result += '{ "ids": [';
 		entries.forEach((entry, index) => {
 			const comma = index + 1 === entries.length ? "" : ", ";
-			result +=
-				'"Id(' + String(index) + ", `" + entry.name + '`)"' + comma;
+			result += '"Id(' + String(index) + ", `" + entry.name + '`)"' + comma;
 		});
 		result += "]" + (this.scopes.length > 0 ? ', "scopes": [' : "");
 		for (const [index, scope] of this.scopes.entries()) {

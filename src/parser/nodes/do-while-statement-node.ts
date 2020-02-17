@@ -19,7 +19,7 @@ export class DoWhileStatementNode extends Statement {
 	public setState(state: NodeState): void {
 		this.state = state;
 		this.block.setState({ ...state, parent: this });
-		this.condition.setState({...state, parent: this });
+		this.condition.setState({ ...state, parent: this });
 	}
 
 	public type(env: Environment): Type {

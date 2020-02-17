@@ -84,8 +84,7 @@ export class PrintVisitor implements Visitor, Describable {
 		this.desc += "Block\n";
 		this.indent += 1;
 		for (const statement of node.statements) {
-			const last =
-				statement === node.statements[node.statements.length - 1];
+			const last = statement === node.statements[node.statements.length - 1];
 			this.desc += this.spaces + (last ? "└── " : "├── ");
 			statement.accept(this);
 		}
@@ -131,10 +130,7 @@ export class PrintVisitor implements Visitor, Describable {
 	public visitFunctionDeclarationNode(node: FunctionDeclarationNode): void {
 		let params = "";
 		let i = 0;
-		for (const [
-			param,
-			typeAnnotation,
-		] of node.info.parameterTypes.entries()) {
+		for (const [param, typeAnnotation] of node.info.parameterTypes.entries()) {
 			const type = typeAnnotation.join(" ");
 			params += type + " " + param;
 			if (i < node.info.parameterTypes.size - 1) params += ", ";
@@ -179,8 +175,7 @@ export class PrintVisitor implements Visitor, Describable {
 		node.consequent.accept(this);
 		this.indent -= 1;
 		for (const alternate of node.alternates) {
-			const last =
-				alternate === node.alternates[node.alternates.length - 1];
+			const last = alternate === node.alternates[node.alternates.length - 1];
 			this.desc += this.spaces + (last ? "└── " : "├── ");
 			alternate.accept(this);
 		}
@@ -227,8 +222,7 @@ export class PrintVisitor implements Visitor, Describable {
 		this.desc += "Program\n";
 		this.indent += 1;
 		for (const statement of node.statements) {
-			const last =
-				statement === node.statements[node.statements.length - 1];
+			const last = statement === node.statements[node.statements.length - 1];
 			this.desc += this.spaces + (last ? "└── " : "├── ");
 			statement.accept(this);
 		}

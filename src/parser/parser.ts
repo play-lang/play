@@ -66,9 +66,7 @@ export class Parser extends TokenParser {
 						"Include preprocessor command expected"
 					);
 					this.consume(TokenType.String, "Include filename expected");
-					this.consumeEndOfStatement(
-						"Expected end of preprocessor statement"
-					);
+					this.consumeEndOfStatement("Expected end of preprocessor statement");
 					this.eatLines();
 				}
 				// A program consists of a series of statements
@@ -168,12 +166,7 @@ export class Parser extends TokenParser {
 		// Colon has already been matched for us
 		const typeAnnotation: string[] = [];
 		if (
-			this.match(
-				TokenType.Id,
-				TokenType.Str,
-				TokenType.Num,
-				TokenType.Bool
-			)
+			this.match(TokenType.Id, TokenType.Str, TokenType.Num, TokenType.Bool)
 		) {
 			typeAnnotation.push(this.previous.lexeme);
 		} else {
@@ -329,9 +322,7 @@ export class Parser extends TokenParser {
 		let i = 0;
 		for (const param of parameters) {
 			// Register each of the function's parameters in the current scope
-			this.scope.register(
-				new IdentifierSymbol(param, paramTokens[i], false)
-			);
+			this.scope.register(new IdentifierSymbol(param, paramTokens[i], false));
 			i++;
 		}
 
@@ -368,9 +359,7 @@ export class Parser extends TokenParser {
 		let catchAllElseSeen = false;
 		while (this.match(TokenType.Else)) {
 			const token = this.previous;
-			const expr = this.match(TokenType.If)
-				? this.expression()
-				: undefined;
+			const expr = this.match(TokenType.If) ? this.expression() : undefined;
 			if (!expr) {
 				if (catchAllElseSeen) {
 					throw this.error(
@@ -388,8 +377,7 @@ export class Parser extends TokenParser {
 			}
 			this.consume(
 				TokenType.BraceOpen,
-				"Expected opening brace of `else" +
-					(expr ? " if` block" : "` block")
+				"Expected opening brace of `else" + (expr ? " if` block" : "` block")
 			);
 			const block = this.block();
 			const alternate = new ElseStatementNode(token, expr, block);
@@ -400,10 +388,7 @@ export class Parser extends TokenParser {
 
 	public doWhileStatement(): DoWhileStatementNode {
 		const token = this.previous;
-		this.consume(
-			TokenType.BraceOpen,
-			"Expected opening brace of while block"
-		);
+		this.consume(TokenType.BraceOpen, "Expected opening brace of while block");
 		const block = this.block();
 		this.consume(TokenType.While, "Expected while keyword");
 		const condition = this.expression();
@@ -413,10 +398,7 @@ export class Parser extends TokenParser {
 	public whileStatement(): WhileStatementNode {
 		const token = this.previous;
 		const condition = this.expression();
-		this.consume(
-			TokenType.BraceOpen,
-			"Expected opening brace of while block"
-		);
+		this.consume(TokenType.BraceOpen, "Expected opening brace of while block");
 		const block = this.block();
 		return new WhileStatementNode(token, condition, block);
 	}

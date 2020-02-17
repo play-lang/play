@@ -35,8 +35,7 @@ export class IfStatementNode extends Statement {
 			alternate.setState({
 				...state,
 				parent: this,
-				isLast:
-					alternate === this.alternates[this.alternates.length - 1],
+				isLast: alternate === this.alternates[this.alternates.length - 1],
 			});
 		});
 	}

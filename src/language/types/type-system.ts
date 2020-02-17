@@ -40,9 +40,7 @@ export abstract class Type implements Describable {
 	): Type {
 		const memberAnnotations: string[][] =
 			typeof typeAnnotation === "string"
-				? typeAnnotation
-						.split("|")
-						.map(annotation => annotation.split(" "))
+				? typeAnnotation.split("|").map(annotation => annotation.split(" "))
 				: [typeAnnotation];
 
 		const memberTypes: Type[] = [];
@@ -302,9 +300,7 @@ export class RecordType extends Type {
 				return false;
 			}
 			// Lastly, ensure that the parameter types match
-			if (
-				!this.operands.get(name)!.equivalent(type.operands.get(name)!)
-			) {
+			if (!this.operands.get(name)!.equivalent(type.operands.get(name)!)) {
 				return false;
 			}
 		}

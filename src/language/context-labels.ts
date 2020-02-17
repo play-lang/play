@@ -86,9 +86,7 @@ export class ContextLabels {
 				const label = labels.get(address)!;
 				// Resolve address to a destination context
 				if (!contextMap.has(label)) {
-					throw new Error(
-						"Can't find destination context in linker output"
-					);
+					throw new Error("Can't find destination context in linker output");
 				}
 
 				const destPos: number = contextMap.get(label)!;
