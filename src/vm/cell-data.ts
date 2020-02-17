@@ -1,14 +1,15 @@
 import { RuntimeValue } from "src/vm/runtime-value";
 
 /**
- * Represents data stored in a heap cell
+ * Represents data that is stored in a heap cell
  *
- * Data can be represented in a cell as an array or a map and this poses as
- * a common iterable interface to either so that the garbage collector need
+ * Data can be represented in a heap cell as an array or a map and this poses
+ * as a common iterable interface to either so that the garbage collector need
  * not care about what kind of data a cell is storing (it only needs to be
- * able to iterate through the data to scan for pointers)
+ * able to iterate through and update the data while scanning pointers)
  *
- * I'm not super proud of this duktape, but it gets the job done
+ * This is a simple abstraction that makes the code for the garbage collector
+ * a little bit cleaner and easier to maintain
  */
 export class CellData implements Iterable<[string | number, RuntimeValue]> {
 	constructor(
@@ -28,6 +29,7 @@ export class CellData implements Iterable<[string | number, RuntimeValue]> {
 		any,
 		undefined
 	> {
+		// Iterate through the underlying array or map accordingly
 		switch (true) {
 			case Array.isArray(this.data): {
 				const data = this.data as RuntimeValue[];
@@ -43,16 +45,10 @@ export class CellData implements Iterable<[string | number, RuntimeValue]> {
 				}
 				break;
 			}
-			// case this.data instanceof Set: {
-			// 	const data = this.data as Set<RuntimeValue>;
-			// 	for (const value of data) {
-			// 		return [value, value];
-			// 	}
-			// 	break;
-			// }
 		}
 	}
 
+	/** Update a value in the underlying array or map */
 	public update(key: string | number, value: RuntimeValue): void {
 		switch (true) {
 			case Array.isArray(this.data):
@@ -64,6 +60,7 @@ export class CellData implements Iterable<[string | number, RuntimeValue]> {
 		}
 	}
 
+	/** Get a value from the underlying array or map */
 	public get(key: string | number): RuntimeValue | undefined {
 		switch (true) {
 			case Array.isArray(this.data):
@@ -73,6 +70,7 @@ export class CellData implements Iterable<[string | number, RuntimeValue]> {
 		}
 	}
 
+	/** Length/size of the underlying array or map */
 	public get length(): number {
 		switch (true) {
 			default:
@@ -80,8 +78,6 @@ export class CellData implements Iterable<[string | number, RuntimeValue]> {
 				return (this.data as RuntimeValue[]).length;
 			case this.data instanceof Map:
 				return (this.data as Map<string, RuntimeValue>).size;
-			// case this.data instanceof Set:
-			// 	return (this.data as Set<RuntimeValue>).size;
 		}
 	}
 }
