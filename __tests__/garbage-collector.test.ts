@@ -116,6 +116,41 @@ describe("garbage collector", () => {
 		}).toThrow();
 		expect(gc.remove(p5, 0, 0)).toBe(false);
 	});
+	test("set/delete", () => {
+		const gc = new GarbageCollector();
+		const p0 = gc.alloc(new Map(), []);
+		gc.set(p0, "a", num(1));
+		gc.set(p0, "b", num(2));
+		expect(gc.heap(p0, "a")).toEqual(num(1));
+		expect(gc.heap(p0, "b")).toEqual(num(2));
+		gc.delete(p0, "a");
+		expect(gc.heap(p0, "a")).toBe(undefined);
+		// "insert" is a list cell operation and can't be called on a map cell:
+		expect(() => {
+			gc.insert(p0, nums(1), 0);
+		}).toThrow();
+		// "remove" is a list cell operation and can't be called on a map cell:
+		expect(() => {
+			gc.remove(p0, 0, 1);
+		}).toThrow();
+		// Test invalid set/delete:
+		expect(() => {
+			gc.set(100, "a", num(100));
+		}).toThrow();
+		expect(() => {
+			gc.delete(100, "a");
+		}).toThrow();
+
+		const p1 = gc.alloc(nums(1, 2, 3), []);
+		// "set" is a map cell operation and can't be called on a list cell:
+		expect(() => {
+			gc.set(p1, "a", num(100));
+		}).toThrow();
+		// "delete" is a map cell operation and can't be called on a list cell:
+		expect(() => {
+			gc.delete(p1, "a");
+		}).toThrow();
+	});
 });
 
 function read(gc: GarbageCollector, addr: number, child: number): RuntimeValue {
