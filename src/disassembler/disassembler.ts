@@ -21,10 +21,7 @@ export class Disassembler {
 		let contextTree: AvlTree<number, Context> = new AvlTree();
 		if (program.contextMap) {
 			program.contexts.forEach(context =>
-				contextTree.insert(
-					program.contextMap!.get(context.name)!,
-					context
-				)
+				contextTree.insert(program.contextMap!.get(context.name)!, context)
 			);
 		}
 		for (const context of program.contexts) {
@@ -233,12 +230,7 @@ export class Disassembler {
 							const contextRefs = contextLabels.get(context)!;
 							if (contextRefs.has(relIp)) {
 								const destContextName = contextRefs.get(relIp)!;
-								out += this.loadWithNoInfo(
-									op,
-									ip,
-									addr,
-									destContextName
-								);
+								out += this.loadWithNoInfo(op, ip, addr, destContextName);
 								break;
 							}
 						}
@@ -420,9 +412,7 @@ export class Disassembler {
 
 	/** Describe a runtime value */
 	private value(value: RuntimeValue): string {
-		return (
-			RuntimeType[value.type].toLowerCase() + "\t" + value.value + "\n"
-		);
+		return RuntimeType[value.type].toLowerCase() + "\t" + value.value + "\n";
 	}
 
 	/**

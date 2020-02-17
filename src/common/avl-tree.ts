@@ -342,9 +342,7 @@ export class AvlTree<K, V> {
 				root = root.left;
 			} else {
 				// Node has 2 children, get the in-order successor
-				const inOrderSuccessor = this._minValueNode(
-					root.right as Node<K, V>
-				);
+				const inOrderSuccessor = this._minValueNode(root.right as Node<K, V>);
 				root.key = inOrderSuccessor.key;
 				root.value = inOrderSuccessor.value;
 				root.right = this._delete(inOrderSuccessor.key, root.right);

@@ -256,9 +256,7 @@ export class TypeChecker {
 				this.report(
 					new SemanticError(
 						node.token,
-						"Variable " +
-							node.name +
-							" referenced before declaration"
+						"Variable " + node.name + " referenced before declaration"
 					)
 				);
 			}
@@ -335,10 +333,7 @@ export class TypeChecker {
 
 	private checkPrimitiveExpression(node: PrimitiveExpressionNode): void {
 		if (node.type(this.env) instanceof ErrorType) {
-			this.error(
-				node.token,
-				"Failed to resolve type for " + node.token.lexeme
-			);
+			this.error(node.token, "Failed to resolve type for " + node.token.lexeme);
 		}
 	}
 
@@ -383,9 +378,7 @@ export class TypeChecker {
 	private checkVariableDeclaration(node: VariableDeclarationNode): void {
 		const scope = this.env.symbolTable.scope.findScope(node.variableName);
 		if (!scope) {
-			this.report(
-				new SemanticError(node.token, "Variable not found in scope")
-			);
+			this.report(new SemanticError(node.token, "Variable not found in scope"));
 			return;
 		}
 		// Visit the assignment expression that might follow a variable declaration:
@@ -423,17 +416,13 @@ export class TypeChecker {
 	private checkNode(node: Node): void {
 		switch (true) {
 			case node instanceof AssignmentExpressionNode:
-				this.checkAssignmentExpression(
-					node as AssignmentExpressionNode
-				);
+				this.checkAssignmentExpression(node as AssignmentExpressionNode);
 				break;
 			case node instanceof BinaryExpressionNode:
 				this.checkBinaryExpression(node as BinaryExpressionNode);
 				break;
 			case node instanceof BinaryLogicalExpressionNode:
-				this.checkBinaryLogicalExpression(
-					node as BinaryLogicalExpressionNode
-				);
+				this.checkBinaryLogicalExpression(node as BinaryLogicalExpressionNode);
 				break;
 			case node instanceof BlockStatementNode:
 				this.checkBlockStatement(node as BlockStatementNode);
@@ -457,9 +446,7 @@ export class TypeChecker {
 				this.checkIfStatement(node as IfStatementNode);
 				break;
 			case node instanceof InvocationExpressionNode:
-				this.checkInvocationExpression(
-					node as InvocationExpressionNode
-				);
+				this.checkInvocationExpression(node as InvocationExpressionNode);
 				break;
 			case node instanceof PostfixExpressionNode:
 				this.checkPostfixExpression(node as PostfixExpressionNode);

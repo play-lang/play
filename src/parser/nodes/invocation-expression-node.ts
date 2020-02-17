@@ -90,9 +90,7 @@ export class InvocationExpressionNode extends Expression {
 				}
 			}
 		}
-		throw new Error(
-			"Can't compute function return type for " + functionName
-		);
+		throw new Error("Can't compute function return type for " + functionName);
 	}
 
 	public argumentsType(env: Environment): ProductType {

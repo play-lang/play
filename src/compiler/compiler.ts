@@ -189,10 +189,7 @@ export class Compiler implements Visitor {
 					stackPos
 				);
 			} else {
-				this.context.emit(
-					shouldIncrement ? OpCode.Inc : OpCode.Dec,
-					stackPos
-				);
+				this.context.emit(shouldIncrement ? OpCode.Inc : OpCode.Dec, stackPos);
 			}
 		} else {
 			throw new Error("Can't mutate non-variable" + node.token.lexeme);
@@ -363,24 +360,16 @@ export class Compiler implements Visitor {
 			if (this.functionTable.has(node.name)) {
 				// Register a function load address to be patched later
 				const index = this.context.emit(OpCode.Load, -1) - 1;
-				this.patcher.registerContextAddress(
-					this.context,
-					index,
-					node.name
-				);
+				this.patcher.registerContextAddress(this.context, index, node.name);
 			} else {
-				throw new Error(
-					"Cannot compile non-existent function: " + node.name
-				);
+				throw new Error("Cannot compile non-existent function: " + node.name);
 			}
 		} else {
 			// Node represents a variable reference
 			const scope = this.scope.findScope(node.name);
 			if (!scope) {
 				throw new Error(
-					"Cannot compile non-existent variable reference `" +
-						node.name +
-						"`"
+					"Cannot compile non-existent variable reference `" + node.name + "`"
 				);
 			}
 			// Emit the proper instruction to push a copy of the variable's value
@@ -447,10 +436,7 @@ export class Compiler implements Visitor {
 		// Load the function to the stack after loading the arguments
 		this.accept(node.lhs);
 		// Emit the proper calling instruction to invoke the function
-		this.context.emit(
-			optimize ? OpCode.Tail : OpCode.Call,
-			node.args.length
-		);
+		this.context.emit(optimize ? OpCode.Tail : OpCode.Call, node.args.length);
 	}
 
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
@@ -559,9 +545,7 @@ export class Compiler implements Visitor {
 	public visitVariableDeclarationNode(node: VariableDeclarationNode): void {
 		if (!this.scope.entries.has(node.variableName)) {
 			throw new Error(
-				"Fatal error: Can't find name " +
-					node.variableName +
-					" in symbol table"
+				"Fatal error: Can't find name " + node.variableName + " in symbol table"
 			);
 		}
 		if (!node.expr) {

@@ -116,10 +116,7 @@ export class Preprocessor {
 			);
 			const filename = filenameToken.lexeme;
 			if (!filename) {
-				throw parser.error(
-					filenameToken,
-					"Must provide a valid filename"
-				);
+				throw parser.error(filenameToken, "Must provide a valid filename");
 			}
 			parser.consumeEndOfStatement();
 			// Recursively include files

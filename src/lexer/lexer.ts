@@ -199,9 +199,7 @@ export class Lexer {
 	 * the lexer position
 	 */
 	protected match(expected: string): boolean {
-		return this.isAtEnd || this.peek !== expected
-			? false
-			: !!this.advance();
+		return this.isAtEnd || this.peek !== expected ? false : !!this.advance();
 	}
 
 	/** Returns the current character and advances the lexer position */
@@ -418,9 +416,7 @@ export class Lexer {
 		// Look the id up in the reserved id tables for the language to
 		// see if it represents built-in functionality
 		const tokenType =
-			this.lexeme in idTokenTypes
-				? idTokenTypes[this.lexeme]
-				: TokenType.Id;
+			this.lexeme in idTokenTypes ? idTokenTypes[this.lexeme] : TokenType.Id;
 		return this.makeToken(tokenType);
 	}
 
@@ -450,9 +446,7 @@ export class Lexer {
 			if (this.match("\\")) {
 				if (this.peek in stringEscapes) {
 					// Escape sequence
-					lexeme += String.fromCharCode(
-						stringEscapes[this.advance()]
-					);
+					lexeme += String.fromCharCode(stringEscapes[this.advance()]);
 				} else {
 					lexeme += this.advance();
 					this.warn("Unknown escape sequence");
