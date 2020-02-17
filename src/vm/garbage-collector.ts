@@ -34,6 +34,8 @@ enum GCErrors {
 	OutOfMemory = "Out of Memory",
 	ScanningIncomplete = "Scanning Incomplete",
 	InvalidPointer = "Invalid Pointer",
+	InvalidListOperation = "Invalid List Operation",
+	InvalidMapOperation = "Invalid Map Operation",
 }
 
 export class GCError extends Exception {
