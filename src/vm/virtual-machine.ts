@@ -100,7 +100,7 @@ export class VirtualMachine {
 							);
 						} else {
 							// Push the return value back on to the stack
-							this.stack.push(returnValue);
+							this.push(returnValue);
 							// Pop the call frame and resume execution at the
 							// previous ip
 							this.frames.pop();
@@ -130,7 +130,7 @@ export class VirtualMachine {
 					}
 					case OpCode.Set: {
 						// Set a local variable
-						this.setLocal(this.read(), this.top);
+						this.setLocal(this.read(), this.top.copy());
 						break;
 					}
 					case OpCode.GetGlobal: {
@@ -139,8 +139,7 @@ export class VirtualMachine {
 						break;
 					}
 					case OpCode.SetGlobal: {
-						const index = this.read();
-						this.stack[index] = this.top;
+						this.set(this.read(), this.top.copy());
 						break;
 					}
 					case OpCode.Neg: {
