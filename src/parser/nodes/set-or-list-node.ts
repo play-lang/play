@@ -41,6 +41,6 @@ export class SetOrListNode extends Statement {
 	}
 
 	public accept(visitor: Visitor): void {
-		visitor.visitReturnStatementNode?.(this);
+		visitor.visitSetOrListNode?.(this);
 	}
 }
