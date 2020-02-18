@@ -1,5 +1,14 @@
 import { RuntimeValue } from "src/vm/runtime-value";
 
+/** Underlying type represented by the cell data */
+export type CellDataType =
+	| RuntimeValue[]
+	| Map<string, RuntimeValue>
+	| Set<RuntimeValue>;
+
+/** Type of key used by the underlying data type */
+export type CellDataTypeKey = string | number | RuntimeValue;
+
 /**
  * Represents data that is stored in a heap cell
  *
@@ -11,13 +20,11 @@ import { RuntimeValue } from "src/vm/runtime-value";
  * This is a simple abstraction that makes the code for the garbage collector
  * a little bit cleaner and easier to maintain
  */
-export class CellData implements Iterable<[string | number, RuntimeValue]> {
-	constructor(
-		public readonly data: RuntimeValue[] | Map<string, RuntimeValue>
-	) {}
+export class CellData implements Iterable<[CellDataTypeKey, RuntimeValue]> {
+	constructor(public readonly data: CellDataType) {}
 
 	public [Symbol.iterator](): Iterator<
-		[string | number, RuntimeValue],
+		[CellDataTypeKey, RuntimeValue],
 		any,
 		undefined
 	> {
@@ -25,7 +32,7 @@ export class CellData implements Iterable<[string | number, RuntimeValue]> {
 	}
 
 	public *iterator(): Iterator<
-		[string | number, RuntimeValue],
+		[CellDataTypeKey, RuntimeValue],
 		any,
 		undefined
 	> {
@@ -43,28 +50,44 @@ export class CellData implements Iterable<[string | number, RuntimeValue]> {
 				for (const [key, value] of data) {
 					yield [key, value];
 				}
+				break;
+			}
+			case this.data instanceof Set: {
+				const data = this.data as Set<RuntimeValue>;
+				for (const value of data) {
+					yield [value, value];
+				}
 			}
 		}
 	}
 
-	/** Update a value in the underlying array or map */
-	public update(key: string | number, value: RuntimeValue): void {
+	/** Update a value in the underlying array/map/set */
+	public update(key: CellDataTypeKey, value: RuntimeValue): void {
 		switch (true) {
 			case Array.isArray(this.data):
 				(this.data as RuntimeValue[])[key as number] = value;
 				break;
 			case this.data instanceof Map:
 				(this.data as Map<string, RuntimeValue>).set(key as string, value);
+				break;
+			case this.data instanceof Set: {
+				// Remove the old value and add the new value to perform an "update"
+				const set = this.data as Set<RuntimeValue>;
+				set.delete(key as RuntimeValue);
+				set.add(value);
+			}
 		}
 	}
 
 	/** Get a value from the underlying array or map */
-	public get(key: string | number): RuntimeValue | undefined {
+	public get(key: CellDataTypeKey): RuntimeValue | undefined {
 		switch (true) {
 			case Array.isArray(this.data):
 				return (this.data as RuntimeValue[])[key as number];
 			case this.data instanceof Map:
 				return (this.data as Map<string, RuntimeValue>).get(key as string);
+			case this.data instanceof Set:
+				return key as RuntimeValue;
 		}
 	}
 
@@ -77,6 +100,8 @@ export class CellData implements Iterable<[string | number, RuntimeValue]> {
 				return (this.data as RuntimeValue[]).length;
 			case this.data instanceof Map:
 				return (this.data as Map<string, RuntimeValue>).size;
+			case this.data instanceof Set:
+				return (this.data as Set<RuntimeValue>).size;
 		}
 	}
 }

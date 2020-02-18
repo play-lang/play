@@ -241,7 +241,7 @@ export class PrintVisitor implements Visitor, Describable {
 
 	public visitSetOrListNode(node: SetOrListNode): void {
 		this.desc +=
-			"SetOrListNode(representedCollectionType =" +
+			"SetOrListNode(representedCollectionType=" +
 			RepresentedCollectionType[node.representedCollectionType] +
 			")\n";
 		this.indent += 1;
