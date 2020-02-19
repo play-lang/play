@@ -63,6 +63,8 @@ export class Play {
 	 */
 	public static compile(code: string): CompiledProgram {
 		const ast = Play.parse(code);
+		const typeChecker = new TypeChecker(ast);
+		typeChecker.check();
 		const compiler = new Compiler(ast);
 		return compiler.compile();
 	}

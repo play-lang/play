@@ -333,7 +333,10 @@ export class TypeChecker {
 			}
 		} else {
 			// TODO: Semantic error here for unrecognized function
-			throw new Error("Can't find function " + node.functionName);
+			throw new TypeCheckError(
+				node.token,
+				"Failed to resolve function " + node.functionName
+			);
 		}
 	}
 

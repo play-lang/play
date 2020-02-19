@@ -354,7 +354,31 @@ export class VirtualMachine {
 					case OpCode.MakeMap: {
 						break;
 					}
+					// Index operator []
 					case OpCode.Index: {
+						const index = this.pop();
+						const lhs = this.pop();
+						if (!lhs.isPointer) {
+							throw new RuntimeError(
+								VMStatus.InvalidIndexOperation,
+								"Invalid index operation into non-lhs type " + lhs.description
+							);
+						}
+						const addr = this.gc.read(lhs.value as number);
+						// Won't work for sets
+						const value = this.gc.heap(addr, index.value);
+						if (value) {
+							this.stack.push(value.copy());
+						} else {
+							throw new RuntimeError(
+								VMStatus.InvalidIndex,
+								"Invalid index " + index.description
+							);
+						}
+						break;
+					}
+					// Assign a value to a specific child index inside a heap cell
+					case OpCode.SetHeap: {
 						break;
 					}
 				}

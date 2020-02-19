@@ -114,6 +114,11 @@ export class AssignmentParselet implements InfixParselet {
 	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
 		// Assignment is right-associative, so we drop precedence by 1:
 		const rhs: Expression = parser.expression(this.precedence - 1);
+		if (lhs instanceof IndexExpressionNode) {
+			// Left-hand side is an index expression (`array[index] = value`) and
+			// is used in an assignment statement
+			lhs.lValue = true;
+		}
 		return new AssignmentExpressionNode(token, token.type, lhs, rhs);
 	}
 	public get precedence(): number {

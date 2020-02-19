@@ -79,11 +79,7 @@ export async function disassembleFinalFile(path: string): Promise<string> {
 
 export async function preprocessFile(path: string): Promise<string> {
 	const fileProvider = createFileProvider();
-	const pp = new Preprocessor(
-		path,
-		async (path: string) => path,
-		fileProvider
-	);
+	const pp = new Preprocessor(path, async (path: string) => path, fileProvider);
 	const finalCode = await pp.preprocess();
 	return finalCode;
 }
