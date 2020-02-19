@@ -1,11 +1,15 @@
 import { Expression, NodeState, Statement } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import { None, Type } from "src/language/types/type-system";
+import {
+	Collection,
+	CollectionType,
+	ErrorType,
+	Type,
+} from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export enum RepresentedCollectionType {
-	Unknown,
 	Set,
 	List,
 }
@@ -16,7 +20,7 @@ export class SetOrListNode extends Statement {
 		/** Expressions comprising the members of the set or list */
 		public readonly members: Expression[],
 		/** The type of collection this node represents */
-		public representedCollectionType: RepresentedCollectionType = RepresentedCollectionType.Unknown
+		public representedCollectionType: RepresentedCollectionType = RepresentedCollectionType.List
 	) {
 		super(
 			token,
@@ -37,7 +41,14 @@ export class SetOrListNode extends Statement {
 	}
 
 	public type(env: Environment): Type {
-		return None;
+		if (this.members.length < 1) return new ErrorType(false);
+		const type = this.members[0].type(env);
+		switch (this.representedCollectionType) {
+			case RepresentedCollectionType.List:
+				return new CollectionType(Collection.List, type, false);
+			case RepresentedCollectionType.Set:
+				return new CollectionType(Collection.Set, type, false);
+		}
 	}
 
 	public accept(visitor: Visitor): void {

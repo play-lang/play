@@ -252,6 +252,11 @@ export class Disassembler {
 					this.instrParam(op, ip, numItems);
 					break;
 				}
+				case OpCode.Index: {
+					// Nothing fancy:
+					out += this.instr(op, ip);
+					break;
+				}
 			}
 			ip = p;
 		} // for op of bytecode

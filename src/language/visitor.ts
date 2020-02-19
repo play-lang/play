@@ -8,6 +8,7 @@ import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-n
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
 import { IfStatementNode } from "src/parser/nodes/if-statement-node";
+import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
@@ -30,6 +31,7 @@ export interface Visitor {
 	visitFunctionDeclarationNode(node: FunctionDeclarationNode): void;
 	visitIdExpressionNode(node: IdExpressionNode): void;
 	visitIfStatementNode(node: IfStatementNode): void;
+	visitIndexExpressionNode(node: IndexExpressionNode): void;
 	visitInvocationExpressionNode(node: InvocationExpressionNode): void;
 	visitPostfixExpressionNode(node: PostfixExpressionNode): void;
 	visitPrefixExpressionNode(node: PrefixExpressionNode): void;
