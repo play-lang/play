@@ -249,7 +249,13 @@ export class Disassembler {
 				case OpCode.MakeSet:
 				case OpCode.MakeMap: {
 					const numItems = bytecode[p++];
-					this.instrParam(op, ip, numItems);
+					out += this.instrParam(op, ip, numItems);
+					break;
+				}
+				case OpCode.Index:
+				case OpCode.SetHeap: {
+					// These don't require parameters as their operands live on the stack
+					out += this.instr(op, ip);
 					break;
 				}
 			}

@@ -1,6 +1,8 @@
 import { LoadedProgram } from "src/language/loaded-program";
 import { OpCode } from "src/language/op-code";
 import { Frame } from "src/vm/frame";
+import { CellDataType } from "src/vm/gc/cell-data";
+import { GarbageCollector } from "src/vm/gc/garbage-collector";
 import { RuntimeError } from "src/vm/runtime-error";
 import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";
@@ -22,8 +24,6 @@ const False: RuntimeValue = new RuntimeValue(RuntimeType.Boolean, false);
 
 /** Virtual machine that runs code */
 export class VirtualMachine {
-	/** Current bytecode context */
-	private program: LoadedProgram;
 	/**
 	 * Instruction pointer
 	 *
@@ -62,8 +62,12 @@ export class VirtualMachine {
 	/** Stack frames */
 	private readonly frames: Frame[] = [];
 
-	constructor(program: LoadedProgram) {
-		this.program = program;
+	constructor(
+		/** Program to execute */
+		private readonly program: LoadedProgram,
+		/** Garbage collector (and heap manager) */
+		private readonly gc: GarbageCollector = new GarbageCollector()
+	) {
 		// Add the main stack frame:
 		this.frames.push(new Frame(0, 0, program.numGlobals));
 	}
@@ -100,7 +104,7 @@ export class VirtualMachine {
 							);
 						} else {
 							// Push the return value back on to the stack
-							this.stack.push(returnValue);
+							this.push(returnValue);
 							// Pop the call frame and resume execution at the
 							// previous ip
 							this.frames.pop();
@@ -130,7 +134,7 @@ export class VirtualMachine {
 					}
 					case OpCode.Set: {
 						// Set a local variable
-						this.setLocal(this.read(), this.top);
+						this.setLocal(this.read(), this.top.copy());
 						break;
 					}
 					case OpCode.GetGlobal: {
@@ -139,8 +143,7 @@ export class VirtualMachine {
 						break;
 					}
 					case OpCode.SetGlobal: {
-						const index = this.read();
-						this.stack[index] = this.top;
+						this.set(this.read(), this.top.copy());
 						break;
 					}
 					case OpCode.Neg: {
@@ -329,18 +332,54 @@ export class VirtualMachine {
 					}
 					// Collections
 					case OpCode.MakeList: {
+						// Grab the top N items off the stack and make a list pointer out
+						// of them
 						const numItems = this.read();
-						for (
-							let i = this.stack.length - numItems;
-							i < this.stack.length;
-							i++
-						) {}
+						const list = this.stack.slice(this.stack.length - numItems);
+						if (list.length < numItems) {
+							throw new RuntimeError(
+								VMStatus.StackUnderflow,
+								"Stack Underflow"
+							);
+						}
+						// Drop the items off the stack that have been turned into a list
+						this.dropTo(this.stack.length - numItems);
+						// Allocate space on the heap and push a pointer to it
+						this.push(this.alloc(list));
 						break;
 					}
 					case OpCode.MakeSet: {
 						break;
 					}
 					case OpCode.MakeMap: {
+						break;
+					}
+					// Index operator []
+					case OpCode.Index: {
+						const index = this.pop();
+						const lhs = this.pop();
+						this.validatePointer(lhs);
+						const addr = this.gc.read(lhs.value as number);
+						// Won't work for sets
+						const value = this.gc.heap(addr, index.value);
+						if (value) {
+							this.stack.push(value.copy());
+						} else {
+							throw new RuntimeError(
+								VMStatus.InvalidIndex,
+								"Invalid index " + index.description
+							);
+						}
+						break;
+					}
+					// Assign a value to a specific child index inside a heap cell
+					case OpCode.SetHeap: {
+						const index = this.pop();
+						const lhs = this.pop();
+						const rhs = this.pop();
+						this.validatePointer(lhs);
+						const addr = this.gc.read(lhs.value as number);
+						this.gc.update(addr, index.value, rhs);
 						break;
 					}
 				}
@@ -459,6 +498,31 @@ export class VirtualMachine {
 				return value.value !== "";
 			case RuntimeType.Pointer:
 				return value.value !== null && value.value !== undefined;
+		}
+	}
+
+	/** Allocate data on the heap */
+	private alloc(value: CellDataType): RuntimeValue {
+		try {
+			return new RuntimeValue(
+				RuntimeType.Pointer,
+				this.gc.alloc(value, this.stack)
+			);
+		} catch (e) {
+			throw new RuntimeError(
+				VMStatus.AllocationFailed,
+				"Failed to allocate data on the heap"
+			);
+		}
+	}
+
+	/** Throw an error if the specified runtime value is not a pointer */
+	private validatePointer(rv: RuntimeValue): void {
+		if (!rv.isPointer) {
+			throw new RuntimeError(
+				VMStatus.InvalidIndexOperation,
+				"Invalid index operation into non-lhs type " + rv.description
+			);
 		}
 	}
 }
