@@ -44,3 +44,4 @@
 | MAKELIST     | numItems   | Construct a list from the top numItems on the stack          |
 | MAKESET      | numItems   | Construct a set from the top numItems on the stack           |
 | MAKEMAP      | numItems   | Construct a map from the top numItems key/value pairs        |
+| INDEX        |            | Index operator operation []                                  |

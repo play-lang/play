@@ -109,4 +109,8 @@ export enum OpCode {
 	MakeSet,
 	/** Construct a map from the top N key/value pairs */
 	MakeMap,
+	/** Index operator [] */
+	Index,
+	/** Set a value based on a heap pointer address and child index */
+	SetHeap,
 }

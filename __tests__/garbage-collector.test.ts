@@ -1,6 +1,6 @@
 import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";
-import { GarbageCollector } from "../src/vm/garbage-collector";
+import { GarbageCollector } from "../src/vm/gc/garbage-collector";
 
 describe("garbage collector", () => {
 	test("initialize", () => {
@@ -47,8 +47,8 @@ describe("garbage collector", () => {
 		const gc = new GarbageCollector({ heapSize: 8 });
 		const p0 = gc.alloc([ptr(-1)], []);
 		const p1 = gc.alloc([ptr(-1), num(100)], ptrs(p0));
-		gc.toSpace[p0].values.update(0, ptr(p1));
-		gc.toSpace[p1].values.update(0, ptr(p0));
+		gc.update(p0, 0, ptr(p1));
+		gc.update(p1, 0, ptr(p0));
 
 		const p2 = gc.alloc([ptr(-1)], ptrs(p0, p1));
 		const p3 = gc.alloc([ptr(-1)], ptrs(p0, p1, p2));
@@ -150,6 +150,29 @@ describe("garbage collector", () => {
 		expect(() => {
 			gc.delete(p1, "a");
 		}).toThrow();
+	});
+	test("underlying set operations", () => {
+		const gc = new GarbageCollector();
+		// Create circular reference between two objects
+		const v0 = ptr(-1);
+		const v1 = ptr(-1);
+		const p0 = gc.alloc(new Set([num(1), v0]), []);
+		const p1 = gc.alloc(new Set([num(2), v1]), []);
+		const n0 = ptr(p1);
+		const n1 = ptr(p0);
+		gc.update(p0, v0, n0);
+		gc.update(p1, v1, n1);
+		expect(gc.toSpace[p0].values.length).toBe(2);
+		expect(gc.toSpace[p1].values.length).toBe(2);
+		expect(gc.heap(p0, n0)).toBe(n0);
+		expect(gc.heap(p0, v0)).toBe(undefined);
+		expect(gc.heap(p1, n1)).toBe(n1);
+		expect(gc.heap(p1, v1)).toBe(undefined);
+		gc.collect([n0]);
+		const r0 = gc.read(p0);
+		const r1 = gc.read(p1);
+		expect(gc.toSpace[r0].values.data).toEqual(new Set([num(1), ptr(r1)]));
+		expect(gc.toSpace[r1].values.data).toEqual(new Set([num(2), ptr(r0)]));
 	});
 });
 

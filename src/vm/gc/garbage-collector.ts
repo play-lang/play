@@ -1,5 +1,5 @@
 import { Exception } from "src/common/exception";
-import { CellData } from "src/vm/cell-data";
+import { CellData, CellDataType, CellDataTypeKey } from "src/vm/gc/cell-data";
 import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";
 
@@ -116,8 +116,24 @@ export class GarbageCollector {
 		this.allocPtr = this.heapSize - 1;
 	}
 
-	public heap(addr: number, index: number | string): RuntimeValue | undefined {
+	/** Read a runtime value from the heap */
+	public heap(addr: number, index: CellDataTypeKey): RuntimeValue | undefined {
 		return this.toSpace[addr].values.get(index);
+	}
+
+	/**
+	 * Update a value contained inside a heap cell
+	 *
+	 * For lists, `index` represents the numeric index into the array
+	 * For maps, `index` represents the string key to update
+	 * For sets, `index` represents the old value to remove from the set
+	 */
+	public update(
+		addr: number,
+		index: CellDataTypeKey,
+		value: RuntimeValue
+	): void {
+		this.toSpace[addr].values.update(index, value);
 	}
 
 	/**
@@ -129,10 +145,7 @@ export class GarbageCollector {
 	 * a map)
 	 * @param roots Current mutator roots, in case garbage collection is initiated
 	 */
-	public alloc(
-		values: RuntimeValue[] | Map<string, RuntimeValue>,
-		roots: RuntimeValue[]
-	): number {
+	public alloc(values: CellDataType, roots: RuntimeValue[]): number {
 		if (this.outOfMemory) {
 			/* istanbul ignore next */
 			if (this.scanPtr < this.evacPtr) {
@@ -265,7 +278,8 @@ export class GarbageCollector {
 	/** Scan the next cell waiting to be scanned */
 	private scan(): void {
 		const cell = this.toSpace[this.scanPtr++];
-		for (const [v, value] of cell.values) {
+		for (const v of cell.values.keys()) {
+			const value = cell.values.get(v)!;
 			if (value.isPointer && typeof value.value === "number") {
 				cell.values.update(
 					v,
@@ -325,7 +339,6 @@ export class GarbageCollector {
 				if (cell.hasFwd) {
 					desc += " (" + String(cell.fwd as number) + ")";
 				}
-				// if (heap === this.toSpace && this.updated.has(i)) desc += "*";
 				if (cell.values.length > 0) desc += ":";
 				desc += "\n";
 				for (const [v, value] of cell.values) {

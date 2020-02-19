@@ -63,6 +63,8 @@ export class Play {
 	 */
 	public static compile(code: string): CompiledProgram {
 		const ast = Play.parse(code);
+		const typeChecker = new TypeChecker(ast);
+		typeChecker.check();
 		const compiler = new Compiler(ast);
 		return compiler.compile();
 	}
@@ -129,6 +131,11 @@ export class Play {
 	 */
 	public static describeAst(code: string): string {
 		const ast = Play.parse(code);
+		const typeChecker = new TypeChecker(ast);
+		if (!typeChecker.check()) {
+			throw new Error("Type check failed:\n" + typeChecker.errors.join("\n"));
+		}
+
 		const printer = new PrintVisitor(ast);
 		return printer.print();
 	}

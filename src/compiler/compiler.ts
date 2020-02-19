@@ -19,13 +19,17 @@ import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-n
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
 import { IfStatementNode } from "src/parser/nodes/if-statement-node";
+import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
 import { ProgramNode } from "src/parser/nodes/program-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
-import { SetOrListNode } from "src/parser/nodes/set-or-list-node";
+import {
+	RepresentedCollectionType,
+	SetOrListNode,
+} from "src/parser/nodes/set-or-list-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
 import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
@@ -121,10 +125,12 @@ export class Compiler implements Visitor {
 				scope?.isGlobalScope ? OpCode.SetGlobal : OpCode.Set,
 				stackPos
 			);
+		} else if (node instanceof IndexExpressionNode) {
+			// TODO: Assign to a child field on a collection value stored in the heap
+			// (this involves pointer lookups)
+			node.accept(this);
 		} else {
-			throw new Error(
-				"Can't compile assignment of non-variable " + node.token.lexeme
-			);
+			throw new Error("Cannot assign to " + node.token.lexeme);
 		}
 	}
 
@@ -213,7 +219,12 @@ export class Compiler implements Visitor {
 
 	public visitAssignmentExpressionNode(node: AssignmentExpressionNode): void {
 		this.accept(node.rhs);
-		// TODO: Handle subscripts for collections
+		// Do not visit the left-hand side, as this could push stuff to the stack
+		// we don't need (it would be a read operation instead of an assign)
+		//
+		// Instead, output our own special assignment instructions based on the
+		// type of the left-hand-side value given
+		// This is the magic where l-values are handled appropriately!
 		this.assignToNode(node.lhs);
 	}
 
@@ -397,6 +408,12 @@ export class Compiler implements Visitor {
 		}
 	}
 
+	public visitIndexExpressionNode(node: IndexExpressionNode): void {
+		this.accept(node.lhs);
+		this.accept(node.index);
+		this.context.emit(node.lValue ? OpCode.SetHeap : OpCode.Index);
+	}
+
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
 		if (
 			!(node.lhs instanceof IdExpressionNode) ||
@@ -523,7 +540,17 @@ export class Compiler implements Visitor {
 	}
 
 	public visitSetOrListNode(node: SetOrListNode): void {
-		// TODO: Compile set or list node
+		for (const member of node.members) {
+			this.accept(member);
+		}
+		switch (node.representedCollectionType) {
+			case RepresentedCollectionType.List:
+				this.context.emit(OpCode.MakeList, node.members.length);
+				break;
+			case RepresentedCollectionType.Set:
+				this.context.emit(OpCode.MakeSet, node.members.length);
+				break;
+		}
 	}
 
 	// Compiler ternary operator: true ? a : b
