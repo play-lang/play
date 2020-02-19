@@ -111,4 +111,6 @@ export enum OpCode {
 	MakeMap,
 	/** Index operator [] */
 	Index,
+	/** Set a value based on a heap pointer address and child index */
+	SetHeap,
 }

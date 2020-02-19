@@ -9,6 +9,9 @@ import {
 import { Visitor } from "src/language/visitor";
 
 export class IndexExpressionNode extends Expression {
+	/** True if the index operation is used as an l-value, false if an r-value */
+	public lValue: boolean = false;
+
 	constructor(
 		token: TokenLike,
 		/** Expression resolving to something that can be indexed */
@@ -32,7 +35,9 @@ export class IndexExpressionNode extends Expression {
 		if (lhsType instanceof CollectionType) {
 			// An index operation returns an element of whatever kind the collection
 			// that it indexes into holds
-			return lhsType.elementType;
+			const elementType = lhsType.elementType.copy();
+			elementType.isAssignable = this.lValue;
+			return elementType;
 		}
 		return new ErrorType(false);
 	}

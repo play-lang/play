@@ -12,4 +12,8 @@ export enum VMStatus {
 	InvalidInstruction,
 	/** Failed to allocate more data on the heap */
 	AllocationFailed,
+	/** Invalid index operation into a non lhs-type */
+	InvalidIndexOperation,
+	/** Invalid index into a collection */
+	InvalidIndex,
 }
