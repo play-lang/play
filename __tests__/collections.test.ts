@@ -11,8 +11,10 @@ describe("collections", () => {
 			const code = `
 var x = [1, 2, 3]
 x[0] = -100
+return x[0]
 `;
 			console.log(Play.disassemble(code));
+			expect(Play.run(code).value.value).toBe(-100);
 		});
 	});
 });

@@ -358,12 +358,7 @@ export class VirtualMachine {
 					case OpCode.Index: {
 						const index = this.pop();
 						const lhs = this.pop();
-						if (!lhs.isPointer) {
-							throw new RuntimeError(
-								VMStatus.InvalidIndexOperation,
-								"Invalid index operation into non-lhs type " + lhs.description
-							);
-						}
+						this.validatePointer(lhs);
 						const addr = this.gc.read(lhs.value as number);
 						// Won't work for sets
 						const value = this.gc.heap(addr, index.value);
@@ -379,6 +374,12 @@ export class VirtualMachine {
 					}
 					// Assign a value to a specific child index inside a heap cell
 					case OpCode.SetHeap: {
+						const index = this.pop();
+						const lhs = this.pop();
+						const rhs = this.pop();
+						this.validatePointer(lhs);
+						const addr = this.gc.read(lhs.value as number);
+						this.gc.update(addr, index.value, rhs);
 						break;
 					}
 				}
@@ -511,6 +512,16 @@ export class VirtualMachine {
 			throw new RuntimeError(
 				VMStatus.AllocationFailed,
 				"Failed to allocate data on the heap"
+			);
+		}
+	}
+
+	/** Throw an error if the specified runtime value is not a pointer */
+	private validatePointer(rv: RuntimeValue): void {
+		if (!rv.isPointer) {
+			throw new RuntimeError(
+				VMStatus.InvalidIndexOperation,
+				"Invalid index operation into non-lhs type " + rv.description
 			);
 		}
 	}
