@@ -23,44 +23,6 @@ export type CellDataTypeKey = string | number | RuntimeValue;
 export class CellData {
 	constructor(public readonly data: CellDataType) {}
 
-	// public [Symbol.iterator](): Iterator<
-	// 	[CellDataTypeKey, RuntimeValue],
-	// 	any,
-	// 	undefined
-	// > {
-	// 	return this.iterator();
-	// }
-
-	// public *iterator(): Iterator<
-	// 	[CellDataTypeKey, RuntimeValue],
-	// 	any,
-	// 	undefined
-	// > {
-	// 	// Iterate through the underlying array or map accordingly
-	// 	switch (true) {
-	// 		case Array.isArray(this.data): {
-	// 			const data = this.data as RuntimeValue[];
-	// 			for (let i = 0; i < data.length; i++) {
-	// 				yield [i, data[i]];
-	// 			}
-	// 			break;
-	// 		}
-	// 		case this.data instanceof Map: {
-	// 			const data = this.data as Map<string, RuntimeValue>;
-	// 			for (const [key, value] of data) {
-	// 				yield [key, value];
-	// 			}
-	// 			break;
-	// 		}
-	// 		case this.data instanceof Set: {
-	// 			const data = this.data as Set<RuntimeValue>;
-	// 			for (const value of data) {
-	// 				yield [value, value];
-	// 			}
-	// 		}
-	// 	}
-	// }
-
 	public *keys(): IterableIterator<CellDataTypeKey> {
 		// Iterate through the underlying array or map accordingly
 		switch (true) {
