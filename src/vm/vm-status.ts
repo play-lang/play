@@ -10,4 +10,6 @@ export enum VMStatus {
 	InvalidOperands,
 	/** Invalid instruction (from bad bytecode) */
 	InvalidInstruction,
+	/** Failed to allocate more data on the heap */
+	AllocationFailed,
 }

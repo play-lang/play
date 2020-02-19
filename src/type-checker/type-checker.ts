@@ -4,7 +4,15 @@ import { SemanticError } from "src/language/semantic-error";
 import { TokenLike } from "src/language/token";
 import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
-import { ErrorType, Num, SumType, Type } from "src/language/types/type-system";
+import {
+	Collection,
+	CollectionType,
+	ErrorType,
+	Num,
+	Str,
+	SumType,
+	Type,
+} from "src/language/types/type-system";
 import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
@@ -15,6 +23,7 @@ import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-n
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
 import { IfStatementNode } from "src/parser/nodes/if-statement-node";
+import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
@@ -271,6 +280,41 @@ export class TypeChecker {
 		}
 	}
 
+	private checkIndexExpression(node: IndexExpressionNode): void {
+		this.checkNode(node.lhs);
+		this.checkNode(node.index);
+		const lhsType = node.lhs.type(this.env);
+		const indexType = node.index.type(this.env);
+
+		if (!(lhsType instanceof CollectionType)) {
+			this.error(
+				node.lhs.token,
+				"The index operator [] can only be used on collection types"
+			);
+			return;
+		}
+
+		switch (lhsType.collection) {
+			case Collection.List:
+				// Lists need numeric keys
+				if (!indexType.equivalent(Num)) {
+					this.mismatch(node.index.token, Num, indexType);
+				}
+				break;
+			case Collection.Map:
+				// Maps need string keys
+				if (!indexType.equivalent(Str)) {
+					this.mismatch(node.index.token, Str, indexType);
+				}
+				break;
+			case Collection.Set:
+				// Sets need the type of elements they store as keys
+				if (!indexType.equivalent(lhsType.elementType)) {
+					this.mismatch(node.index.token, lhsType.elementType, indexType);
+				}
+		}
+	}
+
 	private checkInvocationExpression(node: InvocationExpressionNode): void {
 		const type = node.argumentsType(this.env);
 		const functionName = node.functionName;
@@ -444,6 +488,9 @@ export class TypeChecker {
 				break;
 			case node instanceof IfStatementNode:
 				this.checkIfStatement(node as IfStatementNode);
+				break;
+			case node instanceof IndexExpressionNode:
+				this.checkIndexExpression(node as IndexExpressionNode);
 				break;
 			case node instanceof InvocationExpressionNode:
 				this.checkInvocationExpression(node as InvocationExpressionNode);

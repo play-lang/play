@@ -129,6 +129,11 @@ export class Play {
 	 */
 	public static describeAst(code: string): string {
 		const ast = Play.parse(code);
+		const typeChecker = new TypeChecker(ast);
+		if (!typeChecker.check()) {
+			throw new Error("Type check failed:\n" + typeChecker.errors.join("\n"));
+		}
+
 		const printer = new PrintVisitor(ast);
 		return printer.print();
 	}

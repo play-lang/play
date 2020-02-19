@@ -6,6 +6,7 @@ import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
+import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
@@ -172,6 +173,17 @@ export class InvocationOperatorParselet implements InfixParselet {
 			end = parser.previous.end;
 		}
 		return new InvocationExpressionNode(token, lhs.start, end, lhs, args);
+	}
+	public get precedence(): number {
+		return Precedence.Primary;
+	}
+}
+
+export class IndexOperatorParselet implements InfixParselet {
+	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
+		const expr = parser.expression();
+		parser.consume(TokenType.BracketClose, "Expected closing bracket");
+		return new IndexExpressionNode(token, lhs, expr, parser.previous.pos);
 	}
 	public get precedence(): number {
 		return Precedence.Primary;
