@@ -126,7 +126,7 @@ export class Compiler implements Visitor {
 				stackPos
 			);
 		} else if (node instanceof IndexExpressionNode) {
-			// TODO: Assign to a child field on a collection value stored in the heap
+			// Assign to a child field on a collection value stored in the heap
 			// (this involves pointer lookups)
 			node.accept(this);
 		} else {
