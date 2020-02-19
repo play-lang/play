@@ -16,5 +16,6 @@ return x[0]
 			console.log(Play.disassemble(code));
 			expect(Play.run(code).value.value).toBe(-100);
 		});
+		test("should fail to assign to constant list?", () => {});
 	});
 });
