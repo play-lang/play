@@ -348,9 +348,6 @@ export class VirtualMachine {
 						this.push(this.alloc(list));
 						break;
 					}
-					case OpCode.MakeSet: {
-						break;
-					}
 					case OpCode.MakeMap: {
 						break;
 					}

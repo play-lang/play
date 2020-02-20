@@ -105,8 +105,6 @@ export enum OpCode {
 
 	/** Construct a list from the top N items */
 	MakeList,
-	/** Construct a set from the top N items */
-	MakeSet,
 	/** Construct a map from the top N key/value pairs */
 	MakeMap,
 	/** Index operator [] */
