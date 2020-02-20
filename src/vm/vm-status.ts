@@ -16,4 +16,8 @@ export enum VMStatus {
 	InvalidIndexOperation,
 	/** Invalid index into a collection */
 	InvalidIndex,
+	/** Not an even number of map keys and values on the stack */
+	UnevenMap,
+	/** Invalid map key (not a string) */
+	InvalidMapKey,
 }

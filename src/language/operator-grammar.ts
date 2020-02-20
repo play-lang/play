@@ -10,6 +10,7 @@ import {
 	InfixParselet,
 	InvocationOperatorParselet,
 	ListParselet,
+	MapParselet,
 	PostfixOperatorParselet,
 	PrefixOperatorParselet,
 	PrefixParselet,
@@ -27,7 +28,10 @@ export const prefixParselets: Map<TokenType, PrefixParselet> = new Map<
 >([
 	// Parenthesis (grouping)
 	[TokenType.ParenOpen, new GroupParselet()],
+	// Brackets (lists)
 	[TokenType.BracketOpen, new ListParselet()],
+	// Braces (maps) (also used for blocks, parsed elsewhere)
+	[TokenType.BraceOpen, new MapParselet()],
 	// Literal values
 	[TokenType.Number, new PrimitiveParselet()],
 	[TokenType.String, new PrimitiveParselet()],
