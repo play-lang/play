@@ -348,7 +348,38 @@ export class VirtualMachine {
 						this.push(this.alloc(list));
 						break;
 					}
+					// Create a map based on the keys and values on the stack
 					case OpCode.MakeMap: {
+						const numItems = this.read();
+						// Must be divisible by 2 since we expect key/value pairs
+						if (numItems % 2 !== 0) {
+							throw new RuntimeError(
+								VMStatus.UnevenMap,
+								"Uneven number of map keys and values specified"
+							);
+						}
+						const map = new Map<string, RuntimeValue>();
+						// Walk through the key/value pairs on the stack two at a time
+						// and construct a map
+						for (
+							let i = this.stack.length - numItems;
+							i < this.stack.length - 1;
+							i += 2
+						) {
+							const key = this.stack[i];
+							const value = this.stack[i + 1];
+							if (typeof key.value !== "string") {
+								throw new RuntimeError(
+									VMStatus.InvalidMapKey,
+									"Invalid map key"
+								);
+							}
+							map.set(key.value as string, value);
+						}
+						// Drop the map key/value pairs from the stack
+						this.dropTo(this.stack.length - numItems);
+						// Allocate space on the heap for the new map
+						this.push(this.alloc(map));
 						break;
 					}
 					// Index operator []

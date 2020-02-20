@@ -9,6 +9,7 @@ import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
 import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { ListNode } from "src/parser/nodes/list-node";
+import { MapNode } from "src/parser/nodes/map-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
@@ -55,14 +56,48 @@ export class GroupParselet implements PrefixParselet {
 export class ListParselet implements PrefixParselet {
 	public parse(parser: Parser, token: TokenLike): ListNode {
 		const members: Expression[] = [];
-		if (!parser.match(TokenType.BracketClose)) {
-			members.push(parser.expression());
-			while (parser.match(TokenType.Comma)) {
-				members.push(parser.expression());
+		let finished = false;
+		do {
+			parser.eatLines();
+			if (parser.match(TokenType.BracketClose)) {
+				finished = true;
+				break;
 			}
+			members.push(parser.expression());
+			parser.eatLines();
+		} while (parser.match(TokenType.Comma));
+		if (!finished) {
 			parser.consume(TokenType.BracketClose, "Expected close bracket");
 		}
 		return new ListNode(token, members);
+	}
+}
+
+export class MapParselet implements PrefixParselet {
+	public parse(parser: Parser, token: TokenLike): MapNode {
+		const keys: Expression[] = [];
+		const values: Expression[] = [];
+		let finished = false;
+		do {
+			parser.eatLines();
+			if (parser.match(TokenType.BraceClose)) {
+				finished = true;
+				break;
+			}
+			keys.push(parser.expression());
+			parser.eatLines();
+			parser.consume(TokenType.Colon, "Expected colon following map key");
+			parser.eatLines();
+			values.push(parser.expression());
+			parser.eatLines();
+		} while (parser.match(TokenType.Comma));
+		if (!finished) {
+			parser.consume(
+				TokenType.BraceClose,
+				"Expected closing brace for map literal"
+			);
+		}
+		return new MapNode(token, keys, values);
 	}
 }
 
