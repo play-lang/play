@@ -14,8 +14,6 @@ import {
 	PrefixOperatorParselet,
 	PrefixParselet,
 	PrimitiveParselet,
-	SetOrListParselet,
-	SetParselet,
 	TernaryConditionalParselet,
 } from "src/parser/parselet";
 
@@ -29,9 +27,7 @@ export const prefixParselets: Map<TokenType, PrefixParselet> = new Map<
 >([
 	// Parenthesis (grouping)
 	[TokenType.ParenOpen, new GroupParselet()],
-	[TokenType.BracketOpen, new SetOrListParselet()],
-	[TokenType.Set, new SetParselet()],
-	[TokenType.List, new ListParselet()],
+	[TokenType.BracketOpen, new ListParselet()],
 	// Literal values
 	[TokenType.Number, new PrimitiveParselet()],
 	[TokenType.String, new PrimitiveParselet()],

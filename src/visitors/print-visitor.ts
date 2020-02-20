@@ -14,15 +14,13 @@ import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
 import { IfStatementNode } from "src/parser/nodes/if-statement-node";
 import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
+import { ListNode } from "src/parser/nodes/list-node";
+import { MapNode } from "src/parser/nodes/map-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
 import { ProgramNode } from "src/parser/nodes/program-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
-import {
-	RepresentedCollectionType,
-	SetOrListNode,
-} from "src/parser/nodes/set-or-list-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
 import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
@@ -218,6 +216,37 @@ export class PrintVisitor implements Visitor, Describable {
 		this.indent -= 1;
 	}
 
+	public visitListNode(node: ListNode): void {
+		this.desc += "List\n";
+		this.indent += 1;
+		for (const member of node.members) {
+			const last = member === node.members[node.members.length - 1];
+			this.desc += this.spaces + (last ? "└── " : "├── ");
+			member.accept(this);
+		}
+		this.indent -= 1;
+	}
+
+	public visitMapNode(node: MapNode): void {
+		this.desc += "Map\n";
+		this.indent += 1;
+		for (let i = 0; i < node.keys.length; i++) {
+			const key = node.keys[i];
+			const value = node.values[i];
+			this.desc += this.spaces + "├── key\n";
+			this.indent += 1;
+			this.desc += this.spaces + "└── ";
+			key.accept(this);
+			this.indent -= 1;
+			this.desc += this.spaces + "└── value\n";
+			this.indent += 1;
+			this.desc += this.spaces + "└── ";
+			value.accept(this);
+			this.indent -= 1;
+		}
+		this.indent -= 1;
+	}
+
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
 		this.desc += "Postfix(" + TokenType[node.operatorType] + ")\n";
 		this.indent += 1;
@@ -257,20 +286,6 @@ export class PrintVisitor implements Visitor, Describable {
 			node.expr.accept(this);
 			this.indent -= 1;
 		}
-	}
-
-	public visitSetOrListNode(node: SetOrListNode): void {
-		this.desc +=
-			"SetOrListNode(representedCollectionType=" +
-			RepresentedCollectionType[node.representedCollectionType] +
-			")\n";
-		this.indent += 1;
-		for (const member of node.members) {
-			const last = member === node.members[node.members.length - 1];
-			this.desc += this.spaces + (last ? "└── " : "├── ");
-			member.accept(this);
-		}
-		this.indent -= 1;
 	}
 
 	public visitTernaryConditionalNode(node: TernaryConditionalNode): void {

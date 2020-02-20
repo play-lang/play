@@ -9,19 +9,13 @@ import {
 } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
-export enum RepresentedCollectionType {
-	Set,
-	List,
-}
-
 export class MapNode extends Expression {
 	constructor(
 		token: TokenLike,
-		/** Expressions comprising the members of the set or list */
+		/** Key expressions */
 		public readonly keys: Expression[],
-		public readonly values: Expression[],
-		/** The type of collection this node represents */
-		public representedCollectionType: RepresentedCollectionType = RepresentedCollectionType.List
+		/** Corresponding value expressions */
+		public readonly values: Expression[]
 	) {
 		super(
 			token,

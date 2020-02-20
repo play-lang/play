@@ -9,18 +9,11 @@ import {
 } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
-export enum RepresentedCollectionType {
-	Set,
-	List,
-}
-
-export class SetOrListNode extends Expression {
+export class ListNode extends Expression {
 	constructor(
 		token: TokenLike,
 		/** Expressions comprising the members of the set or list */
-		public readonly members: Expression[],
-		/** The type of collection this node represents */
-		public representedCollectionType: RepresentedCollectionType = RepresentedCollectionType.List
+		public readonly members: Expression[]
 	) {
 		super(
 			token,
@@ -46,15 +39,10 @@ export class SetOrListNode extends Expression {
 		}
 		// TODO: Infer type based on all members
 		const type = this.members[0].type(env);
-		switch (this.representedCollectionType) {
-			case RepresentedCollectionType.List:
-				return new CollectionType(Collection.List, type, false);
-			case RepresentedCollectionType.Set:
-				return new CollectionType(Collection.Set, type, false);
-		}
+		return new CollectionType(Collection.List, type, false);
 	}
 
 	public accept(visitor: Visitor): void {
-		visitor.visitSetOrListNode?.(this);
+		visitor.visitListNode?.(this);
 	}
 }
