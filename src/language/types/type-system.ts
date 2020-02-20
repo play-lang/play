@@ -187,12 +187,12 @@ export class ErrorType extends Type {
 		return this.equivalent(type);
 	}
 
-	public get description(): string {
-		return (this.isAssignable ? "&" : "") + "ErrorType";
-	}
-
 	public copy(): ErrorType {
 		return new ErrorType(this.isAssignable);
+	}
+
+	public get description(): string {
+		return (this.isAssignable ? "&" : "") + "ErrorType";
 	}
 }
 
@@ -216,12 +216,12 @@ export class AnyType extends Type {
 		return !(type instanceof ErrorType);
 	}
 
-	public get description(): string {
-		return (this.isAssignable ? "&" : "") + "Any";
-	}
-
 	public copy(): AnyType {
 		return new AnyType(this.isAssignable);
+	}
+
+	public get description(): string {
+		return (this.isAssignable ? "&" : "") + "Any";
 	}
 }
 
@@ -251,12 +251,12 @@ export class PrimitiveType extends Type {
 		return this.equivalent(type);
 	}
 
-	public get description(): string {
-		return (this.isAssignable ? "&" : "") + Primitive[this.primitive];
-	}
-
 	public copy(): PrimitiveType {
 		return new PrimitiveType(this.primitive, this.isAssignable);
+	}
+
+	public get description(): string {
+		return (this.isAssignable ? "&" : "") + Primitive[this.primitive];
 	}
 }
 
@@ -312,6 +312,13 @@ export class RecordType extends Type {
 		return this.equivalent(type);
 	}
 
+	public copy(): RecordType {
+		return new RecordType(
+			new LinkedHashMap<string, Type>(this.operands),
+			this.isAssignable
+		);
+	}
+
 	public get description(): string {
 		return (
 			(this.isAssignable ? "&" : "") +
@@ -320,13 +327,6 @@ export class RecordType extends Type {
 				.map(operand => operand[0] + ": " + operand[1].description)
 				.join(", ") +
 			">"
-		);
-	}
-
-	public copy(): RecordType {
-		return new RecordType(
-			new LinkedHashMap<string, Type>(this.operands),
-			this.isAssignable
 		);
 	}
 }
@@ -363,6 +363,10 @@ export class ProductType extends Type {
 		return this.equivalent(type);
 	}
 
+	public copy(): ProductType {
+		return new ProductType([...this.operands], this.isAssignable);
+	}
+
 	/**
 	 * Checks to see if this product type contains the same number of types and
 	 * the same ordering as another record type
@@ -395,10 +399,6 @@ export class ProductType extends Type {
 				.join(", ") +
 			">"
 		);
-	}
-
-	public copy(): ProductType {
-		return new ProductType([...this.operands], this.isAssignable);
 	}
 }
 
@@ -446,6 +446,10 @@ export class SumType extends Type {
 		return false;
 	}
 
+	public copy(): SumType {
+		return new SumType(new Set(this.types), this.isAssignable);
+	}
+
 	public get description(): string {
 		return (
 			(this.isAssignable ? "&" : "") +
@@ -455,10 +459,6 @@ export class SumType extends Type {
 				.join(" | ") +
 			">"
 		);
-	}
-
-	public copy(): SumType {
-		return new SumType(new Set(this.types), this.isAssignable);
 	}
 }
 
@@ -493,6 +493,14 @@ export class FunctionType extends Type {
 		return this.equivalent(type);
 	}
 
+	public copy(): FunctionType {
+		return new FunctionType(
+			this.name,
+			this.parameters.copy(),
+			this.returnType.copy()
+		);
+	}
+
 	public get description(): string {
 		return (
 			"(" +
@@ -507,13 +515,129 @@ export class FunctionType extends Type {
 			")"
 		);
 	}
+}
 
-	public copy(): FunctionType {
-		return new FunctionType(
-			this.name,
-			this.parameters.copy(),
-			this.returnType.copy()
+export class ProtocolType extends Type {
+	constructor(
+		/** Protocol name */
+		public readonly name: string,
+		/** Method signatures */
+		public functions: FunctionType[] = [],
+		/** Field variables */
+		public properties: Map<string, Type> = new Map()
+	) {
+		super(false);
+	}
+
+	public equivalent(type: Type): boolean {
+		// Protocols types use name equivalence
+		// TODO: Support module resolution and/or namespaces
+		return (
+			type === this || (type instanceof ProtocolType && this.name === type.name)
 		);
+	}
+
+	public accepts(type: Type): boolean {
+		// Accept an equivalent protocol
+		if (this.equivalent(type)) return true;
+		// Also accept any model type that implements this protocol or applies
+		// a type that implements this protocol
+		if (type instanceof ModelType) {
+			for (const protocol of type.protocols) {
+				if (this.equivalent(protocol)) return true;
+			}
+			for (const appliedType of type.appliedTypes) {
+				for (const protocol of appliedType.protocols) {
+					if (this.equivalent(protocol)) return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	public copy(): ProtocolType {
+		return new ProtocolType(
+			this.name,
+			[...this.functions],
+			new Map(this.properties)
+		);
+	}
+
+	public get description(): string {
+		return "Interface<" + this.name + ">";
+	}
+}
+
+export class ModelType extends Type {
+	constructor(
+		/** Name of the model */
+		public readonly name: string,
+		/** Method signatures */
+		public functions: FunctionType[] = [],
+		/** Field variables */
+		public properties: Map<string, Type> = new Map(),
+		/** Implemented protocols */
+		public protocols: ProtocolType[] = [],
+		/** Applied types */
+		public appliedTypes: ModelType[] = []
+	) {
+		super(false);
+	}
+
+	public equivalent(type: Type): boolean {
+		// Model types use name equivalence
+		// TODO: Support module resolution and/or namespaces
+		return (
+			type === this || (type instanceof ModelType && this.name === type.name)
+		);
+	}
+
+	public accepts(type: Type): boolean {
+		return false;
+	}
+
+	public copy(): ModelType {
+		return new ModelType(
+			this.name,
+			[...this.functions],
+			new Map(this.properties),
+			[...this.protocols],
+			[...this.appliedTypes]
+		);
+	}
+
+	public get description(): string {
+		return "Model<" + this.name + ">";
+	}
+}
+
+export class InstanceType extends Type {
+	constructor(
+		public readonly classType: ModelType,
+		isAssignable: boolean = false
+	) {
+		super(isAssignable);
+	}
+
+	public equivalent(type: Type): boolean {
+		// Two instance types are equivalent if they both represent the same class
+		return (
+			type === this ||
+			(type instanceof InstanceType &&
+				this.classType.equivalent(type.classType))
+		);
+	}
+
+	public accepts(type: Type): boolean {
+		return false;
+	}
+
+	public copy(): InstanceType {
+		return new InstanceType(this.classType, this.isAssignable);
+	}
+
+	public get description(): string {
+		return this.classType.name;
 	}
 }
 
@@ -542,6 +666,14 @@ export class CollectionType extends Type {
 		return this.equivalent(type);
 	}
 
+	public copy(): CollectionType {
+		return new CollectionType(
+			this.collection,
+			this.elementType.copy(),
+			this.isAssignable
+		);
+	}
+
 	public get description(): string {
 		return (
 			(this.isAssignable ? "&" : "") +
@@ -549,14 +681,6 @@ export class CollectionType extends Type {
 			"<" +
 			this.elementType.description +
 			">"
-		);
-	}
-
-	public copy(): Type {
-		return new CollectionType(
-			this.collection,
-			this.elementType.copy(),
-			this.isAssignable
 		);
 	}
 }
