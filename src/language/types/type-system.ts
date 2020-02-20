@@ -1,6 +1,7 @@
 import { Describable } from "src/common/describable";
 import { LinkedHashMap } from "src/common/linked-hash-map";
 import { FunctionInfo } from "src/language/function-info";
+import { collectionModelType } from "src/language/types/collection-model-type";
 
 /**
  * Primitive types that can be represented with an instance of a PrimitiveType
@@ -18,7 +19,6 @@ export enum Primitive {
 export enum Collection {
 	List = 1,
 	Map,
-	Set,
 }
 
 export abstract class Type implements Describable {
@@ -79,9 +79,6 @@ export abstract class Type implements Describable {
 						break;
 					case "map":
 						type = new CollectionType(Collection.Map, type);
-						break;
-					case "set":
-						type = new CollectionType(Collection.Set, type);
 						break;
 					default:
 						type = new ErrorType(isAssignable);
@@ -612,10 +609,7 @@ export class ModelType extends Type {
 }
 
 export class InstanceType extends Type {
-	constructor(
-		public readonly classType: ModelType,
-		isAssignable: boolean = false
-	) {
+	constructor(public readonly model: ModelType, isAssignable: boolean = false) {
 		super(isAssignable);
 	}
 
@@ -623,8 +617,7 @@ export class InstanceType extends Type {
 		// Two instance types are equivalent if they both represent the same class
 		return (
 			type === this ||
-			(type instanceof InstanceType &&
-				this.classType.equivalent(type.classType))
+			(type instanceof InstanceType && this.model.equivalent(type.model))
 		);
 	}
 
@@ -633,15 +626,15 @@ export class InstanceType extends Type {
 	}
 
 	public copy(): InstanceType {
-		return new InstanceType(this.classType, this.isAssignable);
+		return new InstanceType(this.model, this.isAssignable);
 	}
 
 	public get description(): string {
-		return this.classType.name;
+		return this.model.name;
 	}
 }
 
-export class CollectionType extends Type {
+export class CollectionType extends InstanceType {
 	constructor(
 		/** The type of collection being represented by this instance */
 		public readonly collection: Collection,
@@ -649,7 +642,7 @@ export class CollectionType extends Type {
 		public readonly elementType: Type,
 		isAssignable: boolean = false
 	) {
-		super(isAssignable);
+		super(collectionModelType(collection, elementType), isAssignable);
 	}
 
 	public equivalent(type: Type): boolean {

@@ -311,11 +311,6 @@ export class TypeChecker {
 					this.mismatch(node.index.token, Str, indexType);
 				}
 				break;
-			case Collection.Set:
-				// Sets need the type of elements they store as keys
-				if (!indexType.equivalent(lhsType.elementType)) {
-					this.mismatch(node.index.token, lhsType.elementType, indexType);
-				}
 		}
 	}
 
