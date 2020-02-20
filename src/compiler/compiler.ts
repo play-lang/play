@@ -17,7 +17,10 @@ import { DoWhileStatementNode } from "src/parser/nodes/do-while-statement-node";
 import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
-import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
+import {
+	IdExpressionNode,
+	IdExpressionUse,
+} from "src/parser/nodes/id-expression-node";
 import { IfStatementNode } from "src/parser/nodes/if-statement-node";
 import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
@@ -365,7 +368,7 @@ export class Compiler implements Visitor {
 	}
 
 	public visitIdExpressionNode(node: IdExpressionNode): void {
-		if (node.usedAsFunction) {
+		if (node.use === IdExpressionUse.Function) {
 			if (this.functionTable.has(node.name)) {
 				// Register a function load address to be patched later
 				const index = this.context.emit(OpCode.Load, -1) - 1;
@@ -373,7 +376,7 @@ export class Compiler implements Visitor {
 			} else {
 				throw new Error("Cannot compile non-existent function: " + node.name);
 			}
-		} else {
+		} else if (node.use === IdExpressionUse.Variable) {
 			// Node represents a variable reference
 			const scope = this.scope.findScope(node.name);
 			if (!scope) {

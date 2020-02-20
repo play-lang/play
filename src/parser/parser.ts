@@ -43,7 +43,10 @@ export class Parser extends TokenParser {
 		super(new Lexer(contents));
 		this.env = new Environment(
 			new SymbolTable(new Scope()),
-			new Map<string, FunctionInfo>()
+			new Map<string, FunctionInfo>(),
+			// Todo: include models and protocols in environment
+			new Map(),
+			new Map()
 		);
 	}
 

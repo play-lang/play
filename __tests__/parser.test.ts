@@ -32,7 +32,7 @@ describe("parser", () => {
 							isDead: false,
 							isLast: true,
 							name: "a",
-							usedAsFunction: false,
+							use: "Variable",
 						},
 						rhs: {
 							type: "BinaryExpressionNode",
@@ -77,7 +77,7 @@ describe("parser", () => {
 												isDead: false,
 												isLast: true,
 												name: "b",
-												usedAsFunction: false,
+												use: "Variable",
 											},
 											rhs: {
 												type: "IdExpressionNode",
@@ -87,7 +87,7 @@ describe("parser", () => {
 												isDead: false,
 												isLast: true,
 												name: "c",
-												usedAsFunction: false,
+												use: "Variable",
 											},
 										},
 										rhs: {

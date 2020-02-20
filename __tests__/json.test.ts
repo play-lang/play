@@ -85,7 +85,7 @@ describe("json tree printer", () => {
 						isDead: false,
 						isLast: true,
 						name: "myNum",
-						usedAsFunction: false,
+						use: "Variable",
 					},
 				},
 			],
