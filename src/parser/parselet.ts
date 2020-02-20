@@ -5,7 +5,10 @@ import { TokenType } from "src/language/token-type";
 import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
-import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
+import {
+	IdExpressionNode,
+	IdExpressionUse,
+} from "src/parser/nodes/id-expression-node";
 import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { ListNode } from "src/parser/nodes/list-node";
@@ -84,7 +87,12 @@ export class MapParselet implements PrefixParselet {
 				finished = true;
 				break;
 			}
-			keys.push(parser.expression());
+			const key = parser.expression();
+			if (key instanceof IdExpressionNode && !parser.scope.lookup(key.name)) {
+				// Plain id's can be used as map keys if they aren't used as variables
+				key.use = IdExpressionUse.MapKey;
+			}
+			keys.push(key);
 			parser.eatLines();
 			parser.consume(TokenType.Colon, "Expected colon following map key");
 			parser.eatLines();
@@ -171,7 +179,7 @@ export class PostfixOperatorParselet implements InfixParselet {
 export class InvocationOperatorParselet implements InfixParselet {
 	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
 		if (lhs instanceof IdExpressionNode) {
-			lhs.usedAsFunction = true;
+			lhs.use = IdExpressionUse.Function;
 		}
 		const args: Expression[] = [];
 		let end: number = token.end;

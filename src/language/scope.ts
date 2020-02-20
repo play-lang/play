@@ -52,8 +52,8 @@ export class Scope implements Describable {
 	}
 
 	/**
-	 * Returns true if the specified identifier is in the receiver's scope or any
-	 * of its ancestors
+	 * Returns the scope of an identifier if it is found in the current scope or
+	 * an ancestor of the current scope
 	 *
 	 * O(log n) time complexity
 	 *

@@ -10,7 +10,10 @@ import { DoWhileStatementNode } from "src/parser/nodes/do-while-statement-node";
 import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
-import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
+import {
+	IdExpressionNode,
+	IdExpressionUse,
+} from "src/parser/nodes/id-expression-node";
 import { IfStatementNode } from "src/parser/nodes/if-statement-node";
 import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
@@ -155,8 +158,8 @@ export class PrintVisitor implements Visitor, Describable {
 		this.desc +=
 			"IdExpression(" +
 			node.name +
-			", usedAsFunction=" +
-			node.usedAsFunction +
+			", use=" +
+			IdExpressionUse[node.use] +
 			")\n";
 	}
 

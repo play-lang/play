@@ -21,7 +21,10 @@ import { DoWhileStatementNode } from "src/parser/nodes/do-while-statement-node";
 import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
-import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
+import {
+	IdExpressionNode,
+	IdExpressionUse,
+} from "src/parser/nodes/id-expression-node";
 import { IfStatementNode } from "src/parser/nodes/if-statement-node";
 import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
@@ -258,9 +261,9 @@ export class TypeChecker {
 	}
 
 	private checkIdExpression(node: IdExpressionNode): void {
-		if (node.usedAsFunction) {
+		if (node.use === IdExpressionUse.Function) {
 			// TODO: Id is used as a function reference, make sure function exists
-		} else {
+		} else if (node.use === IdExpressionUse.Variable) {
 			const scope = this.env.symbolTable.scope.findScope(node.name);
 			if (!scope) {
 				this.report(

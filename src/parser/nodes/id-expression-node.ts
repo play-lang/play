@@ -1,8 +1,14 @@
 import { Expression, NodeState } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import { ErrorType, Type } from "src/language/types/type-system";
+import { ErrorType, Str, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
+
+export enum IdExpressionUse {
+	Function = 1,
+	MapKey,
+	Variable,
+}
 
 /**
  * Identifier reference node
@@ -15,7 +21,7 @@ export class IdExpressionNode extends Expression {
 	 * The parser will come back to this node and set this to true if it finds a
 	 * function invocation node immediately after (see InvocationOperatorParselet)
 	 */
-	public usedAsFunction: boolean = false;
+	public use: IdExpressionUse = IdExpressionUse.Variable;
 
 	/** Identifier name */
 	public get name(): string {
@@ -33,19 +39,27 @@ export class IdExpressionNode extends Expression {
 	public type(env: Environment): Type {
 		const scope = env.symbolTable.scope.findScope(this.name);
 		if (scope) {
-			// Identifier represents a variable
+			// Identifier represents a variable (takes priority over other uses)
 			return env.symbolTable.scope.lookup(this.name)!.type!;
 		}
-		if (this.usedAsFunction) {
-			// The id is invoked as a function, so see if it can be found in the
-			// function table
-			const info = env.functionTable.get(this.name);
-			if (info) {
-				return Type.construct(info.typeAnnotation);
+		switch (this.use) {
+			case IdExpressionUse.Function: {
+				// The id is invoked as a function, so see if it can be found in the
+				// function table
+				const info = env.functionTable.get(this.name);
+				if (info) {
+					return Type.construct(info.typeAnnotation);
+				}
+				return new ErrorType(false);
 			}
-			return new ErrorType(false);
+			case IdExpressionUse.Variable: {
+				// Didn't find variable in scope above so return error
+				return new ErrorType(false);
+			}
+			case IdExpressionUse.MapKey: {
+				return Str;
+			}
 		}
-		return new ErrorType(true);
 	}
 
 	public validate(): void {}
