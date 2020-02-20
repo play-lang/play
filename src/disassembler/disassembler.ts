@@ -246,7 +246,6 @@ export class Disassembler {
 				}
 				// Collections
 				case OpCode.MakeList:
-				case OpCode.MakeSet:
 				case OpCode.MakeMap: {
 					const numItems = bytecode[p++];
 					out += this.instrParam(op, ip, numItems);
