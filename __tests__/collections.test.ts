@@ -19,5 +19,15 @@ return x[0]
 			const code = `let x = [1, 2, 3]\nx = [4, 5, 6]`;
 			expect(Play.check(code)).toHaveLength(1);
 		});
+		test("chaining index operations", () => {
+			const code = `let x = [[1, 2], [3, 4], [5, 6]][1][1] // 4`;
+			expect(Play.run(code).value.value).toBe(4);
+		});
+		test("bad assign to list literal", () => {
+			const code = `[1, 2, 3] = [4, 5, 6]`;
+			expect(() => {
+				Play.run(code);
+			}).toThrow();
+		});
 	});
 });

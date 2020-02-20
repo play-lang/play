@@ -14,47 +14,50 @@ export enum RepresentedCollectionType {
 	List,
 }
 
-export class SetOrListNode extends Expression {
+export class MapNode extends Expression {
 	constructor(
 		token: TokenLike,
 		/** Expressions comprising the members of the set or list */
-		public readonly members: Expression[],
+		public readonly keys: Expression[],
+		public readonly values: Expression[],
 		/** The type of collection this node represents */
 		public representedCollectionType: RepresentedCollectionType = RepresentedCollectionType.List
 	) {
 		super(
 			token,
 			token.pos,
-			members.length > 0 ? members[members.length - 1].end : token.end
+			values.length > 0 ? values[values.length - 1].end : token.end
 		);
 	}
 
 	public setState(state: NodeState): void {
 		this.state = state;
-		this.members.forEach(member =>
-			member.setState({
+		this.keys.forEach(key =>
+			key.setState({
 				...state,
-				isLast: member === this.members[this.members.length - 1],
+				isLast: key === this.keys[this.keys.length - 1],
+				parent: this,
+			})
+		);
+		this.values.forEach(value =>
+			value.setState({
+				...state,
+				isLast: value === this.values[this.values.length - 1],
 				parent: this,
 			})
 		);
 	}
 
 	public type(env: Environment): Type {
-		if (this.members.length < 1) {
-			return new CollectionType(Collection.List, Any, false);
+		if (this.keys.length < 1) {
+			return new CollectionType(Collection.Map, Any, false);
 		}
-		// TODO: Infer type based on all members
-		const type = this.members[0].type(env);
-		switch (this.representedCollectionType) {
-			case RepresentedCollectionType.List:
-				return new CollectionType(Collection.List, type, false);
-			case RepresentedCollectionType.Set:
-				return new CollectionType(Collection.Set, type, false);
-		}
+		// TODO: Infer type based on all values
+		const type = this.values[0].type(env);
+		return new CollectionType(Collection.Map, type, false);
 	}
 
 	public accept(visitor: Visitor): void {
-		visitor.visitSetOrListNode?.(this);
+		visitor.visitMapNode?.(this);
 	}
 }
