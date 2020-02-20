@@ -11,13 +11,13 @@ import { ModelType, ProtocolType } from "src/language/types/type-system";
  */
 export class Environment {
 	constructor(
-		/**
-		 * Program symbol table (scope tree)
-		 */
+		/** Symbol table of the type-checking environment (context) */
 		public readonly symbolTable: SymbolTable,
-		/** Function table of the type-checking environment */
+		/** Function table of the type-checking environment (signatures) */
 		public readonly functionTable: Map<string, FunctionInfo>,
+		/** Protocols visible in the environment */
 		public readonly protocols: Map<string, ProtocolType>,
+		/** Models visible in the environment */
 		public readonly models: Map<string, ModelType>
 	) {}
 }
