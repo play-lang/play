@@ -8,13 +8,10 @@ import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-exp
 import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
 import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
+import { ListNode } from "src/parser/nodes/list-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
-import {
-	RepresentedCollectionType,
-	SetOrListNode,
-} from "src/parser/nodes/set-or-list-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { Parser } from "src/parser/parser";
 
@@ -55,8 +52,8 @@ export class GroupParselet implements PrefixParselet {
 	}
 }
 
-export class SetOrListParselet implements PrefixParselet {
-	public parse(parser: Parser, token: TokenLike): SetOrListNode {
+export class ListParselet implements PrefixParselet {
+	public parse(parser: Parser, token: TokenLike): ListNode {
 		const members: Expression[] = [];
 		if (!parser.match(TokenType.BracketClose)) {
 			members.push(parser.expression());
@@ -65,31 +62,7 @@ export class SetOrListParselet implements PrefixParselet {
 			}
 			parser.consume(TokenType.BracketClose, "Expected close bracket");
 		}
-		return new SetOrListNode(token, members);
-	}
-}
-
-export class SetParselet extends SetOrListParselet {
-	public parse(parser: Parser, token: TokenLike): SetOrListNode {
-		parser.consume(
-			TokenType.BracketOpen,
-			"Expected opening bracket after set keyword"
-		);
-		const node = super.parse(parser, token);
-		node.representedCollectionType = RepresentedCollectionType.Set;
-		return node;
-	}
-}
-
-export class ListParselet extends SetOrListParselet {
-	public parse(parser: Parser, token: TokenLike): SetOrListNode {
-		parser.consume(
-			TokenType.BracketOpen,
-			"Expected opening bracket after list keyword"
-		);
-		const node = super.parse(parser, token);
-		node.representedCollectionType = RepresentedCollectionType.Set;
-		return node;
+		return new ListNode(token, members);
 	}
 }
 

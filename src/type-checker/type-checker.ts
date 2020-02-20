@@ -25,12 +25,13 @@ import { IdExpressionNode } from "src/parser/nodes/id-expression-node";
 import { IfStatementNode } from "src/parser/nodes/if-statement-node";
 import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
+import { ListNode } from "src/parser/nodes/list-node";
+import { MapNode } from "src/parser/nodes/map-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
 import { ProgramNode } from "src/parser/nodes/program-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
-import { SetOrListNode } from "src/parser/nodes/set-or-list-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
 import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
@@ -340,6 +341,45 @@ export class TypeChecker {
 		}
 	}
 
+	private checkList(node: ListNode): void {
+		if (node.members.length < 1) return;
+		// TODO: Infer type based on all members
+		const itemType = node.members[0].type(this.env);
+		for (let i = 1; i < node.members.length; i++) {
+			const type = node.members[i].type(this.env);
+			if (!itemType.equivalent(type)) {
+				this.mismatch(
+					node.members[i].token,
+					itemType,
+					type,
+					"for collection member"
+				);
+			}
+		}
+	}
+
+	private checkMap(node: MapNode): void {
+		// Map keys should all evaluate to strings
+		for (const key of node.keys) {
+			this.checkNode(key);
+			const type = key.type(this.env);
+			if (!type.equivalent(Str)) {
+				this.mismatch(key.token, Str, type);
+			}
+		}
+		if (node.values.length > 0) {
+			// TODO: Infer type based on all values
+			const valueType = node.values[0].type(this.env);
+			for (const value of node.values) {
+				this.checkNode(value);
+				const type = value.type(this.env);
+				if (!type.equivalent(valueType)) {
+					this.mismatch(value.token, valueType, type);
+				}
+			}
+		}
+	}
+
 	private checkPostfixExpression(node: PostfixExpressionNode): void {
 		this.checkNode(node.lhs);
 		const type = node.type(this.env);
@@ -392,22 +432,6 @@ export class TypeChecker {
 
 	private checkReturnStatement(node: ReturnStatementNode): void {
 		if (node.expr) this.checkNode(node.expr);
-	}
-
-	private checkSetOrList(node: SetOrListNode): void {
-		if (node.members.length < 1) return;
-		const itemType = node.members[0].type(this.env);
-		for (let i = 1; i < node.members.length; i++) {
-			const type = node.members[i].type(this.env);
-			if (!itemType.equivalent(type)) {
-				this.mismatch(
-					node.members[i].token,
-					itemType,
-					type,
-					"for collection member"
-				);
-			}
-		}
 	}
 
 	private checkTernaryConditional(node: TernaryConditionalNode): void {
@@ -498,6 +522,9 @@ export class TypeChecker {
 			case node instanceof InvocationExpressionNode:
 				this.checkInvocationExpression(node as InvocationExpressionNode);
 				break;
+			case node instanceof MapNode:
+				this.checkMap(node as MapNode);
+				break;
 			case node instanceof PostfixExpressionNode:
 				this.checkPostfixExpression(node as PostfixExpressionNode);
 				break;
@@ -513,8 +540,8 @@ export class TypeChecker {
 			case node instanceof ReturnStatementNode:
 				this.checkReturnStatement(node as ReturnStatementNode);
 				break;
-			case node instanceof SetOrListNode:
-				this.checkSetOrList(node as SetOrListNode);
+			case node instanceof ListNode:
+				this.checkList(node as ListNode);
 				break;
 			case node instanceof TernaryConditionalNode:
 				this.checkTernaryConditional(node as TernaryConditionalNode);
