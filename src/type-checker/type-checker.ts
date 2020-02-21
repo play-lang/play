@@ -330,8 +330,8 @@ export class TypeChecker {
 			if (receiverType instanceof InstanceType) {
 				for (const func of receiverType.model.functions) {
 					if (
-						type.satisfiesRecordType(func.parameters) &&
-						func.name === functionName
+						func.name === functionName &&
+						type.satisfiesRecordType(func.parameters)
 					) {
 						// This method invocation is found on the specified object type,
 						// return happily
