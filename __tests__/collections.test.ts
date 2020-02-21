@@ -48,7 +48,8 @@ x.push(1)
 	});
 	describe("maps", () => {
 		test("empty map literal", () => {
-			// TODO: Empty map literal
+			const code = `let x = {}`;
+			expect(Play.run(code).value.isPointer).toBe(true);
 		});
 		test("map literal w/ chained index, trailing comma, bad formatting", () => {
 			const code = `
