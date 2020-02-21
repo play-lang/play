@@ -34,7 +34,7 @@ export enum TokenType {
 
 	// Reserved declaration words
 	Model,
-	Contract,
+	Protocol,
 	Function,
 	Has,
 	Uses,
@@ -115,7 +115,7 @@ export const idTokenTypes: { [key: string]: TokenType } = {
 	list: TokenType.List,
 	set: TokenType.Set,
 	model: TokenType.Model,
-	contract: TokenType.Contract,
+	protocol: TokenType.Protocol,
 	insert: TokenType.Insert,
 	true: TokenType.Boolean,
 	false: TokenType.Boolean,

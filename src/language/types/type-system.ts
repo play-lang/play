@@ -476,7 +476,12 @@ export class FunctionType extends Type {
 		 * If the function is a method that requires a receiver, this receiver type
 		 * should be provided
 		 */
-		public receiverType?: Type
+		public receiverType?: Type,
+		/**
+		 * If this represents a native function/method type the index of the native
+		 * function to call in code should be provided
+		 */
+		public nativeFunctionIndex?: number
 	) {
 		super(false);
 	}

@@ -20,10 +20,12 @@ import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression
 import { ListNode } from "src/parser/nodes/list-node";
 import { MapNode } from "src/parser/nodes/map-node";
 import { MemberAccessExpressionNode } from "src/parser/nodes/member-access-expression-node";
+import { ModelNode } from "src/parser/nodes/model-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
 import { ProgramNode } from "src/parser/nodes/program-node";
+import { ProtocolNode } from "src/parser/nodes/protocol-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
@@ -272,6 +274,11 @@ export class PrintVisitor implements Visitor, Describable {
 		this.indent -= 1;
 	}
 
+	public visitModelNode(node: ModelNode): void {
+		this.desc += "Model\n";
+		// TODO: Finish model declaration print implementation
+	}
+
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {
 		this.desc += "Postfix(" + TokenType[node.operatorType] + ")\n";
 		this.indent += 1;
@@ -301,6 +308,11 @@ export class PrintVisitor implements Visitor, Describable {
 			statement.accept(this);
 		}
 		this.indent -= 1;
+	}
+
+	public visitProtocolNode(node: ProtocolNode): void {
+		this.desc += "Protocol\n";
+		// TODO: Finish protocol declaration print implementation
 	}
 
 	public visitReturnStatementNode(node: ReturnStatementNode): void {

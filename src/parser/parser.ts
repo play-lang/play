@@ -9,6 +9,7 @@ import { TokenLike } from "src/language/token";
 import { TokenParser } from "src/language/token-parser";
 import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
+import { ModelType, ProtocolType } from "src/language/types/type-system";
 import { Lexer } from "src/lexer/lexer";
 import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
 import { DoWhileStatementNode } from "src/parser/nodes/do-while-statement-node";
@@ -16,7 +17,9 @@ import { ElseStatementNode } from "src/parser/nodes/else-statement-node";
 import { ExpressionStatementNode } from "src/parser/nodes/expression-statement-node";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
 import { IfStatementNode } from "src/parser/nodes/if-statement-node";
+import { ModelNode } from "src/parser/nodes/model-node";
 import { ProgramNode } from "src/parser/nodes/program-node";
+import { ProtocolNode } from "src/parser/nodes/protocol-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
 import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
@@ -38,15 +41,21 @@ export class Parser extends TokenParser {
 		return this.symbolTable.scope;
 	}
 
+	public get models(): Map<string, ModelType> {
+		return this.env.models;
+	}
+
+	public get protocols(): Map<string, ProtocolType> {
+		return this.env.protocols;
+	}
+
 	constructor(contents: string) {
-		// Todo: Update for file table when preprocessor is ready
 		super(new Lexer(contents));
 		this.env = new Environment(
 			new SymbolTable(new Scope()),
 			new Map<string, FunctionInfo>(),
-			// Todo: include models and protocols in environment
-			new Map(),
-			new Map()
+			new Map<string, ProtocolType>(),
+			new Map<string, ModelType>()
 		);
 	}
 
@@ -107,6 +116,10 @@ export class Parser extends TokenParser {
 			return this.whileStatement();
 		} else if (this.match(TokenType.Do)) {
 			return this.doWhileStatement();
+		} else if (this.match(TokenType.Model)) {
+			return this.model();
+		} else if (this.match(TokenType.Protocol)) {
+			return this.protocol();
 		} else if (this.match(TokenType.BraceOpen)) {
 			// Match a block statement
 			return this.block();
@@ -396,6 +409,14 @@ export class Parser extends TokenParser {
 		this.consume(TokenType.While, "Expected while keyword");
 		const condition = this.expression();
 		return new DoWhileStatementNode(token, block, condition);
+	}
+
+	public model(): ModelNode {
+		return new ModelNode(this.previous);
+	}
+
+	public protocol(): ProtocolNode {
+		return new ProtocolNode(this.previous);
 	}
 
 	public whileStatement(): WhileStatementNode {
