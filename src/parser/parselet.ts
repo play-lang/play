@@ -89,10 +89,6 @@ export class MapParselet implements PrefixParselet {
 				break;
 			}
 			const key = parser.expression();
-			if (key instanceof IdExpressionNode && !parser.scope.lookup(key.name)) {
-				// Plain id's can be used as map keys if they aren't used as variables
-				key.use = IdExpressionUse.MapKey;
-			}
 			keys.push(key);
 			parser.eatLines();
 			parser.consume(TokenType.Colon, "Expected colon following map key");

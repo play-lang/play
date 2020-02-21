@@ -1,12 +1,11 @@
 import { Expression, NodeState } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import { ErrorType, Str, Type } from "src/language/types/type-system";
+import { ErrorType, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export enum IdExpressionUse {
 	Function = 1,
-	MapKey,
 	Variable,
 }
 
@@ -55,9 +54,6 @@ export class IdExpressionNode extends Expression {
 			case IdExpressionUse.Variable: {
 				// Didn't find variable in scope above so return error
 				return new ErrorType(false);
-			}
-			case IdExpressionUse.MapKey: {
-				return Str;
 			}
 		}
 	}
