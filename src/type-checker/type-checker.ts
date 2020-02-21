@@ -386,7 +386,11 @@ export class TypeChecker {
 	}
 
 	private checkMemberAccess(node: MemberAccessExpressionNode): void {
-		// TODO: Check member access expression
+		if (!(node.member instanceof IdExpressionNode)) {
+			this.error(node.token, "Identifier expected");
+		}
+		this.checkNode(node.lhs);
+		this.checkNode(node.member);
 	}
 
 	private checkPostfixExpression(node: PostfixExpressionNode): void {
