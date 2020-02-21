@@ -8,6 +8,7 @@ import {
 	Collection,
 	CollectionType,
 	ErrorType,
+	InstanceType,
 	Num,
 	Str,
 	SumType,
@@ -323,8 +324,22 @@ export class TypeChecker {
 
 	private checkInvocationExpression(node: InvocationExpressionNode): void {
 		const type = node.argumentsType(this.env);
-		const functionName = node.functionName;
-		if (functionName && this.env.functionTable.has(functionName)) {
+		const functionName = node.functionName!;
+		if (node.receiver) {
+			const receiverType = node.receiver.type(this.env);
+			if (receiverType instanceof InstanceType) {
+				for (const func of receiverType.model.functions) {
+					if (
+						type.satisfiesRecordType(func.parameters) &&
+						func.name === functionName
+					) {
+						// This method invocation is found on the specified object type,
+						// return happily
+						return;
+					}
+				}
+			}
+		} else if (this.env.functionTable.has(functionName)) {
 			const info = this.env.functionTable.get(functionName)!;
 			// Function types are pre-computed before type checking so this should
 			// be safe
@@ -337,13 +352,14 @@ export class TypeChecker {
 					"to be invoked as a function call"
 				);
 			}
-		} else {
-			// TODO: Semantic error here for unrecognized function
-			throw new TypeCheckError(
-				node.token,
-				"Failed to resolve function " + node.functionName
-			);
+			return;
 		}
+
+		// TODO: Semantic error here for unrecognized function
+		throw new TypeCheckError(
+			node.token,
+			"Failed to resolve function " + node.functionName
+		);
 	}
 
 	private checkList(node: ListNode): void {
@@ -386,8 +402,13 @@ export class TypeChecker {
 	}
 
 	private checkMemberAccess(node: MemberAccessExpressionNode): void {
-		if (!(node.member instanceof IdExpressionNode)) {
-			this.error(node.token, "Identifier expected");
+		if (
+			!(
+				node.member instanceof IdExpressionNode ||
+				node.member instanceof InvocationExpressionNode
+			)
+		) {
+			this.error(node.token, "Identifier or invocation expected");
 		}
 		this.checkNode(node.lhs);
 		this.checkNode(node.member);

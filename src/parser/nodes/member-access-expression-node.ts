@@ -3,6 +3,7 @@ import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
 import { ErrorType, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
+import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 
 export class MemberAccessExpressionNode extends Expression {
 	/** True if the member access operation is used as an l-value */
@@ -16,6 +17,11 @@ export class MemberAccessExpressionNode extends Expression {
 		public readonly member: Expression
 	) {
 		super(token, token.pos, member.token.end);
+		if (member instanceof InvocationExpressionNode) {
+			// If the member to access is a function call, we need to inform it that
+			// it is likely a method call so that it can be type-checked correctly
+			member.receiver = lhs;
+		}
 	}
 
 	public setState(state: NodeState): void {

@@ -13,6 +13,13 @@ import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 
 export class InvocationExpressionNode extends Expression {
 	/**
+	 * If the invocation is invoked as a method with the member access operator,
+	 * this will be set to the expression that is believed to be the receiver
+	 * of the method call
+	 */
+	public receiver: Expression | undefined;
+
+	/**
 	 * True if the invocation is a recursive call in tail position
 	 *
 	 * This is true if the invocation is the immediate child of a return statement
