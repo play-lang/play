@@ -42,7 +42,6 @@ return x[0]
 			const code = `let x = [1, 2, 3]
 x.push(1)
 `;
-			console.log(Play.describeAst(code));
 			Play.check(code);
 		});
 	});
