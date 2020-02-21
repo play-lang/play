@@ -326,6 +326,7 @@ export class TypeChecker {
 		const type = node.argumentsType(this.env);
 		const functionName = node.functionName!;
 		if (node.receiver) {
+			// Check a method call
 			const receiverType = node.receiver.type(this.env);
 			if (receiverType instanceof InstanceType) {
 				for (const func of receiverType.model.functions) {
@@ -340,6 +341,7 @@ export class TypeChecker {
 				}
 			}
 		} else if (this.env.functionTable.has(functionName)) {
+			// Check a global function call
 			const info = this.env.functionTable.get(functionName)!;
 			// Function types are pre-computed before type checking so this should
 			// be safe
