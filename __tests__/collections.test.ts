@@ -39,10 +39,16 @@ return x[0]
 			expect(Play.run(code).value.value).toBe(3);
 		});
 		test("member method access", () => {
-			const code = `let x = [1, 2, 3]
+			let code = `let x = [1, 2, 3]
 x.push(1)
 `;
-			Play.check(code);
+			expect(Play.check(code).length).toBe(0);
+			code = `let x = [1, 2, 3]
+x.doesNotExist(1)
+`;
+			expect(() => {
+				Play.check(code);
+			}).toThrow();
 		});
 	});
 	describe("maps", () => {
