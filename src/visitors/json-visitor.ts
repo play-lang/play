@@ -20,6 +20,7 @@ import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { ListNode } from "src/parser/nodes/list-node";
 import { MapNode } from "src/parser/nodes/map-node";
+import { MemberAccessExpressionNode } from "src/parser/nodes/member-access-expression-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
@@ -229,6 +230,20 @@ export class JSONVisitor implements Visitor, Describable {
 			...def(node),
 			keys,
 			values,
+		});
+	}
+
+	public visitMemberAccessExpressionNode(
+		node: MemberAccessExpressionNode
+	): void {
+		node.lhs.accept(this);
+		const lhs = this.stack.pop();
+		node.member.accept(this);
+		const member = this.stack.pop();
+		this.stack.push({
+			...def(node),
+			lhs,
+			member,
 		});
 	}
 

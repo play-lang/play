@@ -13,6 +13,7 @@ import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { ListNode } from "src/parser/nodes/list-node";
 import { MapNode } from "src/parser/nodes/map-node";
+import { MemberAccessExpressionNode } from "src/parser/nodes/member-access-expression-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
@@ -130,11 +131,6 @@ export class AssignmentParselet implements InfixParselet {
 	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
 		// Assignment is right-associative, so we drop precedence by 1:
 		const rhs: Expression = parser.expression(this.precedence - 1);
-		if (lhs instanceof IndexExpressionNode) {
-			// Left-hand side is an index expression (`array[index] = value`) and
-			// is used in an assignment statement
-			lhs.lValue = true;
-		}
 		return new AssignmentExpressionNode(token, token.type, lhs, rhs);
 	}
 	public get precedence(): number {
@@ -205,6 +201,16 @@ export class IndexOperatorParselet implements InfixParselet {
 		const expr = parser.expression();
 		parser.consume(TokenType.BracketClose, "Expected closing bracket");
 		return new IndexExpressionNode(token, lhs, expr, parser.previous.pos);
+	}
+	public get precedence(): number {
+		return Precedence.Primary;
+	}
+}
+
+export class MemberAccessOperatorParselet implements InfixParselet {
+	public parse(parser: Parser, lhs: Expression, token: TokenLike): Expression {
+		const rhs = parser.expression();
+		return new MemberAccessExpressionNode(token, lhs, rhs);
 	}
 	public get precedence(): number {
 		return Precedence.Primary;

@@ -19,6 +19,7 @@ import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { ListNode } from "src/parser/nodes/list-node";
 import { MapNode } from "src/parser/nodes/map-node";
+import { MemberAccessExpressionNode } from "src/parser/nodes/member-access-expression-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
@@ -247,6 +248,27 @@ export class PrintVisitor implements Visitor, Describable {
 			value.accept(this);
 			this.indent -= 1;
 		}
+		this.indent -= 1;
+	}
+
+	public visitMemberAccessExpressionNode(
+		node: MemberAccessExpressionNode
+	): void {
+		this.desc += "Member Access\n";
+		this.indent += 1;
+
+		this.desc += this.spaces + "├── lhs\n";
+		this.indent += 1;
+		this.desc += this.spaces + "└── ";
+		node.lhs.accept(this);
+		this.indent -= 1;
+
+		this.desc += this.spaces + "└── member\n";
+		this.indent += 1;
+		this.desc += this.spaces + "└── ";
+		node.member.accept(this);
+		this.indent -= 1;
+
 		this.indent -= 1;
 	}
 
