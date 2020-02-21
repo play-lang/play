@@ -356,8 +356,6 @@ export class TypeChecker {
 			}
 			return;
 		}
-
-		// TODO: Semantic error here for unrecognized function
 		throw new TypeCheckError(
 			node.token,
 			"Failed to resolve function " + node.functionName
