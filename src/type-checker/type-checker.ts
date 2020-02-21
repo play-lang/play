@@ -57,6 +57,12 @@ export class TypeChecker {
 
 	// MARK: Methods
 
+	/**
+	 * Check the type checker's AST for semantic errors
+	 *
+	 * If any errors are found, they will be added to the `errors` list and
+	 * false will be returned
+	 */
 	public check(): boolean {
 		// Reset everything
 		this.errors = [];
