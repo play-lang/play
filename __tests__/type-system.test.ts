@@ -54,42 +54,42 @@ describe("type system", () => {
 		const rec1 = new RecordType(
 			new LinkedHashMap<string, Type>([
 				["p1", Type.construct("bool")],
-				["p2", Type.construct("num set")],
+				["p2", Type.construct("num list")],
 			]),
 			true
 		);
 		const rec2 = new RecordType(
 			new LinkedHashMap<string, Type>([
 				["p1", Type.construct("bool")],
-				["p2", Type.construct("num set")],
+				["p2", Type.construct("num list")],
 			])
 		);
 		const rec3 = new RecordType(
 			new LinkedHashMap<string, Type>([
-				["p2", Type.construct("num set")],
+				["p2", Type.construct("num list")],
 				["p1", Type.construct("bool")],
 			])
 		);
 		const rec4 = new RecordType(
 			new LinkedHashMap<string, Type>([
-				["p2", Type.construct("num set")],
+				["p2", Type.construct("num list")],
 				["p1", Type.construct("str")],
 			])
 		);
 		const rec5 = new RecordType(
 			new LinkedHashMap<string, Type>([
-				["p2", Type.construct("num set")],
+				["p2", Type.construct("num list")],
 				["p5", Type.construct("bool")],
 			])
 		);
 		const rec6 = new RecordType(
 			new LinkedHashMap<string, Type>([
 				["p1", Type.construct("str")],
-				["p2", Type.construct("num set")],
+				["p2", Type.construct("num list")],
 			])
 		);
-		expect(rec1.description).toBe("&<p1: Bool, p2: Set<Num>>");
-		expect(rec2.description).toBe("<p1: Bool, p2: Set<Num>>");
+		expect(rec1.description).toBe("&<p1: Bool, p2: List<Num>>");
+		expect(rec2.description).toBe("<p1: Bool, p2: List<Num>>");
 		const t1 = Num;
 		expect(rec1.equivalent(rec1)).toBe(true);
 		expect(rec1.equivalent(rec2)).toBe(true);
@@ -221,9 +221,7 @@ describe("type system", () => {
 		expect(fun1.accepts(fun3)).toBe(false);
 	});
 	test("collection type", () => {
-		expect(new CollectionType(Collection.Map, Str).isAssignable).toBe(
-			false
-		);
+		expect(new CollectionType(Collection.Map, Str).isAssignable).toBe(false);
 		const list1 = new CollectionType(
 			Collection.List,
 			new PrimitiveType(Primitive.Bool, false)
@@ -272,9 +270,9 @@ describe("type system", () => {
 			).toBe(true);
 			expect(Type.construct([]).equivalent(None)).toBe(true);
 			expect(Type.construct("none").equivalent(None)).toBe(true);
-			expect(
-				Type.construct("num unknown").equivalent(new ErrorType())
-			).toBe(true);
+			expect(Type.construct("num unknown").equivalent(new ErrorType())).toBe(
+				true
+			);
 			expect(
 				Type.construct("unknown map").equivalent(
 					new CollectionType(Collection.Map, new ErrorType())
@@ -289,12 +287,7 @@ describe("type system", () => {
 		test("function type construction", () => {
 			expect(
 				Type.constructFunction(
-					new FunctionInfo(
-						"fun1",
-						["str"],
-						["a"],
-						new Map([["a", ["str"]]])
-					)
+					new FunctionInfo("fun1", ["str"], ["a"], new Map([["a", ["str"]]]))
 				).equivalent(
 					new FunctionType(
 						"fun1",
