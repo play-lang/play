@@ -466,7 +466,11 @@ export class Compiler implements Visitor {
 	}
 
 	public visitMapNode(node: MapNode): void {
-		// TODO: Compile map nodes
+		for (let i = 0; i < node.keys.length; i++) {
+			this.accept(node.keys[i]);
+			this.accept(node.values[i]);
+		}
+		this.context.emit(OpCode.MakeMap, node.keys.length);
 	}
 
 	public visitMemberAccessExpressionNode(

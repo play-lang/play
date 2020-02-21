@@ -352,17 +352,11 @@ export class VirtualMachine {
 					case OpCode.MakeMap: {
 						const numItems = this.read();
 						// Must be divisible by 2 since we expect key/value pairs
-						if (numItems % 2 !== 0) {
-							throw new RuntimeError(
-								VMStatus.UnevenMap,
-								"Uneven number of map keys and values specified"
-							);
-						}
 						const map = new Map<string, RuntimeValue>();
 						// Walk through the key/value pairs on the stack two at a time
 						// and construct a map
 						for (
-							let i = this.stack.length - numItems;
+							let i = this.stack.length - numItems * 2;
 							i < this.stack.length - 1;
 							i += 2
 						) {
@@ -377,7 +371,7 @@ export class VirtualMachine {
 							map.set(key.value as string, value);
 						}
 						// Drop the map key/value pairs from the stack
-						this.dropTo(this.stack.length - numItems);
+						this.dropTo(this.stack.length - numItems * 2);
 						// Allocate space on the heap for the new map
 						this.push(this.alloc(map));
 						break;
@@ -388,9 +382,9 @@ export class VirtualMachine {
 						const lhs = this.pop();
 						this.validatePointer(lhs);
 						const addr = this.gc.read(lhs.value as number);
-						// Won't work for sets
 						const value = this.gc.heap(addr, index.value);
 						if (value) {
+							if (value.isPointer) this.gc.read(value.value as number);
 							this.stack.push(value.copy());
 						} else {
 							throw new RuntimeError(
