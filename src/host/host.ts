@@ -1,4 +1,4 @@
-import { nativeFunctions, NativeFunction } from "src/vm/host/native-functions";
+import { nativeFunctions, NativeFunction } from "src/host/native-functions";
 
 /**
  * Represents a virtual machine host which contains information about
@@ -10,7 +10,7 @@ import { nativeFunctions, NativeFunction } from "src/vm/host/native-functions";
  * Extension functions are provided by the host environment utilizing the
  * Play virtual machine with the extensions api's
  */
-export class VirtualMachineHost {
+export class Host {
 	/** Functions that can be executed by the virtual machine */
 	public readonly functions: NativeFunction[];
 	/**
