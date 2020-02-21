@@ -13,10 +13,12 @@ import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression
 import { ListNode } from "src/parser/nodes/list-node";
 import { MapNode } from "src/parser/nodes/map-node";
 import { MemberAccessExpressionNode } from "src/parser/nodes/member-access-expression-node";
+import { ModelNode } from "src/parser/nodes/model-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
 import { ProgramNode } from "src/parser/nodes/program-node";
+import { ProtocolNode } from "src/parser/nodes/protocol-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
@@ -38,10 +40,12 @@ export interface Visitor {
 	visitListNode(node: ListNode): void;
 	visitMapNode(node: MapNode): void;
 	visitMemberAccessExpressionNode(node: MemberAccessExpressionNode): void;
+	visitModelNode(node: ModelNode): void;
 	visitPostfixExpressionNode(node: PostfixExpressionNode): void;
 	visitPrefixExpressionNode(node: PrefixExpressionNode): void;
 	visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void;
 	visitProgramNode(node: ProgramNode): void;
+	visitProtocolNode(node: ProtocolNode): void;
 	visitReturnStatementNode(node: ReturnStatementNode): void;
 	visitTernaryConditionalNode(node: TernaryConditionalNode): void;
 	visitVariableDeclarationNode(node: VariableDeclarationNode): void;

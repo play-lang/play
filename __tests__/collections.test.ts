@@ -39,15 +39,17 @@ return x[0]
 			expect(Play.run(code).value.value).toBe(3);
 		});
 		test("member method access", () => {
-			const code = `
-			let x = [1, 2, 3]
-			x.push(1)
-						`;
+			const code = `let x = [1, 2, 3]
+x.push(1)
+`;
 			console.log(Play.describeAst(code));
+			Play.check(code);
 		});
 	});
 	describe("maps", () => {
-		test("empty map literal", () => {});
+		test("empty map literal", () => {
+			// TODO: Empty map literal
+		});
 		test("map literal w/ chained index, trailing comma, bad formatting", () => {
 			const code = `
 				let x = {
