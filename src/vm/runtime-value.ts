@@ -38,3 +38,10 @@ export class RuntimeValue implements Describable {
 		}
 	}
 }
+
+// Make constants for zero values since they are so widely used
+export const Nil: RuntimeValue = new RuntimeValue(RuntimeType.Pointer, null);
+export const Zero: RuntimeValue = new RuntimeValue(RuntimeType.Number, 0);
+export const Blank: RuntimeValue = new RuntimeValue(RuntimeType.String, "");
+export const True: RuntimeValue = new RuntimeValue(RuntimeType.Boolean, true);
+export const False: RuntimeValue = new RuntimeValue(RuntimeType.Boolean, false);

@@ -1,4 +1,3 @@
-
 | Bytecode     | Parameters | Description                                                  |
 |--------------|------------|--------------------------------------------------------------|
 | RETURN       |            | Returns the top value of the stack                           |

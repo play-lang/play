@@ -5,7 +5,14 @@ import { CellDataType } from "src/vm/gc/cell-data";
 import { GarbageCollector } from "src/vm/gc/garbage-collector";
 import { RuntimeError } from "src/vm/runtime-error";
 import { RuntimeType } from "src/vm/runtime-type";
-import { RuntimeValue } from "src/vm/runtime-value";
+import {
+	Blank,
+	False,
+	Nil,
+	RuntimeValue,
+	True,
+	Zero,
+} from "src/vm/runtime-value";
 import { VMResult } from "src/vm/vm-result";
 import { VMStatus } from "src/vm/vm-status";
 
@@ -15,13 +22,6 @@ interface Performance {
 
 const defaultPerformance = { now: () => 0 };
 
-// Make constants for zero values since they are so widely used
-const Nil: RuntimeValue = new RuntimeValue(RuntimeType.Pointer, null);
-const Zero: RuntimeValue = new RuntimeValue(RuntimeType.Number, 0);
-const Blank: RuntimeValue = new RuntimeValue(RuntimeType.String, "");
-const True: RuntimeValue = new RuntimeValue(RuntimeType.Boolean, true);
-const False: RuntimeValue = new RuntimeValue(RuntimeType.Boolean, false);
-
 /** Virtual machine that runs code */
 export class VirtualMachine {
 	/**
@@ -29,44 +29,44 @@ export class VirtualMachine {
 	 *
 	 * Always represents the index of the next instruction to be evaluated
 	 */
-	private get ip(): number {
+	public get ip(): number {
 		return this.frame.ip;
 	}
 
-	private set ip(value: number) {
+	public set ip(value: number) {
 		this.frame.ip = value;
 	}
 
 	/** Bytecode of the program */
-	private get bytecode(): number[] {
+	public get bytecode(): number[] {
 		return this.program.bytecode;
 	}
 
 	/** Constant pool of the program */
-	private get constantPool(): RuntimeValue[] {
+	public get constantPool(): RuntimeValue[] {
 		return this.program.constantPool;
 	}
 
 	/** Top value in the stack */
-	private get top(): RuntimeValue {
+	public get top(): RuntimeValue {
 		return this.stack[this.stack.length - 1];
 	}
 
 	/** Current stack frame for current function being executed */
-	private get frame(): Frame {
+	public get frame(): Frame {
 		return this.frames[this.frames.length - 1];
 	}
 
 	/** Stack */
-	private readonly stack: RuntimeValue[] = [];
+	public readonly stack: RuntimeValue[] = [];
 	/** Stack frames */
-	private readonly frames: Frame[] = [];
+	public readonly frames: Frame[] = [];
 
 	constructor(
 		/** Program to execute */
-		private readonly program: LoadedProgram,
+		public readonly program: LoadedProgram,
 		/** Garbage collector (and heap manager) */
-		private readonly gc: GarbageCollector = new GarbageCollector()
+		public readonly gc: GarbageCollector = new GarbageCollector()
 	) {
 		// Add the main stack frame:
 		this.frames.push(new Frame(0, 0, program.numGlobals));
