@@ -12,6 +12,7 @@ import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { ListNode } from "src/parser/nodes/list-node";
 import { MapNode } from "src/parser/nodes/map-node";
+import { MemberAccessExpressionNode } from "src/parser/nodes/member-access-expression-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
@@ -36,6 +37,7 @@ export interface Visitor {
 	visitInvocationExpressionNode(node: InvocationExpressionNode): void;
 	visitListNode(node: ListNode): void;
 	visitMapNode(node: MapNode): void;
+	visitMemberAccessExpressionNode(node: MemberAccessExpressionNode): void;
 	visitPostfixExpressionNode(node: PostfixExpressionNode): void;
 	visitPrefixExpressionNode(node: PrefixExpressionNode): void;
 	visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void;

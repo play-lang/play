@@ -11,6 +11,7 @@ import {
 	InvocationOperatorParselet,
 	ListParselet,
 	MapParselet,
+	MemberAccessOperatorParselet,
 	PostfixOperatorParselet,
 	PrefixOperatorParselet,
 	PrefixParselet,
@@ -117,4 +118,6 @@ export const infixParselets: Map<TokenType, InfixParselet> = new Map<
 	[TokenType.ParenOpen, new InvocationOperatorParselet()],
 	// Index operator []
 	[TokenType.BracketOpen, new IndexOperatorParselet()],
+	// Dot operator .
+	[TokenType.Dot, new MemberAccessOperatorParselet()],
 ]);

@@ -4,6 +4,8 @@ import { TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
 import { ErrorType, Num, Str, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
+import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
+import { MemberAccessExpressionNode } from "src/parser/nodes/member-access-expression-node";
 
 export class AssignmentExpressionNode extends Expression {
 	constructor(
@@ -13,6 +15,15 @@ export class AssignmentExpressionNode extends Expression {
 		public readonly rhs: Expression
 	) {
 		super(token, lhs.start, rhs.end);
+		if (
+			lhs instanceof IndexExpressionNode ||
+			lhs instanceof MemberAccessExpressionNode
+		) {
+			// Left-hand side is an index expression (`array[index] = value`) or
+			// member access expression (`item.value = 10`) and is used in an
+			// assignment statement
+			lhs.lValue = true;
+		}
 	}
 
 	public setState(state: NodeState): void {

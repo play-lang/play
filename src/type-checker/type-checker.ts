@@ -30,6 +30,7 @@ import { IndexExpressionNode } from "src/parser/nodes/index-expression-node";
 import { InvocationExpressionNode } from "src/parser/nodes/invocation-expression-node";
 import { ListNode } from "src/parser/nodes/list-node";
 import { MapNode } from "src/parser/nodes/map-node";
+import { MemberAccessExpressionNode } from "src/parser/nodes/member-access-expression-node";
 import { PostfixExpressionNode } from "src/parser/nodes/postfix-expression-node";
 import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
@@ -378,6 +379,10 @@ export class TypeChecker {
 		}
 	}
 
+	private checkMemberAccess(node: MemberAccessExpressionNode): void {
+		// TODO: Check member access expression
+	}
+
 	private checkPostfixExpression(node: PostfixExpressionNode): void {
 		this.checkNode(node.lhs);
 		const type = node.type(this.env);
@@ -522,6 +527,9 @@ export class TypeChecker {
 				break;
 			case node instanceof MapNode:
 				this.checkMap(node as MapNode);
+				break;
+			case node instanceof MemberAccessExpressionNode:
+				this.checkMemberAccess(node as MemberAccessExpressionNode);
 				break;
 			case node instanceof PostfixExpressionNode:
 				this.checkPostfixExpression(node as PostfixExpressionNode);
