@@ -471,7 +471,12 @@ export class FunctionType extends Type {
 		/** Function parameters (domain) type */
 		public readonly parameters: RecordType,
 		/** Return value type (range type) */
-		public readonly returnType: Type
+		public readonly returnType: Type,
+		/**
+		 * If the function is a method that requires a receiver, this receiver type
+		 * should be provided
+		 */
+		public receiverType?: Type
 	) {
 		super(false);
 	}

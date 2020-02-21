@@ -38,17 +38,24 @@ return x[0]
 			const code = `let x = [1, 2, 3,][2]`;
 			expect(Play.run(code).value.value).toBe(3);
 		});
+		test("member method access", () => {
+			const code = `
+let x = [1, 2, 3]
+x.push(1)
+			`;
+			console.log(Play.describeAst(code));
+		});
 	});
 	describe("maps", () => {
 		test("empty map literal", () => {});
 		test("map literal w/ trailing comma", () => {
-			const code = `
-				let x = {
-					"a": true,
-					"b": false,
-				}
-			`;
-			console.log(Play.describeAst(code));
+			// const code = `
+			// 	let x = {
+			// 		"a": true,
+			// 		"b": false,
+			// 	}
+			// `;
+			// console.log(Play.describeAst(code));
 		});
 	});
 });
