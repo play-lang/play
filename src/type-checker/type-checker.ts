@@ -323,6 +323,9 @@ export class TypeChecker {
 	}
 
 	private checkInvocationExpression(node: InvocationExpressionNode): void {
+		for (const arg of node.args) {
+			this.checkNode(arg);
+		}
 		const argsType = node.argumentsType(this.env);
 		const functionType = node.functionType(this.env);
 		if (functionType instanceof FunctionType) {
