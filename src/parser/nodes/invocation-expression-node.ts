@@ -43,6 +43,15 @@ export class InvocationExpressionNode extends Expression {
 		}
 	}
 
+	/**
+	 * If this call represents an invocation of a native function, this
+	 * specifies the index of the native function to call
+	 *
+	 * This is set by the type-checker when types are computed, so code
+	 * involving native functions must be type-checked before being compiled
+	 */
+	public nativeFunctionIndex: number | undefined;
+
 	constructor(
 		/** Opening parenthesis token */
 		public readonly token: TokenLike,

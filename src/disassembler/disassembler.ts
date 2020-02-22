@@ -244,6 +244,12 @@ export class Disassembler {
 					out += this.instrParam(op, ip, numLocals);
 					break;
 				}
+				case OpCode.CallNative: {
+					const numLocals = bytecode[p++];
+					const nativeFunctionIndex = bytecode[p++];
+					out += this.instrParam(op, ip, numLocals, nativeFunctionIndex);
+					break;
+				}
 				// Collections
 				case OpCode.MakeList:
 				case OpCode.MakeMap: {
@@ -273,19 +279,19 @@ export class Disassembler {
 	}
 
 	/**
-	 * Outputs an instruction with a single parameter
+	 * Outputs an instruction with the specified parameters
 	 * @param op The instruction to output
 	 * @param ip The bytecode instruction index
 	 * @param param The instruction's parameter
 	 */
-	private instrParam(op: OpCode, ip: number, param: number): string {
+	private instrParam(op: OpCode, ip: number, ...param: number[]): string {
 		return (
 			"\t" +
 			this.format(ip).trim() +
 			"\t" +
 			this.op(op) +
 			"\t" +
-			this.format(param) +
+			param.map(param => this.format(param)).join("\t") +
 			"\n"
 		);
 	}

@@ -14,18 +14,21 @@ export class Host {
 	/** Functions that can be executed by the virtual machine */
 	public readonly functions: NativeFunction[];
 	/**
-	 * The number of native functions provided (functions added after this in the
-	 * function list are extension functions)
+	 * The number of functions that play provides by default
+	 *
+	 * Functions beginning at this index in `functions` are the additional native
+	 * functions provided to the host in addition to the ones that Play provides
+	 * by default
 	 */
-	public readonly numNativeFunctions: number;
+	public readonly numBuiltInFunctions: number;
 
 	/**
-	 *
-	 * @param extendedFunctions Extension functions available to the virtual
-	 * machine
+	 * Create a new play runtime environment host
+	 * @param extendedFunctions Additional native functions to add to the host
+	 * environment besides the ones that Play provides by default
 	 */
-	constructor(extendedFunctions: NativeFunction[]) {
-		this.numNativeFunctions = nativeFunctions.length;
+	constructor(extendedFunctions: NativeFunction[] = []) {
+		this.numBuiltInFunctions = nativeFunctions.length;
 		this.functions = [...nativeFunctions, ...extendedFunctions];
 	}
 }

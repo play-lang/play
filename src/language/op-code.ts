@@ -100,6 +100,8 @@ export enum OpCode {
 	Tail,
 	/** Call a function */
 	Call,
+	/** Call a native function */
+	CallNative,
 
 	// Collections
 

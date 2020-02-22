@@ -1,3 +1,4 @@
+import { Host } from "src/host/host";
 import { LoadedProgram } from "src/language/loaded-program";
 import { OpCode } from "src/language/op-code";
 import { Frame } from "src/vm/frame";
@@ -21,6 +22,28 @@ interface Performance {
 }
 
 const defaultPerformance = { now: () => 0 };
+
+export interface VMConfig {
+	/** Garbage collector instance for the VM to use */
+	gc: GarbageCollector;
+	/** Performance time provider for the VM to use */
+	performance: Performance;
+	/** Extension host for the VM to use which provides native functions */
+	host: Host;
+}
+
+export type VMInitConfig = Partial<VMConfig>;
+
+/** Default VM configuration */
+const defaults: VMConfig = {
+	get gc(): GarbageCollector {
+		return new GarbageCollector();
+	},
+	performance: defaultPerformance,
+	get host(): Host {
+		return new Host();
+	},
+};
 
 /** Virtual machine that runs code */
 export class VirtualMachine {
@@ -61,19 +84,28 @@ export class VirtualMachine {
 	public readonly stack: RuntimeValue[] = [];
 	/** Stack frames */
 	public readonly frames: Frame[] = [];
+	/** Garbage collector (and heap manager) */
+	public readonly gc: GarbageCollector;
+	/** Performance time provider */
+	public readonly performance: Performance;
+	/** Environment host providing native functions */
+	public readonly host: Host;
 
 	constructor(
 		/** Program to execute */
 		public readonly program: LoadedProgram,
-		/** Garbage collector (and heap manager) */
-		public readonly gc: GarbageCollector = new GarbageCollector()
+		initConfig: VMInitConfig
 	) {
+		const config = { ...defaults, ...initConfig };
+		this.gc = config.gc;
+		this.performance = config.performance;
+		this.host = config.host;
 		// Add the main stack frame:
 		this.frames.push(new Frame(0, 0, program.numGlobals));
 	}
 
-	public run(performance: Performance = defaultPerformance): VMResult {
-		const startTime = performance.now();
+	public run(): VMResult {
+		const startTime = this.performance.now();
 		try {
 			while (true) {
 				const instr = this.read();
@@ -100,7 +132,7 @@ export class VirtualMachine {
 							return new VMResult(
 								VMStatus.Success,
 								returnValue,
-								performance.now() - startTime
+								this.performance.now() - startTime
 							);
 						} else {
 							// Push the return value back on to the stack
@@ -330,6 +362,44 @@ export class VirtualMachine {
 						}
 						break;
 					}
+					case OpCode.CallNative: {
+						const numLocals = this.read();
+						const nativeFunctionIndex = this.read();
+						// Look up the native function in our host environment
+						const nativeFunction = this.host.functions[nativeFunctionIndex];
+						if (!nativeFunction || nativeFunction.arity !== numLocals) {
+							throw new RuntimeError(
+								VMStatus.InvalidNativeFunction,
+								"Invalid native function call"
+							);
+						}
+						// If the function requires a receiver, the first of the local
+						// arguments at the top of the stack represents the receiver
+						const numArgs = nativeFunction.expectsReceiver
+							? numLocals - 1
+							: numLocals;
+						const args = this.stack.slice(this.stack.length - numArgs);
+						const receiver = nativeFunction.expectsReceiver
+							? this.stack[this.stack.length - numLocals]
+							: undefined;
+						// Drop items off the stack before calling the native function
+						this.dropTo(this.stack.length - numLocals);
+						// Invoke the native function
+						const result = nativeFunction.execute(this, args, receiver);
+						if (nativeFunction.hasReturnValue) {
+							if (!result) {
+								// Native function declares that it will always return a value
+								// but failed to do so (unlikely)
+								throw new RuntimeError(
+									VMStatus.NativeFunctionError,
+									"Native function failed to return a value"
+								);
+							}
+							// Since the function returns a value, push it on to the stack
+							this.push(result);
+						}
+						break;
+					}
 					// Collections
 					case OpCode.MakeList: {
 						// Grab the top N items off the stack and make a list pointer out
@@ -411,13 +481,17 @@ export class VirtualMachine {
 			return new VMResult(
 				VMStatus.Success,
 				this.top || Nil,
-				performance.now() - startTime
+				this.performance.now() - startTime
 			);
 		} catch (e) {
 			const code: VMStatus =
 				e instanceof RuntimeError ? e.code : VMStatus.UnknownFailure;
 			console.error(e);
-			return new VMResult(code, this.top || Nil, performance.now() - startTime);
+			return new VMResult(
+				code,
+				this.top || Nil,
+				this.performance.now() - startTime
+			);
 		}
 	}
 

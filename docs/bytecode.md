@@ -40,6 +40,7 @@
 | LOAD         | fnAddr     | Push the specified function address onto the stack           |
 | TAIL         | numLocals  | Same as CALL but does not allocate a new call frame on stack |
 | CALL         | numLocals  | Call address on top with specified number of local variables |
+| CALLNATIVE   | nLocals, n | Call native function n with nLocals arguments                |
 | MAKELIST     | numItems   | Construct a list from the top numItems on the stack          |
 | MAKEMAP      | numItems   | Construct a map from the top numItems key/value pairs        |
 | INDEX        |            | Index operator operation []                                  |
