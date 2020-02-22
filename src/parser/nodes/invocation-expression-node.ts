@@ -89,39 +89,43 @@ export class InvocationExpressionNode extends Expression {
 
 	public type(env: Environment): Type {
 		// Find the return type of the invoked function
+		const functionType = this.functionType(env);
+		if (functionType instanceof FunctionType) {
+			return functionType.returnType;
+		}
+		return new ErrorType();
+	}
+
+	/** Compute the invocation arguments type as a product type */
+	public argumentsType(env: Environment): ProductType {
+		// Compute the product type that represents the type of the arguments
+		// in the invocation expression
+		return new ProductType(this.args.map(arg => arg.type(env)));
+	}
+
+	/**
+	 * Find the type of the function or method being invoked based on the given
+	 * environment
+	 */
+	public functionType(env: Environment): Type {
 		const functionName = this.functionName!;
 		if (this.receiver) {
 			// Method invocation
-			const type = this.argumentsType(env);
 			const receiverType = this.receiver.type(env);
 			if (receiverType instanceof InstanceType) {
 				for (const func of receiverType.model.functions) {
-					if (
-						func.name === functionName &&
-						type.satisfiesRecordType(func.parameters)
-					) {
+					if (func.name === functionName) {
 						// Our function matches a method on the receiver
-						return func.returnType;
+						return func;
 					}
 				}
 			}
 		} else if (env.functionTable.has(functionName)) {
 			// Global function invocation
-			const info = env.functionTable.get(functionName);
-			if (info) {
-				const type = info.type;
-				if (type && type instanceof FunctionType) {
-					return type.returnType;
-				}
-			}
+			const info = env.functionTable.get(functionName)!;
+			return info.type!;
 		}
 		return new ErrorType();
-	}
-
-	public argumentsType(env: Environment): ProductType {
-		// Compute the product type that represents the type of the arguments
-		// in the invocation expression
-		return new ProductType(this.args.map(arg => arg.type(env)));
 	}
 
 	public accept(visitor: Visitor): void {

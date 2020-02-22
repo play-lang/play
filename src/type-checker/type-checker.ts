@@ -8,7 +8,7 @@ import {
 	Collection,
 	CollectionType,
 	ErrorType,
-	InstanceType,
+	FunctionType,
 	Num,
 	Str,
 	SumType,
@@ -323,34 +323,14 @@ export class TypeChecker {
 	}
 
 	private checkInvocationExpression(node: InvocationExpressionNode): void {
-		const type = node.argumentsType(this.env);
-		const functionName = node.functionName!;
-		if (node.receiver) {
-			// Check a method call
-			const receiverType = node.receiver.type(this.env);
-			if (receiverType instanceof InstanceType) {
-				for (const func of receiverType.model.functions) {
-					if (
-						func.name === functionName &&
-						type.satisfiesRecordType(func.parameters)
-					) {
-						// This method invocation is found on the specified object type,
-						// return happily
-						return;
-					}
-				}
-			}
-		} else if (this.env.functionTable.has(functionName)) {
-			// Check a global function call
-			const info = this.env.functionTable.get(functionName)!;
-			// Function types are pre-computed before type checking so this should
-			// be safe
-			const functionType = info.type!;
-			if (!type.satisfiesRecordType(functionType.parameters)) {
+		const argsType = node.argumentsType(this.env);
+		const functionType = node.functionType(this.env);
+		if (functionType instanceof FunctionType) {
+			if (!argsType.satisfiesRecordType(functionType.parameters)) {
 				this.mismatch(
 					node.lhs.token,
 					functionType.parameters,
-					type,
+					argsType,
 					"to be invoked as a function call"
 				);
 			}
