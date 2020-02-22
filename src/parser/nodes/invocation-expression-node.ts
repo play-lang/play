@@ -2,7 +2,9 @@ import { Expression, NodeState } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
 import {
+	ErrorType,
 	FunctionType,
+	InstanceType,
 	ProductType,
 	Type,
 } from "src/language/types/type-system";
@@ -87,8 +89,24 @@ export class InvocationExpressionNode extends Expression {
 
 	public type(env: Environment): Type {
 		// Find the return type of the invoked function
-		const functionName = this.functionName;
-		if (functionName) {
+		const functionName = this.functionName!;
+		if (this.receiver) {
+			// Method invocation
+			const type = this.argumentsType(env);
+			const receiverType = this.receiver.type(env);
+			if (receiverType instanceof InstanceType) {
+				for (const func of receiverType.model.functions) {
+					if (
+						func.name === functionName &&
+						type.satisfiesRecordType(func.parameters)
+					) {
+						// Our function matches a method on the receiver
+						return func.returnType;
+					}
+				}
+			}
+		} else if (env.functionTable.has(functionName)) {
+			// Global function invocation
 			const info = env.functionTable.get(functionName);
 			if (info) {
 				const type = info.type;
@@ -97,7 +115,7 @@ export class InvocationExpressionNode extends Expression {
 				}
 			}
 		}
-		throw new Error("Can't compute function return type for " + functionName);
+		return new ErrorType();
 	}
 
 	public argumentsType(env: Environment): ProductType {
