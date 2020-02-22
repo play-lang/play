@@ -329,6 +329,10 @@ export class TypeChecker {
 		const argsType = node.argumentsType(this.env);
 		const functionType = node.functionType(this.env);
 		if (functionType instanceof FunctionType) {
+			// If the function call represents a call to a native function we
+			// can go ahead and set the invocation's node native index property
+			// so that the compiler can compile the native call correctly
+			node.nativeFunctionIndex = functionType.nativeFunctionIndex;
 			if (!argsType.satisfiesRecordType(functionType.parameters)) {
 				this.mismatch(
 					node.lhs.token,

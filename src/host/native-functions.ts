@@ -16,7 +16,7 @@ export abstract class NativeFunction {
 	 * Execute the native function with the specified arguments
 	 * @param vm The virtual machine invoking the function
 	 * @param args Function arguments
-	 * @param context The `this` context of the method being invoked, if
+	 * @param receiver The `this` context of the method being invoked, if
 	 * `expectsReceiver` is `true`
 	 *
 	 * This value will always be provided if `expectsReceiver` is true and never
@@ -28,7 +28,7 @@ export abstract class NativeFunction {
 	public abstract execute(
 		vm: VirtualMachine,
 		args: RuntimeValue[],
-		context?: RuntimeValue
+		receiver?: RuntimeValue
 	): RuntimeValue | undefined;
 }
 

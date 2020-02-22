@@ -20,4 +20,8 @@ export enum VMStatus {
 	UnevenMap,
 	/** Invalid map key (not a string) */
 	InvalidMapKey,
+	/** Invalid native function call */
+	InvalidNativeFunction,
+	/** An internal native function call failed */
+	NativeFunctionError,
 }
