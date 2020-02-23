@@ -607,17 +607,24 @@ export class VirtualMachine {
 
 	/** Perform a heap increment or decrement operation */
 	private incOrDecHeap(increment: boolean): void {
+		// We need to pop the thing-to-be-indexed off and also the index value,
+		// just like a normal index operation
 		const index = this.pop();
 		const lhs = this.pop();
 		this.validatePointer(lhs);
+		// Read the pointer in the garbage collector to trigger the read barrier
 		const addr = this.gc.read(lhs.value as number);
+		// See what the value we're supposed to mutate actually is
 		const value = this.gc.heap(addr, index.value);
+		// Make sure the value we're asked to mutate is actually
+		// a number
 		if (!value || value.type !== RuntimeType.Number) {
 			throw new RuntimeError(
 				VMStatus.InvalidIndex,
 				"Invalid index for " + (increment ? "increment" : "decrement")
 			);
 		}
+		// Have the garbage collector mutate the value appropriately
 		this.gc.update(
 			addr,
 			index.value,
