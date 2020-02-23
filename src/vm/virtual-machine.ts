@@ -209,41 +209,11 @@ export class VirtualMachine {
 						break;
 					}
 					case OpCode.IncHeap: {
-						const index = this.pop();
-						const lhs = this.pop();
-						this.validatePointer(lhs);
-						const addr = this.gc.read(lhs.value as number);
-						const value = this.gc.heap(addr, index.value);
-						if (!value || value.type !== RuntimeType.Number) {
-							throw new RuntimeError(
-								VMStatus.InvalidIndex,
-								"Invalid index for increment"
-							);
-						}
-						this.gc.update(
-							addr,
-							index.value,
-							new RuntimeValue(RuntimeType.Number, value.value + 1)
-						);
+						this.incOrDecHeap(true);
 						break;
 					}
 					case OpCode.DecHeap: {
-						const index = this.pop();
-						const lhs = this.pop();
-						this.validatePointer(lhs);
-						const addr = this.gc.read(lhs.value as number);
-						const value = this.gc.heap(addr, index.value);
-						if (!value || value.type !== RuntimeType.Number) {
-							throw new RuntimeError(
-								VMStatus.InvalidIndex,
-								"Invalid index for decrement"
-							);
-						}
-						this.gc.update(
-							addr,
-							index.value,
-							new RuntimeValue(RuntimeType.Number, value.value - 1)
-						);
+						this.incOrDecHeap(false);
 						break;
 					}
 					case OpCode.Add: {
@@ -633,6 +603,29 @@ export class VirtualMachine {
 			case RuntimeType.Pointer:
 				return value.value !== null && value.value !== undefined;
 		}
+	}
+
+	/** Perform a heap increment or decrement operation */
+	private incOrDecHeap(increment: boolean): void {
+		const index = this.pop();
+		const lhs = this.pop();
+		this.validatePointer(lhs);
+		const addr = this.gc.read(lhs.value as number);
+		const value = this.gc.heap(addr, index.value);
+		if (!value || value.type !== RuntimeType.Number) {
+			throw new RuntimeError(
+				VMStatus.InvalidIndex,
+				"Invalid index for " + (increment ? "increment" : "decrement")
+			);
+		}
+		this.gc.update(
+			addr,
+			index.value,
+			new RuntimeValue(
+				RuntimeType.Number,
+				increment ? value.value + 1 : value.value - 1
+			)
+		);
 	}
 
 	/** Allocate data on the heap */
