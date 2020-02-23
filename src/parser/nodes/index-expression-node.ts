@@ -36,7 +36,8 @@ export class IndexExpressionNode extends Expression {
 			// An index operation returns an element of whatever kind the collection
 			// that it indexes into holds
 			const elementType = lhsType.elementType.copy();
-			elementType.isAssignable = this.lValue;
+			// All indexed expressions are assignable in Play
+			elementType.isAssignable = true;
 			return elementType;
 		}
 		return new ErrorType(false);

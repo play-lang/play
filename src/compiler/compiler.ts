@@ -201,6 +201,10 @@ export class Compiler implements Visitor {
 			} else {
 				this.context.emit(shouldIncrement ? OpCode.Inc : OpCode.Dec, stackPos);
 			}
+		} else if (node instanceof IndexExpressionNode) {
+			node.lhs.accept(this);
+			node.index.accept(this);
+			this.context.emit(shouldIncrement ? OpCode.IncHeap : OpCode.DecHeap);
 		} else {
 			throw new Error("Can't mutate non-variable" + node.token.lexeme);
 		}
@@ -478,6 +482,8 @@ export class Compiler implements Visitor {
 	public visitMemberAccessExpressionNode(
 		node: MemberAccessExpressionNode
 	): void {
+		node.lhs.accept(this);
+		node.member.accept(this);
 		// TODO: Compile member access expressions
 	}
 

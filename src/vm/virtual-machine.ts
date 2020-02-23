@@ -94,7 +94,7 @@ export class VirtualMachine {
 	constructor(
 		/** Program to execute */
 		public readonly program: LoadedProgram,
-		initConfig: VMInitConfig
+		initConfig: VMInitConfig = {}
 	) {
 		const config = { ...defaults, ...initConfig };
 		this.gc = config.gc;
@@ -206,6 +206,44 @@ export class VirtualMachine {
 						const index = this.read();
 						const rv = this.get(index);
 						this.set(index, new RuntimeValue(rv.type, rv.value - 1));
+						break;
+					}
+					case OpCode.IncHeap: {
+						const index = this.pop();
+						const lhs = this.pop();
+						this.validatePointer(lhs);
+						const addr = this.gc.read(lhs.value as number);
+						const value = this.gc.heap(addr, index.value);
+						if (!value || value.type !== RuntimeType.Number) {
+							throw new RuntimeError(
+								VMStatus.InvalidIndex,
+								"Invalid index for increment"
+							);
+						}
+						this.gc.update(
+							addr,
+							index.value,
+							new RuntimeValue(RuntimeType.Number, value.value + 1)
+						);
+						break;
+					}
+					case OpCode.DecHeap: {
+						const index = this.pop();
+						const lhs = this.pop();
+						this.validatePointer(lhs);
+						const addr = this.gc.read(lhs.value as number);
+						const value = this.gc.heap(addr, index.value);
+						if (!value || value.type !== RuntimeType.Number) {
+							throw new RuntimeError(
+								VMStatus.InvalidIndex,
+								"Invalid index for decrement"
+							);
+						}
+						this.gc.update(
+							addr,
+							index.value,
+							new RuntimeValue(RuntimeType.Number, value.value - 1)
+						);
 						break;
 					}
 					case OpCode.Add: {
@@ -486,11 +524,11 @@ export class VirtualMachine {
 		} catch (e) {
 			const code: VMStatus =
 				e instanceof RuntimeError ? e.code : VMStatus.UnknownFailure;
-			console.error(e);
 			return new VMResult(
 				code,
 				this.top || Nil,
-				this.performance.now() - startTime
+				this.performance.now() - startTime,
+				e
 			);
 		}
 	}

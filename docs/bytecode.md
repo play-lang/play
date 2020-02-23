@@ -11,8 +11,10 @@
 | NEG          |            | Negate the value on the top of the stack                     |
 | INC          | index      | Increment the numeric value specified by relative index      |
 | DEC          | index      | Decrement the numeric value specified by relative index      |
-| INCGLOBAL    | index      | Increment the numeric value specified by relative index      |
-| DECGLOBAL    | index      | Decrement the numeric value specified by relative index      |
+| INCGLOBAL    | index      | Increment the numeric value specified by absolute index      |
+| DECGLOBAL    | index      | Decrement the numeric value specified by absolute index      |
+| INCHEAP      |            | Increment the heap value represented by pointer on top       |
+| DECHEAP      |            | Decrement the heap value represented by pointer on top       |
 | ADD          |            | Add top two values on stack and replace with sum             |
 | SUB          |            | Subtract top two values on stack and replace with difference |
 | MUL          |            | Multiply top two values on stack and replace with product    |

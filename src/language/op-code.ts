@@ -30,6 +30,10 @@ export enum OpCode {
 	IncGlobal,
 	/** Decrement a numeric global by one */
 	DecGlobal,
+	/** Increment a value on the heap */
+	IncHeap,
+	/** Decrement a value on the heap */
+	DecHeap,
 	/** Add using the top two values of the stack */
 	Add,
 	/** Subtract using the top two values of the stack */

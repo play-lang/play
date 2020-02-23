@@ -13,6 +13,7 @@ import { JSONVisitor } from "src/visitors/json-visitor";
 import { PrintVisitor } from "src/visitors/print-visitor";
 import { VirtualMachine } from "src/vm/virtual-machine";
 import { VMResult } from "src/vm/vm-result";
+import { VMStatus } from "src/vm/vm-status";
 
 /**
  * Play programming language
@@ -95,7 +96,11 @@ export class Play {
 			throw new Error("Type checking failed");
 		}
 		const vm = new VirtualMachine(linkedProgram.program);
-		return vm.run();
+		const result = vm.run();
+		if (result.status !== VMStatus.Success) {
+			throw result.error!;
+		}
+		return result;
 	}
 
 	/**

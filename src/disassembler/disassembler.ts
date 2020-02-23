@@ -162,6 +162,8 @@ export class Disassembler {
 					out += this.instrParam(op, ip, index);
 					break;
 				}
+				case OpCode.IncHeap:
+				case OpCode.DecHeap:
 				case OpCode.Neg:
 				case OpCode.Add:
 				case OpCode.Sub:

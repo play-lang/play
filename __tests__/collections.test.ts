@@ -1,4 +1,6 @@
 import { Play } from "src/play";
+import { RuntimeError } from "src/vm/runtime-error";
+import { VirtualMachine } from "src/vm/virtual-machine";
 
 describe("collections", () => {
 	describe("lists", () => {
@@ -49,6 +51,33 @@ x.doesNotExist(1)
 			expect(() => {
 				Play.check(code);
 			}).toThrow();
+		});
+		describe("increment/decrement", () => {
+			test("inc/dec bad index", () => {
+				const code = `let x = [1, 2, 3]\nx[3]++`;
+				expect(() => Play.run(code)).toThrow(RuntimeError);
+			});
+			test("inc/dec non-numeric value", () => {
+				const code = `let x = ["a", "b", "c"]\nx[0]++`;
+				expect(() => Play.run(code)).toThrow(RuntimeError);
+			});
+			test("inc number array value", () => {
+				const code = `let x = [1, 2, 3, 4, 5]\nx[0]++\nreturn x[0]`;
+				expect(Play.run(code).value.value).toBe(2);
+			});
+			test("dec number array value", () => {
+				const code = `let x = [5, 4, 3, 2, 1]\nx[0]--\nreturn x[0]`;
+				expect(Play.run(code).value.value).toBe(4);
+			});
+			test("postfix preserves values", () => {
+				const code = `let x = [5, 4, 3, 2, 1]\nreturn x[0]--`;
+				const vm = new VirtualMachine(Play.link(code));
+				// Should return the non decremented value
+				expect(vm.run().value.value).toBe(5);
+				// Value stored in memory (forgive hard-coded heap address) should be
+				// the decremented value
+				expect(vm.gc.heap(1023, 0)!.value).toBe(4);
+			});
 		});
 	});
 	describe("maps", () => {
