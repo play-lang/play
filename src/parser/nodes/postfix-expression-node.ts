@@ -2,7 +2,11 @@ import { Expression, NodeState } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { postfixTypeAnnotations, TokenType } from "src/language/token-type";
 import { Environment } from "src/language/types/environment";
-import { ErrorType, Type } from "src/language/types/type-system";
+import {
+	CollectionType,
+	ErrorType,
+	Type,
+} from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export class PostfixExpressionNode extends Expression {
@@ -29,7 +33,10 @@ export class PostfixExpressionNode extends Expression {
 		const lhsType = this.lhs.type(env);
 		const annotation = postfixTypeAnnotations.get(this.token.type);
 		if (annotation) {
-			return Type.construct(annotation, lhsType.isAssignable);
+			return Type.construct(
+				annotation,
+				lhsType.isAssignable || lhsType instanceof CollectionType
+			);
 		}
 		return new ErrorType(lhsType.isAssignable);
 	}
