@@ -35,11 +35,11 @@ export class ListNode extends Expression {
 
 	public type(env: Environment): Type {
 		if (this.members.length < 1) {
-			return new CollectionType(Collection.List, Any, false);
+			return new CollectionType(Collection.List, Any);
 		}
 		// TODO: Infer type based on all members
 		const type = this.members[0].type(env);
-		return new CollectionType(Collection.List, type, false);
+		return new CollectionType(Collection.List, type);
 	}
 
 	public accept(visitor: Visitor): void {

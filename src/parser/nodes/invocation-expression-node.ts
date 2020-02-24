@@ -121,8 +121,11 @@ export class InvocationExpressionNode extends Expression {
 		if (this.receiver) {
 			// Method invocation
 			const receiverType = this.receiver.type(env);
-			if (receiverType instanceof InstanceType) {
-				for (const func of receiverType.model.functions) {
+			if (
+				receiverType instanceof InstanceType &&
+				receiverType.constructorType
+			) {
+				for (const func of receiverType.constructorType.functions) {
 					if (func.name === functionName) {
 						// Our function matches a method on the receiver
 						return func;

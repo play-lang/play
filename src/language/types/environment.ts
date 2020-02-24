@@ -1,3 +1,4 @@
+import { Host } from "src/host/host";
 import { FunctionInfo } from "src/language/function-info";
 import { SymbolTable } from "src/language/symbol-table";
 import { ModelType, ProtocolType } from "src/language/types/type-system";
@@ -18,6 +19,8 @@ export class Environment {
 		/** Protocols visible in the environment */
 		public readonly protocols: Map<string, ProtocolType>,
 		/** Models visible in the environment */
-		public readonly models: Map<string, ModelType>
+		public readonly models: Map<string, ModelType>,
+		/** Native extensions provided by the host for the environment */
+		public readonly host: Host
 	) {}
 }
