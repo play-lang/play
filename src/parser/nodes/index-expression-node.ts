@@ -32,7 +32,7 @@ export class IndexExpressionNode extends Expression {
 
 	public type(env: Environment): Type {
 		const lhsType = this.lhs.type(env);
-		if (lhsType instanceof CollectionType) {
+		if (lhsType instanceof CollectionType && lhsType.elementType) {
 			// An index operation returns an element of whatever kind the collection
 			// that it indexes into holds
 			const elementType = lhsType.elementType.copy();

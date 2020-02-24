@@ -1,7 +1,6 @@
 import { Describable } from "src/common/describable";
 import { LinkedHashMap } from "src/common/linked-hash-map";
 import { FunctionInfo } from "src/language/function-info";
-import { collectionModelType } from "src/language/types/collection-model-type";
 
 /**
  * Primitive types that can be represented with an instance of a PrimitiveType
@@ -524,9 +523,13 @@ export class FunctionType extends Type {
 	}
 }
 
-export class ProtocolType extends Type {
+/**
+ * Represents a constructed class-like type
+ * This serves as the base class for both ProtocolType and ModelType
+ */
+export abstract class ConstructorType extends Type {
 	constructor(
-		/** Protocol name */
+		/** Constructor name */
 		public readonly name: string,
 		/** Method signatures */
 		public functions: FunctionType[] = [],
@@ -534,6 +537,18 @@ export class ProtocolType extends Type {
 		public properties: Map<string, Type> = new Map()
 	) {
 		super(false);
+	}
+}
+
+export class ProtocolType extends ConstructorType {
+	constructor(
+		name: string,
+		/** Method signatures */
+		functions: FunctionType[] = [],
+		/** Field variables */
+		properties: Map<string, Type> = new Map()
+	) {
+		super(name, functions, properties);
 	}
 
 	public equivalent(type: Type): boolean {
@@ -619,7 +634,10 @@ export class ModelType extends Type {
 }
 
 export class InstanceType extends Type {
-	constructor(public readonly model: ModelType, isAssignable: boolean = false) {
+	constructor(
+		public readonly constructorType: ConstructorType | undefined,
+		isAssignable: boolean = false
+	) {
 		super(isAssignable);
 	}
 
@@ -627,7 +645,10 @@ export class InstanceType extends Type {
 		// Two instance types are equivalent if they both represent the same class
 		return (
 			type === this ||
-			(type instanceof InstanceType && this.model.equivalent(type.model))
+			(type instanceof InstanceType &&
+				typeof this.constructorType !== "undefined" &&
+				typeof type.constructorType !== "undefined" &&
+				this.constructorType.equivalent(type.constructorType))
 		);
 	}
 
@@ -636,23 +657,66 @@ export class InstanceType extends Type {
 	}
 
 	public copy(): InstanceType {
-		return new InstanceType(this.model, this.isAssignable);
+		return new InstanceType(this.constructorType, this.isAssignable);
 	}
 
 	public get description(): string {
-		return this.model.name;
+		return this.constructorType?.name || "Instance";
 	}
 }
 
-export class CollectionType extends InstanceType {
+export class CollectionType extends ProtocolType {
 	constructor(
-		/** The type of collection being represented by this instance */
+		/** Collection type represented */
 		public readonly collection: Collection,
 		/** Type of the elements to be stored in the list */
-		public readonly elementType: Type,
-		isAssignable: boolean = false
+		public elementType?: Type
 	) {
-		super(collectionModelType(collection, elementType), isAssignable);
+		super("list");
+	}
+
+	/** Set the type of element being stored in the collection */
+	public setElementType(elementType: Type): void {
+		this.elementType = elementType;
+		// Set the built-in function types based on the element type
+		this.functions = [
+			// Method name, parameters, return type, receiver type,
+			// native function index
+			new FunctionType(
+				"push",
+				new RecordType(new LinkedHashMap([["element", elementType]])),
+				Num,
+				this,
+				0
+			),
+			new FunctionType(
+				"pop",
+				new RecordType(new LinkedHashMap([])),
+				elementType,
+				this,
+				1
+			),
+			new FunctionType(
+				"unshift",
+				new RecordType(new LinkedHashMap([["element", elementType]])),
+				Num,
+				this,
+				2
+			),
+			new FunctionType(
+				"shift",
+				new RecordType(new LinkedHashMap([])),
+				elementType,
+				this,
+				3
+			),
+		];
+		// Set the built-in properties for the list
+		this.properties = new Map([
+			["length", Num],
+			["first", elementType],
+			["last", elementType],
+		]);
 	}
 
 	public equivalent(type: Type): boolean {
@@ -660,31 +724,38 @@ export class CollectionType extends InstanceType {
 			type === this ||
 			(type instanceof CollectionType &&
 				this.collection === type.collection &&
+				typeof this.elementType !== "undefined" &&
+				typeof type.elementType !== "undefined" &&
 				this.elementType.equivalent(type.elementType))
 		);
 	}
 
 	public accepts(type: Type): boolean {
-		// Collection types also have a narrow definition of compatibility
-		return this.equivalent(type);
+		// Accept an equivalent protocol
+		if (this.equivalent(type)) return true;
+		// Also accept any model type that implements this protocol or applies
+		// a type that implements this protocol
+		if (type instanceof ModelType) {
+			for (const protocol of type.protocols) {
+				if (this.equivalent(protocol)) return true;
+			}
+			for (const appliedType of type.appliedTypes) {
+				for (const protocol of appliedType.protocols) {
+					if (this.equivalent(protocol)) return true;
+				}
+			}
+		}
+		return false;
 	}
 
 	public copy(): CollectionType {
-		return new CollectionType(
-			this.collection,
-			this.elementType.copy(),
-			this.isAssignable
-		);
+		const type = new CollectionType(this.collection);
+		if (this.elementType) type.setElementType(this.elementType);
+		return type;
 	}
 
 	public get description(): string {
-		return (
-			(this.isAssignable ? "&" : "") +
-			Collection[this.collection] +
-			"<" +
-			this.elementType.description +
-			">"
-		);
+		return "List<" + this.elementType?.description + ">";
 	}
 }
 

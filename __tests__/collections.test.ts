@@ -41,13 +41,10 @@ return x[0]
 			expect(Play.run(code).value.value).toBe(3);
 		});
 		test("member method access", () => {
-			let code = `let x = [1, 2, 3]
-x.push(1)
-`;
+			let code = `let x = [1, 2, 3]\nx.push(1)`;
+			console.log(Play.disassemble(code));
 			expect(Play.check(code).length).toBe(0);
-			code = `let x = [1, 2, 3]
-x.doesNotExist(1)
-`;
+			code = `let x = [1, 2, 3]\nx.doesNotExist(1)`;
 			expect(() => {
 				Play.check(code);
 			}).toThrow();

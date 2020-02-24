@@ -44,11 +44,11 @@ export class MapNode extends Expression {
 
 	public type(env: Environment): Type {
 		if (this.keys.length < 1) {
-			return new CollectionType(Collection.Map, Any, false);
+			return new CollectionType(Collection.Map, Any);
 		}
 		// TODO: Infer type based on all values
 		const type = this.values[0].type(env);
-		return new CollectionType(Collection.Map, type, false);
+		return new CollectionType(Collection.Map, type);
 	}
 
 	public accept(visitor: Visitor): void {

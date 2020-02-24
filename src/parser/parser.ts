@@ -1,3 +1,4 @@
+import { Host } from "src/host/host";
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
 import { FunctionInfo } from "src/language/function-info";
 import { IdentifierSymbol } from "src/language/identifier-symbol";
@@ -51,11 +52,13 @@ export class Parser extends TokenParser {
 
 	constructor(contents: string) {
 		super(new Lexer(contents));
+		// Todo: Allow environment to be pre-configured
 		this.env = new Environment(
 			new SymbolTable(new Scope()),
 			new Map<string, FunctionInfo>(),
 			new Map<string, ProtocolType>(),
-			new Map<string, ModelType>()
+			new Map<string, ModelType>(),
+			new Host()
 		);
 	}
 

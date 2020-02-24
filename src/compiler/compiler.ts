@@ -423,45 +423,79 @@ export class Compiler implements Visitor {
 	}
 
 	public visitInvocationExpressionNode(node: InvocationExpressionNode): void {
-		if (
-			!(node.lhs instanceof IdExpressionNode) ||
-			!this.functionTable.has(node.lhs.name)
-		) {
-			throw new Error(
-				"Can't compile non-existent function invocation of " +
-					node.lhs.token.lexeme
-			);
+		if (!(node.lhs instanceof IdExpressionNode)) {
+			throw new Error("Can't compile invocation for " + node.lhs.token.lexeme);
 		}
-		const info = this.functionTable.get(node.lhs.name)!;
-		// Ensure that the number of arguments in this call match...the
-		// type checker should have caught this beforehand but it's okay
-		// to double-check
-		if (node.args.length !== info.parameters.length) {
-			throw new Error(
-				"Can't compile tail recursive invocation with " +
-					"incorrect number of arguments" +
-					node.lhs.token.lexeme
-			);
-		}
-		const optimize =
-			this.options.optimizeTailRecursiveCalls && node.isTailRecursive;
-		// Arguments given to function go onto the stack
-		for (const arg of node.args) {
-			this.accept(arg);
-		}
-		if (optimize) {
-			for (let i = node.args.length - 1; i >= 0; i--) {
-				// Update the local variable that argument maps to inside the current
-				// call frame
-				this.context.emit(OpCode.Set, i);
-				// Pop the argument now that the local variable is saved
-				this.context.emit(OpCode.Pop);
+		const isNative = typeof node.nativeFunctionIndex === "number";
+		if (node.receiver) {
+			// Compile a method call
+			if (isNative) {
+				// Native method call
+			} else {
+				// Normal method call
+				throw new Error("Only native methods can be compiled currently");
+			}
+		} else {
+			// Compile a global function call
+
+			if (isNative) {
+				// If we are compiling a native function call, make sure the index
+				// of the native function provided is valid
+				if (!this.ast.env.host.functions[node.nativeFunctionIndex!]) {
+					throw new Error(
+						"Cannot resolve native function " + node.nativeFunctionIndex!
+					);
+				}
+			}
+
+			// Figure out how many parameters the function is supposed to have
+			// If it is a user function, look it up in the environment signatures
+			// If it is a native function, look it up in the environment host
+			// extensions that contain the native functions
+			const numParameters = isNative
+				? this.functionTable.get(node.lhs.name)!.parameters.length
+				: this.ast.env.host.functions[node.nativeFunctionIndex!].arity;
+
+			// Ensure that the number of arguments in this call match...the
+			// type checker should have caught this beforehand but it's okay
+			// to double-check
+			if (node.args.length !== numParameters) {
+				throw new Error(
+					"Can't compile tail recursive invocation with " +
+						"incorrect number of arguments" +
+						node.lhs.token.lexeme
+				);
+			}
+			const optimize =
+				!isNative &&
+				this.options.optimizeTailRecursiveCalls &&
+				node.isTailRecursive;
+			// Arguments given to function go onto the stack
+			for (const arg of node.args) {
+				this.accept(arg);
+			}
+			if (optimize) {
+				for (let i = node.args.length - 1; i >= 0; i--) {
+					// Update the local variable that the argument maps to inside
+					// the current call frame
+					this.context.emit(OpCode.Set, i);
+					// Pop the argument now that the local variable is saved
+					this.context.emit(OpCode.Pop);
+				}
+			}
+			// Load the function to the stack after loading the arguments
+			this.accept(node.lhs);
+			if (isNative) {
+				// Emit instruction for native function call
+				this.context.emit(OpCode.CallNative, node.nativeFunctionIndex!);
+			} else {
+				// Emit the proper calling instruction to invoke the user function
+				this.context.emit(
+					optimize ? OpCode.Tail : OpCode.Call,
+					node.args.length
+				);
 			}
 		}
-		// Load the function to the stack after loading the arguments
-		this.accept(node.lhs);
-		// Emit the proper calling instruction to invoke the function
-		this.context.emit(optimize ? OpCode.Tail : OpCode.Call, node.args.length);
 	}
 
 	public visitListNode(node: ListNode): void {
