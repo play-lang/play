@@ -228,11 +228,10 @@ describe("type system", () => {
 		);
 		const list2 = new CollectionType(
 			Collection.List,
-			new PrimitiveType(Primitive.Bool, false),
-			true
+			new PrimitiveType(Primitive.Bool, false)
 		);
 		expect(list1.description).toBe("List<Bool>");
-		expect(list2.description).toBe("&List<Bool>");
+		expect(list2.description).toBe("List<Bool>");
 		const list3 = new CollectionType(
 			Collection.List,
 			new PrimitiveType(Primitive.Str, false)
@@ -265,7 +264,7 @@ describe("type system", () => {
 			expect(Type.construct("str").equivalent(str)).toBe(true);
 			expect(
 				Type.construct("str list").equivalent(
-					new CollectionType(Collection.List, str, false)
+					new CollectionType(Collection.List, str)
 				)
 			).toBe(true);
 			expect(Type.construct([]).equivalent(None)).toBe(true);
@@ -280,7 +279,7 @@ describe("type system", () => {
 			).toBe(true);
 			expect(
 				Type.construct("str map").equivalent(
-					new CollectionType(Collection.Map, str, false)
+					new CollectionType(Collection.Map, str)
 				)
 			).toBe(true);
 		});
