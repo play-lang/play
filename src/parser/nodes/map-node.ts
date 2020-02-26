@@ -1,12 +1,7 @@
 import { Expression, NodeState } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import {
-	Any,
-	Collection,
-	CollectionType,
-	Type,
-} from "src/language/types/type-system";
+import { ErrorType, MapType, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export class MapNode extends Expression {
@@ -44,11 +39,11 @@ export class MapNode extends Expression {
 
 	public type(env: Environment): Type {
 		if (this.keys.length < 1) {
-			return new CollectionType(Collection.Map, Any);
+			return new ErrorType();
 		}
 		// TODO: Infer type based on all values
 		const type = this.values[0].type(env);
-		return new CollectionType(Collection.Map, type);
+		return new MapType(type);
 	}
 
 	public accept(visitor: Visitor): void {
