@@ -452,9 +452,11 @@ export class Compiler implements Visitor {
 			// If it is a user function, look it up in the environment signatures
 			// If it is a native function, look it up in the environment host
 			// extensions that contain the native functions
+			//
+			// Todo: Clean this up by providing easier access to function information
 			const numParameters = isNative
-				? this.functionTable.get(node.lhs.name)!.parameters.length
-				: this.ast.env.host.functions[node.nativeFunctionIndex!].arity;
+				? this.ast.env.host.functions[node.nativeFunctionIndex!].arity
+				: this.functionTable.get(node.lhs.name)!.parameters.length;
 
 			// Ensure that the number of arguments in this call match...the
 			// type checker should have caught this beforehand but it's okay

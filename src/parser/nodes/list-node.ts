@@ -1,12 +1,7 @@
 import { Expression, NodeState } from "src/language/node";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import {
-	Any,
-	Collection,
-	CollectionType,
-	Type,
-} from "src/language/types/type-system";
+import { ErrorType, ListType, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export class ListNode extends Expression {
@@ -35,11 +30,11 @@ export class ListNode extends Expression {
 
 	public type(env: Environment): Type {
 		if (this.members.length < 1) {
-			return new CollectionType(Collection.List, Any);
+			return new ErrorType();
 		}
 		// TODO: Infer type based on all members
 		const type = this.members[0].type(env);
-		return new CollectionType(Collection.List, type);
+		return new ListType(type);
 	}
 
 	public accept(visitor: Visitor): void {

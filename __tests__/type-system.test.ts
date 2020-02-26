@@ -4,10 +4,10 @@ import {
 	allowAssignment,
 	Any,
 	AnyType,
-	Collection,
-	CollectionType,
 	ErrorType,
 	FunctionType,
+	ListType,
+	MapType,
 	None,
 	Num,
 	Primitive,
@@ -221,21 +221,12 @@ describe("type system", () => {
 		expect(fun1.accepts(fun3)).toBe(false);
 	});
 	test("collection type", () => {
-		expect(new CollectionType(Collection.Map, Str).isAssignable).toBe(false);
-		const list1 = new CollectionType(
-			Collection.List,
-			new PrimitiveType(Primitive.Bool, false)
-		);
-		const list2 = new CollectionType(
-			Collection.List,
-			new PrimitiveType(Primitive.Bool, false)
-		);
+		expect(new MapType(Str).isAssignable).toBe(false);
+		const list1 = new ListType(new PrimitiveType(Primitive.Bool, false));
+		const list2 = new ListType(new PrimitiveType(Primitive.Bool, false));
 		expect(list1.description).toBe("List<Bool>");
 		expect(list2.description).toBe("List<Bool>");
-		const list3 = new CollectionType(
-			Collection.List,
-			new PrimitiveType(Primitive.Str, false)
-		);
+		const list3 = new ListType(new PrimitiveType(Primitive.Str, false));
 		expect(list1.equivalent(list2)).toBe(true);
 		expect(list2.equivalent(list1)).toBe(true);
 		expect(list1.equivalent(list3)).toBe(false);
@@ -262,26 +253,18 @@ describe("type system", () => {
 	describe("type utilities", () => {
 		test("type construction", () => {
 			expect(Type.construct("str").equivalent(str)).toBe(true);
-			expect(
-				Type.construct("str list").equivalent(
-					new CollectionType(Collection.List, str)
-				)
-			).toBe(true);
+			expect(Type.construct("str list").equivalent(new ListType(str))).toBe(
+				true
+			);
 			expect(Type.construct([]).equivalent(None)).toBe(true);
 			expect(Type.construct("none").equivalent(None)).toBe(true);
 			expect(Type.construct("num unknown").equivalent(new ErrorType())).toBe(
 				true
 			);
 			expect(
-				Type.construct("unknown map").equivalent(
-					new CollectionType(Collection.Map, new ErrorType())
-				)
+				Type.construct("unknown map").equivalent(new MapType(new ErrorType()))
 			).toBe(true);
-			expect(
-				Type.construct("str map").equivalent(
-					new CollectionType(Collection.Map, str)
-				)
-			).toBe(true);
+			expect(Type.construct("str map").equivalent(new MapType(str))).toBe(true);
 		});
 		test("function type construction", () => {
 			expect(
