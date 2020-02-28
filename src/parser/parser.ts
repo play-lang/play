@@ -5,6 +5,7 @@ import { IdentifierSymbol } from "src/language/identifier-symbol";
 import { Expression, Statement } from "src/language/node";
 import { infixParselets, prefixParselets } from "src/language/operator-grammar";
 import { Scope } from "src/language/scope";
+import { SourceFile } from "src/language/source-file";
 import { SymbolTable } from "src/language/symbol-table";
 import { TokenLike } from "src/language/token";
 import { TokenParser } from "src/language/token-parser";
@@ -50,8 +51,11 @@ export class Parser extends TokenParser {
 		return this.env.protocols;
 	}
 
-	constructor(contents: string) {
-		super(new Lexer(contents));
+	constructor(
+		/** File to parse */
+		public readonly file: SourceFile
+	) {
+		super(new Lexer(file));
 		// Todo: Allow environment to be pre-configured
 		this.env = new Environment(
 			new SymbolTable(new Scope()),

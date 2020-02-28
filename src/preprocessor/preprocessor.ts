@@ -67,8 +67,9 @@ export class Preprocessor {
 					"`"
 			);
 		}
-		const file = new SourceFile(absolutePath);
-		// Return the index to the new file in the file table
+		const contents = await this.fileProvider(absolutePath);
+		const file = new SourceFile(absolutePath, contents);
+		// Return the new file object
 		return file;
 	}
 
@@ -90,17 +91,15 @@ export class Preprocessor {
 	private async _preprocess(filename: string): Promise<string> {
 		// Get the file's contents
 		const file = await this.addFile(filename);
-		let contents: string = "";
-		contents = await this.getFileContents(file.path);
 
 		// No point in including a blank file
-		if (contents.length === 0 || this.fileSet.has(file.path)) return "";
+		if (file.contents.length === 0 || this.fileSet.has(file.path)) return "";
 		// Mark the file as having been visited
 		this.fileSet.add(file.path);
 		// Add a blank line just in case to prevent grammar from breaking
-		contents += "\n";
+		file.contents += "\n";
 
-		const lexer = new Lexer(contents, file);
+		const lexer = new Lexer(file);
 		const parser = new TokenParser(lexer);
 		// Eat up any lines at the beginning of the file
 		parser.eatLines();
@@ -130,12 +129,8 @@ export class Preprocessor {
 		this.ranges.insert(this.contents.length, file);
 
 		// Add this file's contents to the combined contents
-		this.contents += contents;
+		this.contents += file.contents;
 
 		return this.contents;
-	}
-
-	private async getFileContents(filename: string): Promise<string> {
-		return this.fileProvider(filename);
 	}
 }
