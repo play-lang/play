@@ -9,7 +9,7 @@ let end: number = 1;
 const chars: string[] = ["a", "b", "c", "d", "e", "f", "g"];
 function fakeToken(): Token {
 	return new Token({
-		file: new SourceFile("test.play"),
+		file: new SourceFile("test.play", ""),
 		type: 1,
 		pos,
 		end: end++,
@@ -68,6 +68,7 @@ describe("symbol table", () => {
 				column: 0,
 				file: {
 					path: "test.play",
+					contents: "",
 				},
 				length: 1,
 				lexeme: "a",
