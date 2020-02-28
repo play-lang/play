@@ -3,7 +3,9 @@ import { directory, filename } from "src/common/path-utility";
 export class SourceFile {
 	constructor(
 		/** Fully qualified absolute file path */
-		public readonly path: string
+		public readonly path: string,
+		/** File contents as a JavaScript string */
+		public readonly contents: string
 	) {}
 
 	/**

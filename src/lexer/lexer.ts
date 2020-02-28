@@ -19,20 +19,16 @@ export class Lexer {
 	 * The contents of this are reset after each scan()
 	 */
 	public warnings: ErrorToken[] = [];
-	/**
-	 * File that the lexer is scanning
-	 */
-	public readonly file: SourceFile;
 
 	/** True if the source has reached the end */
 	public get isAtEnd(): boolean {
-		return this.head.pos >= this.contents.length;
+		return this.head.pos >= this.file.contents.length;
 	}
 
 	/** Next character (first look ahead) */
 	public get peek(): string {
-		return this.head.pos < this.contents.length
-			? this.contents[this.head.pos]
+		return this.head.pos < this.file.contents.length
+			? this.file.contents[this.head.pos]
 			: "";
 	}
 
@@ -41,7 +37,7 @@ export class Lexer {
 	 * position and current position
 	 */
 	public get lexeme(): string {
-		return this.contents.substring(this.tail.pos, this.head.pos);
+		return this.file.contents.substring(this.tail.pos, this.head.pos);
 	}
 
 	/**
@@ -127,12 +123,14 @@ export class Lexer {
 	 * file that represents multiple files chained together
 	 */
 	constructor(
-		/** Lexer contents to scan */
-		public readonly contents: string,
-		file?: SourceFile,
+		/** File to scan for tokens */
+		public readonly file: SourceFile,
+		/**
+		 * Maps indices to file start positions if the given `file` is a
+		 * combined (preprocessed) file containing multiple files
+		 */
 		public readonly ranges?: AvlTree<number, SourceFile>
 	) {
-		this.file = file || new SourceFile("source");
 		// Read the first tokens
 		this._token = this.scan();
 		this._lookahead = this.scan();
@@ -210,7 +208,7 @@ export class Lexer {
 		} else {
 			this.head.column++;
 		}
-		return this.contents[this.head.pos++];
+		return this.file.contents[this.head.pos++];
 	}
 
 	/**

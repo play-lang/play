@@ -3,6 +3,7 @@ import { Compiler } from "src/compiler/compiler";
 import { Disassembler } from "src/disassembler/disassembler";
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
 import { SemanticError } from "src/language/semantic-error";
+import { SourceFile } from "src/language/source-file";
 import { TokenLike } from "src/language/token";
 import { Lexer } from "src/lexer/lexer";
 import { LinkedProgram } from "src/linker/linked-program";
@@ -27,7 +28,7 @@ export class Play {
 	 * @returns The list of tokens
 	 */
 	public static scan(code: string): TokenLike[] {
-		const lexer = new Lexer(code);
+		const lexer = new Lexer(new SourceFile("source", code));
 		return lexer.readAll();
 	}
 
