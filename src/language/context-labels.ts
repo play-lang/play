@@ -62,7 +62,7 @@ export class ContextLabels {
 	 * Only call this when all contexts have been compiled for proper address
 	 * back-patching!
 	 *
-	 * @param bytecode All of the bytecode from all of the linked contexts
+	 * @param bytecode Combined bytecode of all the linked contexts
 	 * @param contextMap Context names mapped to their start offset in
 	 * the bytecode
 	 * @param contexts An array of all the contexts used to create the

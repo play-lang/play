@@ -1,6 +1,6 @@
 import { Context } from "src/language/context";
 import { ContextLabels } from "src/language/context-labels";
-import { LoadedProgram } from "src/language/loaded-program";
+import { ExecutableProgram } from "src/language/executable-program";
 import { ObjectCode } from "src/language/object-code";
 import { RuntimeValue } from "src/vm/runtime-value";
 
@@ -8,7 +8,7 @@ import { RuntimeValue } from "src/vm/runtime-value";
  * Linker output creates a LinkedProgram, which is given to the Patcher
  * to back-patch jumps between contexts
  */
-export class LinkedProgram implements ObjectCode {
+export class LinkedProgram implements ObjectCode, ExecutableProgram {
 	constructor(
 		/** Constant pool preceding the code */
 		public readonly constantPool: RuntimeValue[],
@@ -29,9 +29,4 @@ export class LinkedProgram implements ObjectCode {
 		/** Mappings of context references inside the code */
 		public readonly contextLabels: ContextLabels
 	) {}
-
-	/** Loaded program represented by the linker output */
-	public get program(): LoadedProgram {
-		return new LoadedProgram(this.constantPool, this.bytecode, this.numGlobals);
-	}
 }

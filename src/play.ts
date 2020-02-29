@@ -96,7 +96,7 @@ export class Play {
 			console.error(errors);
 			throw new Error("Type checking failed");
 		}
-		const vm = new VirtualMachine(linkedProgram.program);
+		const vm = new VirtualMachine(linkedProgram);
 		const result = vm.run();
 		if (result.status !== VMStatus.Success) {
 			throw result.error!;

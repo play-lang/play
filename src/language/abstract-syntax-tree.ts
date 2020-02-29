@@ -6,6 +6,9 @@ import { ProgramNode } from "src/parser/nodes/program-node";
  * (the output of the parser)
  */
 export class AbstractSyntaxTree {
+	/** True if the tree has been verified by the type-checker */
+	public verified: boolean = false;
+
 	constructor(
 		public readonly root: ProgramNode,
 		/**
