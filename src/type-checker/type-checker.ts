@@ -81,7 +81,9 @@ export class TypeChecker {
 
 		this.checkNode(this.ast.root);
 
-		return this.errors.length < 1;
+		this.ast.verified = this.errors.length < 1;
+
+		return this.ast.verified;
 	}
 
 	/**

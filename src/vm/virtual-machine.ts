@@ -1,5 +1,5 @@
 import { Host } from "src/host/host";
-import { LoadedProgram } from "src/language/loaded-program";
+import { ExecutableProgram } from "src/language/executable-program";
 import { OpCode } from "src/language/op-code";
 import { Frame } from "src/vm/frame";
 import { CellDataType } from "src/vm/gc/cell-data";
@@ -93,7 +93,7 @@ export class VirtualMachine {
 
 	constructor(
 		/** Program to execute */
-		public readonly program: LoadedProgram,
+		public readonly program: ExecutableProgram,
 		initConfig: VMInitConfig = {}
 	) {
 		const config = { ...defaults, ...initConfig };
