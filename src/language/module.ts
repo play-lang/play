@@ -15,7 +15,11 @@ import { ModelType, ProtocolType } from "src/language/types/type-system";
 export class Module {
 	public readonly env: Environment;
 
-	constructor(host: Host) {
+	constructor(
+		/** Name of the module */
+		public readonly name: string,
+		host: Host
+	) {
 		this.env = new Environment(
 			new SymbolTable(new Scope()),
 			new Map<string, FunctionInfo>(),
