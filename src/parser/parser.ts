@@ -4,6 +4,7 @@ import { FunctionInfo } from "src/language/function-info";
 import { IdentifierSymbol } from "src/language/identifier-symbol";
 import { Expression, Statement } from "src/language/node";
 import { infixParselets, prefixParselets } from "src/language/operator-grammar";
+import { PropertyInfo } from "src/language/property-info";
 import { Scope } from "src/language/scope";
 import { SourceFile } from "src/language/source-file";
 import { SymbolTable } from "src/language/symbol-table";
@@ -288,11 +289,7 @@ export class Parser extends TokenParser {
 			);
 		}
 		this.match(TokenType.ParenOpen);
-		const {
-			types: parameterTypes,
-			names: parameters,
-			tokens: paramTokens,
-		} = this.parameterList();
+		const parameters = this.parameterList();
 		this.match(TokenType.ParenClose);
 		// Optionally match a type annotation following function
 		// parameter parenthesis -> function doSomething(a: num): str {}
@@ -304,8 +301,8 @@ export class Parser extends TokenParser {
 		const info = new FunctionInfo(
 			name,
 			typeAnnotation,
-			parameters,
-			parameterTypes
+			parameters.names,
+			parameters.types
 		);
 		// Register the function name and the function info that it points to
 		// This will make compilation of functions simpler since we can look up
@@ -321,9 +318,11 @@ export class Parser extends TokenParser {
 		this.createScope();
 
 		let i = 0;
-		for (const param of parameters) {
+		for (const param of parameters.names) {
 			// Register each of the function's parameters in the current scope
-			this.scope.register(new IdentifierSymbol(param, paramTokens[i], false));
+			this.scope.register(
+				new IdentifierSymbol(param, parameters.tokens[i], false)
+			);
 			i++;
 		}
 
@@ -419,6 +418,7 @@ export class Parser extends TokenParser {
 
 	public doWhileStatement(): DoWhileStatementNode {
 		const token = this.previous;
+		this.eatLines();
 		this.consume(TokenType.BraceOpen, "Expected opening brace of while block");
 		const block = this.block();
 		this.consume(TokenType.While, "Expected while keyword");
@@ -428,10 +428,25 @@ export class Parser extends TokenParser {
 
 	public model(): ModelNode {
 		const token = this.previous;
+		this.consume(TokenType.Id, "Expected model name");
+		const nameToken = this.previous;
+		const modelName = nameToken.lexeme;
+		this.eatLines();
 		this.consume(TokenType.BraceOpen, "Expected opening brace of model block");
 		this.eatLines();
+		const properties: PropertyInfo[] = [];
+		if (this.match(TokenType.ParenOpen)) {
+			const parameters = this.parameterList();
+			for (const name of parameters.names) {
+				properties.push(
+					new PropertyInfo(name, parameters.types.get(name)!, false)
+				);
+			}
+			// Model has initialization parameters
+			this.consume(TokenType.ParenClose, "Expected closing parenthesis");
+		}
 		this.eatLines();
-		return new ModelNode(token);
+		return new ModelNode(token, modelName, properties);
 	}
 
 	public protocol(): ProtocolNode {

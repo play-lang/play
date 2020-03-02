@@ -18,6 +18,6 @@ export class ProtocolNode extends Expression {
 	}
 
 	public accept(visitor: Visitor): void {
-		visitor.visitModelNode?.(this);
+		visitor.visitProtocolNode?.(this);
 	}
 }
