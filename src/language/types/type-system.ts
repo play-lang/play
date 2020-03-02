@@ -594,10 +594,10 @@ export class ModelType extends Type {
 	constructor(
 		/** Name of the model */
 		public readonly name: string,
-		/** Method signatures */
-		public functions: FunctionType[] = [],
 		/** Field variables */
 		public properties: Map<string, Type> = new Map(),
+		/** Method signatures */
+		public functions: FunctionType[] = [],
 		/** Implemented protocols */
 		public protocols: ProtocolType[] = [],
 		/** Applied types */
@@ -621,8 +621,8 @@ export class ModelType extends Type {
 	public copy(): ModelType {
 		return new ModelType(
 			this.name,
-			[...this.functions],
 			new Map(this.properties),
+			[...this.functions],
 			[...this.protocols],
 			[...this.appliedTypes]
 		);

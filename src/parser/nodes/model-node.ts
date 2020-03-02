@@ -37,7 +37,7 @@ export class ModelNode extends Expression {
 				Type.construct(property.typeAnnotation, !property.isImmutable)
 			);
 		}
-		return new ModelType(this.name, [], propertyTypeMap, [], []);
+		return new ModelType(this.name, propertyTypeMap, [], [], []);
 	}
 
 	public accept(visitor: Visitor): void {
