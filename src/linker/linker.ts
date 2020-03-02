@@ -23,7 +23,6 @@ export class Linker {
 		}
 		let bytecode: number[] = [];
 		for (const context of contexts) {
-			// Todo: The context map might be setting the wrong bytecode offset
 			contextMap.set(context.name, bytecode.length);
 			bytecode = [...bytecode, ...context.bytecode];
 		}
