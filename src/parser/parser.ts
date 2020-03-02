@@ -25,6 +25,7 @@ import { ProtocolNode } from "src/parser/nodes/protocol-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
 import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
+import { ParsedParameters } from "src/parser/parsed-parameters";
 import { InfixParselet } from "src/parser/parselet";
 
 export class Parser extends TokenParser {
@@ -286,35 +287,12 @@ export class Parser extends TokenParser {
 				"Cannot redeclare function with the name `" + name + "`"
 			);
 		}
-		const parameterTypes: Map<string, string[]> = new Map();
-		const parameters: string[] = [];
-		const paramTokens: TokenLike[] = [];
 		this.match(TokenType.ParenOpen);
-		if (!this.isAtEnd && this.peek.type !== TokenType.ParenClose) {
-			do {
-				const paramToken = this.consume(
-					TokenType.Id,
-					"Expected parameter name"
-				);
-				const paramName = paramToken.lexeme;
-				paramTokens.push(paramToken);
-				this.consume(
-					TokenType.Colon,
-					"Expected colon for parameter type annotation"
-				);
-				// Attempt to match one or more parameters
-				const paramType = this.typeAnnotation();
-				if (parameterTypes.has(paramName)) {
-					throw this.error(
-						paramToken,
-						"Function cannot have parameters with duplicate names"
-					);
-				}
-				// Store the parameter information in the node
-				parameterTypes.set(paramName, paramType);
-				parameters.push(paramName);
-			} while (this.match(TokenType.Comma));
-		}
+		const {
+			types: parameterTypes,
+			names: parameters,
+			tokens: paramTokens,
+		} = this.parameterList();
 		this.match(TokenType.ParenClose);
 		// Optionally match a type annotation following function
 		// parameter parenthesis -> function doSomething(a: num): str {}
@@ -357,6 +335,36 @@ export class Parser extends TokenParser {
 
 		const node = new FunctionDeclarationNode(nameToken, start, info, block);
 		return node;
+	}
+
+	/** Parse a parameter sequence */
+	public parameterList(): ParsedParameters {
+		const types: Map<string, string[]> = new Map();
+		const names: string[] = [];
+		const tokens: TokenLike[] = [];
+		if (!this.isAtEnd && this.peek.type !== TokenType.ParenClose) {
+			do {
+				const paramToken = this.consume(
+					TokenType.Id,
+					"Expected parameter name"
+				);
+				const paramName = paramToken.lexeme;
+				tokens.push(paramToken);
+				this.consume(
+					TokenType.Colon,
+					"Expected colon for parameter type annotation"
+				);
+				// Attempt to match one or more parameters
+				const paramType = this.typeAnnotation();
+				if (types.has(paramName)) {
+					throw this.error(paramToken, "Duplicate parameter name found");
+				}
+				// Store the parameter information in the node
+				types.set(paramName, paramType);
+				names.push(paramName);
+			} while (this.match(TokenType.Comma));
+		}
+		return new ParsedParameters(types, names, tokens);
 	}
 
 	public returnStatement(): ReturnStatementNode {
@@ -419,7 +427,11 @@ export class Parser extends TokenParser {
 	}
 
 	public model(): ModelNode {
-		return new ModelNode(this.previous);
+		const token = this.previous;
+		this.consume(TokenType.BraceOpen, "Expected opening brace of model block");
+		this.eatLines();
+		this.eatLines();
+		return new ModelNode(token);
 	}
 
 	public protocol(): ProtocolNode {
