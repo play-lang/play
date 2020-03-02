@@ -434,19 +434,27 @@ export class Parser extends TokenParser {
 		this.eatLines();
 		this.consume(TokenType.BraceOpen, "Expected opening brace of model block");
 		this.eatLines();
-		const properties: PropertyInfo[] = [];
+		const initParams: PropertyInfo[] = [];
 		if (this.match(TokenType.ParenOpen)) {
 			const parameters = this.parameterList();
 			for (const name of parameters.names) {
-				properties.push(
-					new PropertyInfo(name, parameters.types.get(name)!, false)
+				initParams.push(
+					new PropertyInfo(name, parameters.types.get(name)!, true)
 				);
 			}
+			this.eatLines();
 			// Model has initialization parameters
 			this.consume(TokenType.ParenClose, "Expected closing parenthesis");
+			this.eatLines();
 		}
-		this.eatLines();
-		return new ModelNode(token, modelName, properties);
+
+		const propertyDeclarations: VariableDeclarationNode[] = [];
+		while (this.match(TokenType.Let, TokenType.Var)) {
+			const decl = this.variableDeclaration();
+			decl.existsInModel = true;
+			propertyDeclarations.push(decl);
+		}
+		return new ModelNode(token, modelName, initParams, propertyDeclarations);
 	}
 
 	public protocol(): ProtocolNode {

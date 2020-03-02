@@ -5,6 +5,9 @@ import { None, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 
 export class VariableDeclarationNode extends Statement {
+	/** True if this node represents a property declaration for a model */
+	public existsInModel: boolean = false;
+
 	/** Name of the variable */
 	public get variableName(): string {
 		return this.token.lexeme;
