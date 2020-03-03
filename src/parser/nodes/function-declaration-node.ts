@@ -7,6 +7,9 @@ import { Visitor } from "src/language/visitor";
 import { BlockStatementNode } from "src/parser/nodes/block-statement-node";
 
 export class FunctionDeclarationNode extends Statement {
+	/** True if this node represents a method declaration for a model */
+	public isMethod: boolean = false;
+
 	constructor(
 		token: TokenLike,
 		/** Start position in the code */

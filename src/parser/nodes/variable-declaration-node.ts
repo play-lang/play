@@ -6,7 +6,7 @@ import { Visitor } from "src/language/visitor";
 
 export class VariableDeclarationNode extends Statement {
 	/** True if this node represents a property declaration for a model */
-	public existsInModel: boolean = false;
+	public isProperty: boolean = false;
 
 	/** Name of the variable */
 	public get variableName(): string {
