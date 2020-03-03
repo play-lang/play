@@ -451,10 +451,23 @@ export class Parser extends TokenParser {
 		const propertyDeclarations: VariableDeclarationNode[] = [];
 		while (this.match(TokenType.Let, TokenType.Var)) {
 			const decl = this.variableDeclaration();
-			decl.existsInModel = true;
+			decl.isProperty = true;
 			propertyDeclarations.push(decl);
 		}
-		return new ModelNode(token, modelName, initParams, propertyDeclarations);
+
+		const methodDeclarations: FunctionDeclarationNode[] = [];
+		while (this.match(TokenType.Function)) {
+			const decl = this.functionDeclaration();
+			decl.isMethod = true;
+			methodDeclarations.push(decl);
+		}
+		return new ModelNode(
+			token,
+			modelName,
+			initParams,
+			propertyDeclarations,
+			methodDeclarations
+		);
 	}
 
 	public protocol(): ProtocolNode {

@@ -594,6 +594,8 @@ export class ModelType extends Type {
 	constructor(
 		/** Name of the model */
 		public readonly name: string,
+		/** Initialization parameters (like in Kotlin) */
+		public parameters: RecordType = new RecordType(new LinkedHashMap([])),
 		/** Field variables */
 		public properties: Map<string, Type> = new Map(),
 		/** Method signatures */
@@ -621,6 +623,7 @@ export class ModelType extends Type {
 	public copy(): ModelType {
 		return new ModelType(
 			this.name,
+			new RecordType(new LinkedHashMap([])),
 			new Map(this.properties),
 			[...this.functions],
 			[...this.protocols],

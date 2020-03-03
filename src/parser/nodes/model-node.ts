@@ -1,9 +1,16 @@
+import { LinkedHashMap } from "src/common/linked-hash-map";
 import { Expression, NodeState } from "src/language/node";
 import { PropertyInfo } from "src/language/property-info";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import { ModelType, Type } from "src/language/types/type-system";
+import {
+	FunctionType,
+	ModelType,
+	RecordType,
+	Type,
+} from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
+import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
 
 export class ModelNode extends Expression {
@@ -14,7 +21,9 @@ export class ModelNode extends Expression {
 		/** Initialization parameters (similar to Kotlin class) */
 		public readonly initParams: PropertyInfo[],
 		/** Child property declaration nodes */
-		public readonly propertyDeclarations: VariableDeclarationNode[]
+		public readonly propertyDeclarations: VariableDeclarationNode[],
+		/** Child function declaration nodes */
+		public readonly methodDeclarations: FunctionDeclarationNode[]
 	) {
 		super(token, token.pos, token.end);
 	}
@@ -29,9 +38,39 @@ export class ModelNode extends Expression {
 				isLast: param === this.initParams[this.initParams.length - 1],
 			});
 		});
+		this.propertyDeclarations.forEach(decl => {
+			decl.setState({
+				...state,
+				parent: this,
+				isDead: false,
+				isLast:
+					decl ===
+					this.propertyDeclarations[this.propertyDeclarations.length - 1],
+			});
+		});
+		this.methodDeclarations.forEach(decl => {
+			decl.setState({
+				...state,
+				parent: this,
+				isDead: false,
+				isLast:
+					decl === this.methodDeclarations[this.methodDeclarations.length - 1],
+			});
+		});
 	}
 
 	public type(env: Environment): Type {
+		// TODO: Look up model type stub created for us
+		// Instead of creating a new model type instance, we should find the cached
+		// one in the environment and set the types of the parameters, properties,
+		// and methods on it
+		const modelType = new ModelType(this.name);
+
+		// Convert parameters to a record type
+		const parametersType = new RecordType(
+			new LinkedHashMap(this.initParams.map(info => [info.name, info.type!]))
+		);
+
 		// Examine the child variable declaration nodes to determine our
 		// property types
 		const propertyTypes: Map<string, Type> = new Map();
@@ -40,7 +79,19 @@ export class ModelNode extends Expression {
 			const propertyName = decl.variableName;
 			propertyTypes.set(propertyName, propertyType);
 		}
-		return new ModelType(this.name, propertyTypes, [], [], []);
+
+		const methodTypes: FunctionType[] = [];
+		for (const decl of this.methodDeclarations) {
+			const methodType = decl.type(env) as FunctionType;
+			methodType.receiverType = modelType;
+			methodTypes.push(methodType);
+		}
+
+		modelType.parameters = parametersType;
+		modelType.properties = propertyTypes;
+		modelType.functions = methodTypes;
+
+		return modelType;
 	}
 
 	public accept(visitor: Visitor): void {
