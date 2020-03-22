@@ -1,5 +1,5 @@
 # Play
-Play is a statically typed programming language written in TypeScript *with zero production dependencies*. Play is written in TypeScript and consists of a *lexer*, *parser*, *preprocessor*, *type-checker*, *bytecode compiler*, *linker*, *disassembler*, *virtual machine*, and *garbage collector*.
+Play is a statically typed programming language written in TypeScript *with zero production dependencies*. Play consists of a *lexer*, *parser*, *preprocessor*, *type-checker*, *bytecode compiler*, *linker*, *disassembler*, *virtual machine*, and *garbage collector*.
 
 **Note:** Play is still a young project. A large portion of the language exists and is working, but still lacks object-oriented functionality and a module system (both of which are actively being developed).
 
