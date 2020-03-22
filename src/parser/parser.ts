@@ -215,7 +215,9 @@ export class Parser extends TokenParser {
 	 * @param leadingType First identifier already matched--must be the
 	 * deepest type in the expression (a num, str, or user-defined type)
 	 */
-	public variableDeclaration(): VariableDeclarationNode {
+	public variableDeclaration(
+		isProperty: boolean = false
+	): VariableDeclarationNode {
 		// We've already matched the reserved word token if we make it here
 		const start = this.previous.pos;
 		const isImmutable = this.previous.type === TokenType.Let;
@@ -247,6 +249,7 @@ export class Parser extends TokenParser {
 			start,
 			end,
 			isImmutable,
+			isProperty,
 			expr,
 			typeAnnotation
 		);
@@ -450,8 +453,8 @@ export class Parser extends TokenParser {
 
 		const propertyDeclarations: VariableDeclarationNode[] = [];
 		while (this.match(TokenType.Let, TokenType.Var)) {
-			const decl = this.variableDeclaration();
-			decl.isProperty = true;
+			// Parse a variable declaration used as a property declaration
+			const decl = this.variableDeclaration(true);
 			propertyDeclarations.push(decl);
 		}
 
