@@ -3,6 +3,8 @@ Play is a statically typed programming language written in TypeScript *with zero
 
 **Note:** Play is still a young project. A large portion of the language exists and is working, but still lacks object-oriented functionality and a module system (both of which are actively being developed).
 
+![Play Logo](/logo.png)
+
 *Play has zero production dependencies.* All of its various components are written in [TypeScript](https://www.typescriptlang.org/), with a large amount of test coverage provided using simple [Jest](https://jestjs.io/) tests. Play uses a little bit of non-original code borrowed from other projects detailed in the [credits](#Credits) section.
 
 ## Features
