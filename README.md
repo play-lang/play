@@ -52,7 +52,7 @@ Play supports basic language constructs but it's still missing some of the basic
 
 	The only optimization supported today is tail-recursion. There is no optimization phase because the author is still unfamiliar with how optimizing compilers work.
 
-## From Start to Finish
+## Components
 
 ### Parser
 Play takes source code as an input string and converts it into an abstract syntax tree (AST) using a recursive-descent parser. The parser fetches token from the lexer as needed and arranges them into an AST. Expressions are parsed using a [Pratt parser](https://en.wikipedia.org/wiki/Pratt_parser).
@@ -86,6 +86,116 @@ The virtual machine pretends to be a very abstract version of a computer and run
 ### Garbage Collector
 
 Play features an incremental copying/compacting garbage collector that uses Baker's algorithm with a read barrier to manage garbage while the virtual machine runs.
+
+## Quick Start
+
+Play code is run from the accompanying tests. All new features have tests built for them at the same time. The goal is to reach 100% test coverage as the language becomes more mature.
+
+A static convenience class is provided for easily running Play code.
+
+```ts
+const code = `return fact(6, 1)
+	// Compute a factorial recursively
+	function fact(n: num, temp: num): num {
+		if (n == 1) {
+			return temp
+		} else {
+			return fact(n - 1, n * temp)
+		}
+	}`;
+
+const result = Play.run(code).value.value // 720
+```
+
+The convenience method `run` returns a `VMResult` object containing a `RuntimeValue` called `value` with a `value` property containing the actual JavaScript value.
+
+Play first scans, parses, type-checks, and compiles the code into stack-based bytecode (not optimized). A dump of the disassembled bytecode can easily be obtained with the following convenience method:
+
+```ts
+console.log(Play.disassemble(code)); // uses -1 as a placeholder for unresolved addresses
+console.log(Play.disassembleFinal(code)); // links and resolves addresses before disassembling
+```
+
+The above call produces:
+
+```
+.CONSTANTS
+		0000    number  6
+		0001    number  1
+
+.CODE
+; Context (main)
+; 0 locals
+label_0000:
+		0000                   const     0000   ; value 6
+		0002                   const     0001   ; value 1
+		0004                    load     0009   ; label_0001 context fact
+		0006                    call     0002
+		0008                  return
+; Context fact
+; 2 locals
+label_0001:
+		0009                     get     0000
+		0011                   const     0001   ; value 1
+		0013                   equal
+		0014             jmpfalsepop     0003   ; label_0002 (instr  0019) 
+		0016                     get     0001
+		0018                  return
+label_0002:
+		0019                     get     0000
+		0021                   const     0001   ; value 1
+		0023                     sub
+		0024                     get     0000
+		0026                     get     0001
+		0028                     mul
+		0029                     set     0001
+		0031                     pop
+		0032                     set     0000
+		0034                     pop
+		0035                    load     0009   ; label_0001 context fact
+		0037                    tail     0002
+		0039                  return
+```
+
+Full [bytecode opcode documentation](/docs/bytecode.md) is provided.
+
+Other convenience functions allow for printing the AST as a human-friendly string or JSON:
+
+```ts
+console.log(Play.describeAst(code)); // Human friendly AST representation
+console.log(Play.describeAstAsJSON(code)); // Machine friendly AST representation
+```
+
+The first line produces the following:
+
+```
+Program
+  ├── Return
+    └── Call(fact, tailRecursive=false)
+      ├── Literal(`6`)
+      └── Literal(`1`)
+  └── Function num fact(num n, num temp)
+    └── Block
+      └── If
+        ├── predicate
+          └── Binary(EqualEqual)
+            ├── IdExpression(n, use=Variable)
+            └── Literal(`1`)
+        ├── then
+          └── Block
+            └── Return
+              └── IdExpression(temp, use=Variable)
+        └── Else
+          └── Block
+            └── Return
+              └── Call(fact, tailRecursive=true)
+                ├── Binary(Minus)
+                  ├── IdExpression(n, use=Variable)
+                  └── Literal(`1`)
+                └── Binary(Asterisk)
+                  ├── IdExpression(n, use=Variable)
+                  └── IdExpression(temp, use=Variable)
+```
 
 ## Contributing
 
