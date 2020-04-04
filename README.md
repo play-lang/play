@@ -1,4 +1,15 @@
 # Play
+
+[![License][license-image]][license-url]
+
+[license-url]: https://opensource.org/licenses/MIT
+[license-image]: https://img.shields.io/npm/l/make-coverage-badge.svg
+
+![Coverage lines](docs/resources/badge-lines.svg)
+![Coverage functions](docs/resources/badge-functions.svg)
+![Coverage branches](docs/resources/badge-branches.svg)
+![Coverage statements](docs/resources/badge-statements.svg)
+
 Play is a statically typed programming language written in TypeScript *with zero production dependencies*. Play consists of a *lexer*, *parser*, *preprocessor*, *type-checker*, *bytecode compiler*, *linker*, *disassembler*, *virtual machine*, and *garbage collector*.
 
 **Note:** Play is still a young project. A large portion of the language exists and is working, but still lacks object-oriented functionality and a module system (both of which are actively being developed).
