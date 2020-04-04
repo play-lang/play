@@ -15,4 +15,9 @@ module.exports = {
 	moduleDirectories: [
 		"node_modules"
 	],
+	"coverageReporters": [
+		"json-summary", 
+		"text",
+		"lcov"
+	]
 };
