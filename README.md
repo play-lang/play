@@ -112,7 +112,8 @@ The convenience method `run` returns a `VMResult` object containing a `RuntimeVa
 Play first scans, parses, type-checks, and compiles the code into stack-based bytecode (not optimized). A dump of the disassembled bytecode can easily be obtained with the following convenience method:
 
 ```ts
-console.log(Play.disassemble(code));
+console.log(Play.disassemble(code)); // uses -1 as a placeholder for unresolved addresses
+console.log(Play.disassembleFinal(code)); // links and resolves addresses before disassembling
 ```
 
 The above call produces:
@@ -128,32 +129,32 @@ The above call produces:
 label_0000:
 		0000                   const     0000   ; value 6
 		0002                   const     0001   ; value 1
-		0004                    load    -1      ; context fact
+		0004                    load     0009   ; label_0001 context fact
 		0006                    call     0002
 		0008                  return
 ; Context fact
 ; 2 locals
 label_0001:
-		0000                     get     0000
-		0002                   const     0001   ; value 1
-		0004                   equal
-		0005             jmpfalsepop     0003   ; label_0002 (instr  0010) 
-		0007                     get     0001
-		0009                  return
+		0009                     get     0000
+		0011                   const     0001   ; value 1
+		0013                   equal
+		0014             jmpfalsepop     0003   ; label_0002 (instr  0019) 
+		0016                     get     0001
+		0018                  return
 label_0002:
-		0010                     get     0000
-		0012                   const     0001   ; value 1
-		0014                     sub
-		0015                     get     0000
-		0017                     get     0001
-		0019                     mul
-		0020                     set     0001
-		0022                     pop
-		0023                     set     0000
-		0025                     pop
-		0026                    load    -1      ; context fact
-		0028                    tail     0002
-		0030                  return
+		0019                     get     0000
+		0021                   const     0001   ; value 1
+		0023                     sub
+		0024                     get     0000
+		0026                     get     0001
+		0028                     mul
+		0029                     set     0001
+		0031                     pop
+		0032                     set     0000
+		0034                     pop
+		0035                    load     0009   ; label_0001 context fact
+		0037                    tail     0002
+		0039                  return
 ```
 
 Full [bytecode opcode documentation](/docs/bytecode.md) is provided.
