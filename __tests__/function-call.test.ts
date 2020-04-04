@@ -203,7 +203,6 @@ function same(a: num): num {
 	}
 	}
 	`;
-			console.log(Play.disassembleFinal(code));
 			expect(Play.run(code).value.value).toBe(720);
 		});
 	});
