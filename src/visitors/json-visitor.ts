@@ -250,9 +250,14 @@ export class JSONVisitor implements Visitor, Describable {
 	}
 
 	public visitModelNode(node: ModelNode): void {
-		// TODO: Finish model declaration print implementation
+		const properties = [];
+		for (const decl of node.propertyDeclarations) {
+			decl.accept(this);
+			properties.push(this.stack.pop());
+		}
 		this.stack.push({
 			...def(node),
+			properties,
 		});
 	}
 

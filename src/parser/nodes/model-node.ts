@@ -3,12 +3,7 @@ import { Expression, NodeState } from "src/language/node";
 import { PropertyInfo } from "src/language/property-info";
 import { TokenLike } from "src/language/token";
 import { Environment } from "src/language/types/environment";
-import {
-	FunctionType,
-	ModelType,
-	RecordType,
-	Type,
-} from "src/language/types/type-system";
+import { FunctionType, RecordType, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";
 import { FunctionDeclarationNode } from "src/parser/nodes/function-declaration-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
@@ -64,7 +59,11 @@ export class ModelNode extends Expression {
 		// Instead of creating a new model type instance, we should find the cached
 		// one in the environment and set the types of the parameters, properties,
 		// and methods on it
-		const modelType = new ModelType(this.name);
+		const modelType = env.models.get(this.name);
+
+		if (!modelType) {
+			throw new Error(`Cannot find model for \`${this.name}\``);
+		}
 
 		// Convert parameters to a record type
 		const parametersType = new RecordType(

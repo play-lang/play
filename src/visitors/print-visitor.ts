@@ -276,7 +276,14 @@ export class PrintVisitor implements Visitor, Describable {
 
 	public visitModelNode(node: ModelNode): void {
 		this.desc += "Model\n";
-		// TODO: Finish model declaration print implementation
+		this.indent += 1;
+		node.propertyDeclarations.forEach((decl, index) => {
+			this.desc +=
+				this.spaces +
+				(index === node.propertyDeclarations.length - 1 ? "└── " : "├── ");
+			decl.accept(this);
+		});
+		this.indent -= 1;
 	}
 
 	public visitPostfixExpressionNode(node: PostfixExpressionNode): void {

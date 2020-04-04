@@ -456,6 +456,7 @@ export class Parser extends TokenParser {
 			// Parse a variable declaration used as a property declaration
 			const decl = this.variableDeclaration(true);
 			propertyDeclarations.push(decl);
+			this.eatLines();
 		}
 
 		const methodDeclarations: FunctionDeclarationNode[] = [];
@@ -464,6 +465,8 @@ export class Parser extends TokenParser {
 			decl.isMethod = true;
 			methodDeclarations.push(decl);
 		}
+		this.eatLines();
+		this.consume(TokenType.BraceClose, "Expected closing brace of model block");
 		return new ModelNode(
 			token,
 			modelName,
