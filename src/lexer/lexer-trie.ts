@@ -1,4 +1,4 @@
-import { TokenType } from "src/language/token-type";
+import { TokenType } from "src/language/token/token-type";
 
 /**
  * Recursive trie data structure that makes it easy to parse sequences

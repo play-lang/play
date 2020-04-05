@@ -1,7 +1,6 @@
 import { Expression } from "src/language/node";
-import { Precedence } from "src/language/precedence";
-import { TokenLike } from "src/language/token";
-import { TokenType } from "src/language/token-type";
+import { TokenLike } from "src/language/token/token";
+import { TokenType } from "src/language/token/token-type";
 import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";
 import { BinaryLogicalExpressionNode } from "src/parser/nodes/binary-logical-expression-node";
@@ -19,6 +18,7 @@ import { PrefixExpressionNode } from "src/parser/nodes/prefix-expression-node";
 import { PrimitiveExpressionNode } from "src/parser/nodes/primitive-expression-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { Parser } from "src/parser/parser";
+import { Precedence } from "src/parser/precedence";
 
 export interface PrefixParselet {
 	parse(parser: Parser, token: TokenLike): Expression;

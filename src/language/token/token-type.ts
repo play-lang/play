@@ -23,6 +23,7 @@ export enum TokenType {
 	Set,
 
 	// Reserved statement words
+	Import,
 	If,
 	Else,
 	While,
@@ -100,6 +101,7 @@ export const idTokenTypes: { [key: string]: TokenType } = {
 	include: TokenType.Include,
 	// Play language:
 	function: TokenType.Function,
+	import: TokenType.Import,
 	if: TokenType.If,
 	else: TokenType.Else,
 	while: TokenType.While,

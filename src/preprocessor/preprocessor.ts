@@ -1,8 +1,8 @@
 import { AvlTree } from "src/common/avl-tree";
 import { SourceFile } from "src/language/source-file";
-import { TokenParser } from "src/language/token-parser";
-import { TokenType } from "src/language/token-type";
+import { TokenType } from "src/language/token/token-type";
 import { Lexer } from "src/lexer/lexer";
+import { TokenParser } from "src/parser/token-parser";
 
 /** Represents a preprocessor that chains files together */
 export class Preprocessor {

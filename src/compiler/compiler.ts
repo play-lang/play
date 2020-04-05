@@ -1,13 +1,13 @@
 import { CompiledProgram } from "src/compiler/compiled-program";
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
-import { Context } from "src/language/context";
-import { ContextLabels } from "src/language/context-labels";
+import { Context } from "src/language/context/context";
+import { ContextLabels } from "src/language/context/context-labels";
 import { FunctionInfo } from "src/language/function-info";
 import { Expression, Node } from "src/language/node";
 import { OpCode } from "src/language/op-code";
-import { Scope } from "src/language/scope";
-import { SymbolTable } from "src/language/symbol-table";
-import { TokenType } from "src/language/token-type";
+import { Scope } from "src/language/symbol-table/scope";
+import { SymbolTable } from "src/language/symbol-table/symbol-table";
+import { TokenType } from "src/language/token/token-type";
 import { Visitor } from "src/language/visitor";
 import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";

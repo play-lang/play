@@ -1,5 +1,5 @@
 import { Exception } from "src/common/exception";
-import { TokenLike } from "src/language/token";
+import { TokenLike } from "src/language/token/token";
 
 export class SemanticError extends Exception {
 	constructor(

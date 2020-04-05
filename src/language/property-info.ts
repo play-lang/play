@@ -1,6 +1,11 @@
 import { Expression } from "src/language/node";
 import { Type } from "src/language/types/type-system";
 
+/**
+ * Holds information about parsed model properties. This is an intermediate data
+ * structure that is used to hold property information until type construction
+ * can occur after parsing.
+ */
 export class PropertyInfo {
 	constructor(
 		/** Name of the property */

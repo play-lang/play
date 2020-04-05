@@ -1,7 +1,11 @@
-import { Context } from "src/language/context";
+import { Context } from "src/language/context/context";
 
 /**
- * Holds a list of references to contexts amongst contexts
+ * Each context has a ContextLabels object which contains a list of that
+ * context's references to other contexts
+ *
+ * These context labels are used during linking and disassembly for correct
+ * address resolution
  */
 export class ContextLabels {
 	constructor(

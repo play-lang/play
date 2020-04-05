@@ -4,7 +4,7 @@ import { Disassembler } from "src/disassembler/disassembler";
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
 import { SemanticError } from "src/language/semantic-error";
 import { SourceFile } from "src/language/source-file";
-import { TokenLike } from "src/language/token";
+import { TokenLike } from "src/language/token/token";
 import { Lexer } from "src/lexer/lexer";
 import { LinkedProgram } from "src/linker/linked-program";
 import { Linker } from "src/linker/linker";

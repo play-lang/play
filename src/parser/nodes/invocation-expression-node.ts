@@ -1,5 +1,5 @@
 import { Expression, NodeState } from "src/language/node";
-import { TokenLike } from "src/language/token";
+import { TokenLike } from "src/language/token/token";
 import { Environment } from "src/language/types/environment";
 import {
 	ErrorType,
