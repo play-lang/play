@@ -1,7 +1,7 @@
 import { Describable } from "src/common/describable";
 import { describeErrorToken } from "src/common/format-messages";
 import { SourceFile } from "src/language/source-file";
-import { TokenType } from "src/language/token-type";
+import { TokenType } from "src/language/token/token-type";
 
 export interface Position {
 	pos: number;

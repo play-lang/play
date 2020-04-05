@@ -1,5 +1,6 @@
 import { directory, filename } from "src/common/path-utility";
 
+/** Represents a Play language source file for use with the lexer */
 export class SourceFile {
 	constructor(
 		/** Fully qualified absolute file path */

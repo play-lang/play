@@ -1,5 +1,5 @@
 import { Exception } from "src/common/exception";
-import { TokenLike } from "src/language/token";
+import { TokenLike } from "src/language/token/token";
 
 export class ParseError extends Exception {
 	/** Error token */

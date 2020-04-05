@@ -1,7 +1,7 @@
 import { AvlTree } from "src/common/avl-tree";
-import { Context } from "src/language/context";
-import { ObjectCode } from "src/language/object-code";
+import { Context } from "src/language/context/context";
 import { OpCode } from "src/language/op-code";
+import { ObjectCode } from "src/language/program";
 import { RuntimeError } from "src/vm/runtime-error";
 import { RuntimeType } from "src/vm/runtime-type";
 import { RuntimeValue } from "src/vm/runtime-value";

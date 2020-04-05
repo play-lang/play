@@ -1,6 +1,9 @@
 import { Expression, NodeState } from "src/language/node";
-import { TokenLike } from "src/language/token";
-import { postfixTypeAnnotations, TokenType } from "src/language/token-type";
+import { TokenLike } from "src/language/token/token";
+import {
+	postfixTypeAnnotations,
+	TokenType,
+} from "src/language/token/token-type";
 import { Environment } from "src/language/types/environment";
 import {
 	CollectionType,

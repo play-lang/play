@@ -1,7 +1,9 @@
 import { FunctionType } from "src/language/types/type-system";
 
 /**
- * Holds information about a parsed function
+ * Holds information about a parsed function.
+ * This is an intermediate data structure that is used to construct function
+ * types once parsing is complete.
  */
 export class FunctionInfo {
 	constructor(

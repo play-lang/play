@@ -1,4 +1,4 @@
-import { TokenLike } from "src/language/token";
+import { TokenLike } from "src/language/token/token";
 import { Environment } from "src/language/types/environment";
 import { Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";

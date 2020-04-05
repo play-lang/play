@@ -1,6 +1,6 @@
-import { Context } from "src/language/context";
-import { ContextLabels } from "src/language/context-labels";
-import { ObjectCode } from "src/language/object-code";
+import { Context } from "src/language/context/context";
+import { ContextLabels } from "src/language/context/context-labels";
+import { ObjectCode } from "src/language/program";
 import { RuntimeValue } from "src/vm/runtime-value";
 
 export class CompiledProgram implements ObjectCode {

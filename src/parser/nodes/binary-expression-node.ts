@@ -1,6 +1,6 @@
 import { Expression, NodeState } from "src/language/node";
-import { TokenLike } from "src/language/token";
-import { TokenType } from "src/language/token-type";
+import { TokenLike } from "src/language/token/token";
+import { TokenType } from "src/language/token/token-type";
 import { Environment } from "src/language/types/environment";
 import {
 	Any,

@@ -1,16 +1,14 @@
 import { Host } from "src/host/host";
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
 import { FunctionInfo } from "src/language/function-info";
-import { IdentifierSymbol } from "src/language/identifier-symbol";
 import { Expression, Statement } from "src/language/node";
-import { infixParselets, prefixParselets } from "src/language/operator-grammar";
 import { PropertyInfo } from "src/language/property-info";
-import { Scope } from "src/language/scope";
 import { SourceFile } from "src/language/source-file";
-import { SymbolTable } from "src/language/symbol-table";
-import { TokenLike } from "src/language/token";
-import { TokenParser } from "src/language/token-parser";
-import { TokenType } from "src/language/token-type";
+import { Scope } from "src/language/symbol-table/scope";
+import { SymbolEntry } from "src/language/symbol-table/symbol-entry";
+import { SymbolTable } from "src/language/symbol-table/symbol-table";
+import { TokenLike } from "src/language/token/token";
+import { TokenType } from "src/language/token/token-type";
 import { Environment } from "src/language/types/environment";
 import { ModelType, ProtocolType } from "src/language/types/type-system";
 import { Lexer } from "src/lexer/lexer";
@@ -26,8 +24,10 @@ import { ProtocolNode } from "src/parser/nodes/protocol-node";
 import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
 import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
+import { infixParselets, prefixParselets } from "src/parser/operator-grammar";
 import { ParsedParameters } from "src/parser/parsed-parameters";
 import { InfixParselet } from "src/parser/parselet";
+import { TokenParser } from "src/parser/token-parser";
 
 export class Parser extends TokenParser {
 	/** Parsing environment containing symbol table and function table */
@@ -129,6 +129,8 @@ export class Parser extends TokenParser {
 			return this.model();
 		} else if (this.match(TokenType.Protocol)) {
 			return this.protocol();
+		} else if (this.match(TokenType.Import)) {
+			return this.import();
 		} else if (this.match(TokenType.BraceOpen)) {
 			// Match a block statement
 			return this.block();
@@ -255,7 +257,7 @@ export class Parser extends TokenParser {
 		);
 		// Register the declared variable in the current scope
 		this.symbolTable.scope.register(
-			new IdentifierSymbol(nameToken.lexeme, nameToken, isImmutable)
+			new SymbolEntry(nameToken.lexeme, nameToken, isImmutable)
 		);
 		return node;
 	}
@@ -323,9 +325,7 @@ export class Parser extends TokenParser {
 		let i = 0;
 		for (const param of parameters.names) {
 			// Register each of the function's parameters in the current scope
-			this.scope.register(
-				new IdentifierSymbol(param, parameters.tokens[i], false)
-			);
+			this.scope.register(new SymbolEntry(param, parameters.tokens[i], false));
 			i++;
 		}
 
@@ -486,6 +486,10 @@ export class Parser extends TokenParser {
 		this.consume(TokenType.BraceOpen, "Expected opening brace of while block");
 		const block = this.block();
 		return new WhileStatementNode(token, condition, block);
+	}
+
+	public import(): any {
+		// return new ImportNode(this.previous);
 	}
 
 	public expressionStatement(): ExpressionStatementNode {

@@ -1,6 +1,6 @@
 import { AvlTree } from "../src/common/avl-tree";
 import { SourceFile } from "../src/language/source-file";
-import { TokenType } from "../src/language/token-type";
+import { TokenType } from "../src/language/token/token-type";
 import { Lexer } from "../src/lexer/lexer";
 
 describe("lexer", () => {

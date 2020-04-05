@@ -1,7 +1,7 @@
 import { LinkedHashMap } from "src/common/linked-hash-map";
 import { Expression, NodeState } from "src/language/node";
 import { PropertyInfo } from "src/language/property-info";
-import { TokenLike } from "src/language/token";
+import { TokenLike } from "src/language/token/token";
 import { Environment } from "src/language/types/environment";
 import { FunctionType, RecordType, Type } from "src/language/types/type-system";
 import { Visitor } from "src/language/visitor";

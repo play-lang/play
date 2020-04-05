@@ -1,6 +1,6 @@
 import { prepareHint } from "src/common/format-messages";
-import { TokenLike } from "src/language/token";
-import { TokenType } from "src/language/token-type";
+import { TokenLike } from "src/language/token/token";
+import { TokenType } from "src/language/token/token-type";
 import { Lexer } from "src/lexer/lexer";
 import { ParseError } from "src/parser/parse-error";
 

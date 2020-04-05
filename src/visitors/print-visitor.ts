@@ -1,6 +1,6 @@
 import { Describable } from "src/common/describable";
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
-import { TokenType } from "src/language/token-type";
+import { TokenType } from "src/language/token/token-type";
 import { Visitor } from "src/language/visitor";
 import { AssignmentExpressionNode } from "src/parser/nodes/assignment-expression-node";
 import { BinaryExpressionNode } from "src/parser/nodes/binary-expression-node";

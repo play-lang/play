@@ -1,6 +1,6 @@
 import { Describable } from "src/common/describable";
 import { LinkedHashMap } from "src/common/linked-hash-map";
-import { IdentifierSymbol } from "src/language/identifier-symbol";
+import { SymbolEntry } from "src/language/symbol-table/symbol-entry";
 
 /**
  * Represents a scope node, a recursive data type that helps represent a tree
@@ -32,7 +32,7 @@ export class Scope implements Describable {
 	 *
 	 * A LinkedHashMap is used to maintain insertion order
 	 */
-	public entries: LinkedHashMap<string, IdentifierSymbol> = new LinkedHashMap();
+	public entries: LinkedHashMap<string, SymbolEntry> = new LinkedHashMap();
 
 	/**
 	 * True if this scope is the global scope containing all other scopes
@@ -84,7 +84,7 @@ export class Scope implements Describable {
 	 * @param token The token containing the identifier to register
 	 * @param typeAnnotation The type annotation of the identifier
 	 */
-	public register(variableDeclaration: IdentifierSymbol): boolean {
+	public register(variableDeclaration: SymbolEntry): boolean {
 		// Make sure identifier doesn't already exist in this exact scope
 		// Note that the identifier can exist in ancestor scopes because we allow
 		// variable shadowing to happen when a nested scope uses the same
@@ -104,7 +104,7 @@ export class Scope implements Describable {
 	 * @param id The identifier to look up
 	 * @returns The corresponding identifier entry if the identifier was found
 	 */
-	public lookup(id: string): IdentifierSymbol | undefined {
+	public lookup(id: string): SymbolEntry | undefined {
 		if (this.entries.has(id) && this.entries.ordinal(id)! < this.available) {
 			return this.entries.get(id);
 		}

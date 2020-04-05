@@ -1,4 +1,4 @@
-import { TokenLike } from "src/language/token";
+import { TokenLike } from "src/language/token/token";
 
 /** Contains data about a parsed parameter sequence like `a: num, b: str` */
 export class ParsedParameters {

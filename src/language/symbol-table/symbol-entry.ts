@@ -1,8 +1,8 @@
-import { TokenLike } from "src/language/token";
+import { TokenLike } from "src/language/token/token";
 import { Type } from "src/language/types/type-system";
 
 /** Represents an entry in a symbol table */
-export class IdentifierSymbol {
+export class SymbolEntry {
 	constructor(
 		/** Name of the identifier */
 		public readonly name: string,

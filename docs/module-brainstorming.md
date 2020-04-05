@@ -90,3 +90,44 @@ A compiled play module might look like the following:
 	]
 }
 ```
+
+```play
+// app.play module
+
+import "lib/bird.play"
+import "lib/music.play"
+
+// Create a class with the same name as an imported module
+model Bird {
+	// Implement external interface
+	implements BirdLike
+	let id: str
+	let age: number
+	let song: str
+}
+
+let bird = new Bird
+bird.song = "row row row your boat"
+
+// Invoke external method
+sing(bird)
+
+// lib/bird.play module
+
+model Bird {
+	implements BirdLike
+	let name: str
+	let song: str
+}
+
+protocol BirdLike {
+	let song: str
+}
+
+// lib/music.play module
+import "bird.play"
+
+function sing(bird: Bird) {
+	print(bird.song)
+} 
+```

@@ -1,8 +1,8 @@
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
 import { Node } from "src/language/node";
 import { SemanticError } from "src/language/semantic-error";
-import { TokenLike } from "src/language/token";
-import { TokenType } from "src/language/token-type";
+import { TokenLike } from "src/language/token/token";
+import { TokenType } from "src/language/token/token-type";
 import { Environment } from "src/language/types/environment";
 import {
 	Collection,

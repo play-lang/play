@@ -1,7 +1,7 @@
-import { IdentifierSymbol } from "../src/language/identifier-symbol";
-import { Scope } from "../src/language/scope";
 import { SourceFile } from "../src/language/source-file";
-import { Token, TokenLike } from "../src/language/token";
+import { Scope } from "../src/language/symbol-table/scope";
+import { SymbolEntry } from "../src/language/symbol-table/symbol-entry";
+import { Token, TokenLike } from "../src/language/token/token";
 import { Play } from "../src/play";
 
 let pos: number = 0;
@@ -136,9 +136,6 @@ return deepNest(20)
 	});
 });
 
-function makeIdSymbol(
-	token: TokenLike,
-	isImmutable: boolean
-): IdentifierSymbol {
-	return new IdentifierSymbol(token.lexeme, token, isImmutable);
+function makeIdSymbol(token: TokenLike, isImmutable: boolean): SymbolEntry {
+	return new SymbolEntry(token.lexeme, token, isImmutable);
 }

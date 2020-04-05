@@ -1,7 +1,6 @@
-import { Context } from "src/language/context";
-import { ContextLabels } from "src/language/context-labels";
-import { ExecutableProgram } from "src/language/executable-program";
-import { ObjectCode } from "src/language/object-code";
+import { Context } from "src/language/context/context";
+import { ContextLabels } from "src/language/context/context-labels";
+import { ExecutableProgram, ObjectCode } from "src/language/program";
 import { RuntimeValue } from "src/vm/runtime-value";
 
 /**

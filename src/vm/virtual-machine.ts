@@ -1,6 +1,6 @@
 import { Host } from "src/host/host";
-import { ExecutableProgram } from "src/language/executable-program";
 import { OpCode } from "src/language/op-code";
+import { ExecutableProgram } from "src/language/program";
 import { Frame } from "src/vm/frame";
 import { CellDataType } from "src/vm/gc/cell-data";
 import { GarbageCollector } from "src/vm/gc/garbage-collector";

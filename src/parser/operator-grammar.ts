@@ -1,5 +1,4 @@
-import { Precedence } from "src/language/precedence";
-import { TokenType } from "src/language/token-type";
+import { TokenType } from "src/language/token/token-type";
 import {
 	AssignmentParselet,
 	BinaryLogicalOperatorParselet,
@@ -18,6 +17,7 @@ import {
 	PrimitiveParselet,
 	TernaryConditionalParselet,
 } from "src/parser/parselet";
+import { Precedence } from "src/parser/precedence";
 
 // http://journal.stuffwithstuff.com/2011/03/19/pratt-parsers-expression-parsing-made-easy/
 // https://www.craftinginterpreters.com/compiling-expressions.html
