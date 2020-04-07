@@ -24,7 +24,7 @@
 	"dependencies": {},
 	"devDependencies": {
 		"@types/jest": "^24.9.1",
-		"@types/node": "^10.17.16",
+		"@types/node": "^10.17.18",
 		"jest": "^24.9.0",
 		"jest-coverage-badges": "^1.1.2",
 		"prettier": "^1.19.1",
@@ -32,8 +32,8 @@
 		"ts-prune": "^0.3.0",
 		"tslint": "^5.20.1",
 		"tslint-config-prettier": "^1.18.0",
-		"tslint-plugin-prettier": "^2.1.0",
-		"typescript": "^3.7.5",
+		"tslint-plugin-prettier": "^2.3.0",
+		"typescript": "^3.8.3",
 		"typescript-tslint-plugin": "^0.5.5"
 	}
 }
