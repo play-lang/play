@@ -2,10 +2,10 @@ import { AvlTree } from "src/common/avl-tree";
 import { Context } from "src/language/context/context";
 import { OpCode } from "src/language/op-code";
 import { ObjectCode } from "src/language/program";
-import { RuntimeError } from "src/vm/runtime-error";
-import { RuntimeType } from "src/vm/runtime-type";
-import { RuntimeValue } from "src/vm/runtime-value";
+import { VMError } from "src/vm/vm-error";
 import { VMStatus } from "src/vm/vm-status";
+import { VMType } from "src/vm/vm-type";
+import { VMValue } from "src/vm/vm-value";
 
 export class Disassembler {
 	/**
@@ -49,7 +49,7 @@ export class Disassembler {
 	 * Disassembles the specified constant pool
 	 * @param constantPool The constant pool to disassemble
 	 */
-	public disassembleConstantPool(constantPool: RuntimeValue[]): string {
+	public disassembleConstantPool(constantPool: VMValue[]): string {
 		let out: string = "";
 		let dp: number = 0;
 		while (dp < constantPool.length) {
@@ -68,7 +68,7 @@ export class Disassembler {
 	public disassembleContext(
 		context: Context,
 		bytecode: number[],
-		constantPool: RuntimeValue[],
+		constantPool: VMValue[],
 		contextTree: AvlTree<number, Context>,
 		startOffset: number,
 		contextLabels: Map<Context, Map<number, string>>
@@ -96,7 +96,7 @@ export class Disassembler {
 	public disassembleBytecode(
 		bytecode: number[],
 		length: number,
-		constantPool: RuntimeValue[],
+		constantPool: VMValue[],
 		contextTree: AvlTree<number, Context>,
 		startOffset: number, // bytecode start offset, if any
 		contextLabels: Map<Context, Map<number, string>>
@@ -126,7 +126,7 @@ export class Disassembler {
 			switch (op) {
 				// Handle invalid instructions
 				default: {
-					throw new RuntimeError(
+					throw new VMError(
 						VMStatus.InvalidInstruction,
 						"Invalid instruction encountered: " +
 							op +
@@ -392,7 +392,7 @@ export class Disassembler {
 		op: OpCode,
 		ip: number,
 		index: number,
-		constantPool: RuntimeValue[]
+		constantPool: VMValue[]
 	): string {
 		return (
 			"\t" +
@@ -424,8 +424,8 @@ export class Disassembler {
 	}
 
 	/** Describe a runtime value */
-	private value(value: RuntimeValue): string {
-		return RuntimeType[value.type].toLowerCase() + "\t" + value.value + "\n";
+	private value(value: VMValue): string {
+		return VMType[value.type].toLowerCase() + "\t" + value.value + "\n";
 	}
 
 	/**

@@ -4,18 +4,11 @@ import { ExecutableProgram } from "src/language/program";
 import { Frame } from "src/vm/frame";
 import { CellDataType } from "src/vm/gc/cell-data";
 import { GarbageCollector } from "src/vm/gc/garbage-collector";
-import { RuntimeError } from "src/vm/runtime-error";
-import { RuntimeType } from "src/vm/runtime-type";
-import {
-	Blank,
-	False,
-	Nil,
-	RuntimeValue,
-	True,
-	Zero,
-} from "src/vm/runtime-value";
+import { VMError } from "src/vm/vm-error";
 import { VMResult } from "src/vm/vm-result";
 import { VMStatus } from "src/vm/vm-status";
+import { VMType } from "src/vm/vm-type";
+import { Blank, False, Nil, True, VMValue, Zero } from "src/vm/vm-value";
 
 interface Performance {
 	now(): number;
@@ -66,12 +59,12 @@ export class VirtualMachine {
 	}
 
 	/** Constant pool of the program */
-	public get constantPool(): RuntimeValue[] {
+	public get constantPool(): VMValue[] {
 		return this.program.constantPool;
 	}
 
 	/** Top value in the stack */
-	public get top(): RuntimeValue {
+	public get top(): VMValue {
 		return this.stack[this.stack.length - 1];
 	}
 
@@ -81,7 +74,7 @@ export class VirtualMachine {
 	}
 
 	/** Stack */
-	public readonly stack: RuntimeValue[] = [];
+	public readonly stack: VMValue[] = [];
 	/** Stack frames */
 	public readonly frames: Frame[] = [];
 	/** Garbage collector (and heap manager) */
@@ -111,7 +104,7 @@ export class VirtualMachine {
 				const instr = this.read();
 				switch (instr) {
 					default:
-						throw new RuntimeError(
+						throw new VMError(
 							VMStatus.InvalidInstruction,
 							"Invalid instruction encountered: " + instr
 						);
@@ -124,7 +117,7 @@ export class VirtualMachine {
 						this.dropTo(this.frame.basePointer);
 						if (this.frames.length === 1) {
 							if (this.stack.length > 0) {
-								throw new RuntimeError(
+								throw new VMError(
 									VMStatus.UnknownFailure,
 									"Internal error: Execution completed but stack still has values"
 								);
@@ -181,31 +174,31 @@ export class VirtualMachine {
 					case OpCode.Neg: {
 						// Negate the top value of the stack
 						const top = this.pop();
-						this.push(new RuntimeValue(top.type, -top.value));
+						this.push(new VMValue(top.type, -top.value));
 						break;
 					}
 					case OpCode.Inc: {
 						const index = this.read();
 						const rv = this.getLocal(index);
-						this.setLocal(index, new RuntimeValue(rv.type, rv.value + 1));
+						this.setLocal(index, new VMValue(rv.type, rv.value + 1));
 						break;
 					}
 					case OpCode.Dec: {
 						const index = this.read();
 						const rv = this.getLocal(index);
-						this.setLocal(index, new RuntimeValue(rv.type, rv.value - 1));
+						this.setLocal(index, new VMValue(rv.type, rv.value - 1));
 						break;
 					}
 					case OpCode.IncGlobal: {
 						const index = this.read();
 						const rv = this.get(index);
-						this.set(index, new RuntimeValue(rv.type, rv.value + 1));
+						this.set(index, new VMValue(rv.type, rv.value + 1));
 						break;
 					}
 					case OpCode.DecGlobal: {
 						const index = this.read();
 						const rv = this.get(index);
-						this.set(index, new RuntimeValue(rv.type, rv.value - 1));
+						this.set(index, new VMValue(rv.type, rv.value - 1));
 						break;
 					}
 					case OpCode.IncHeap: {
@@ -219,37 +212,37 @@ export class VirtualMachine {
 					case OpCode.Add: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(new RuntimeValue(rhs.type, lhs.value + rhs.value));
+						this.push(new VMValue(rhs.type, lhs.value + rhs.value));
 						break;
 					}
 					case OpCode.Sub: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(new RuntimeValue(rhs.type, lhs.value - rhs.value));
+						this.push(new VMValue(rhs.type, lhs.value - rhs.value));
 						break;
 					}
 					case OpCode.Mul: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(new RuntimeValue(rhs.type, lhs.value * rhs.value));
+						this.push(new VMValue(rhs.type, lhs.value * rhs.value));
 						break;
 					}
 					case OpCode.Div: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(new RuntimeValue(rhs.type, lhs.value / rhs.value));
+						this.push(new VMValue(rhs.type, lhs.value / rhs.value));
 						break;
 					}
 					case OpCode.Remain: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(new RuntimeValue(rhs.type, lhs.value % rhs.value));
+						this.push(new VMValue(rhs.type, lhs.value % rhs.value));
 						break;
 					}
 					case OpCode.Exp: {
 						const rhs = this.pop();
 						const lhs = this.pop();
-						this.push(new RuntimeValue(rhs.type, lhs.value ** rhs.value));
+						this.push(new VMValue(rhs.type, lhs.value ** rhs.value));
 						break;
 					}
 					case OpCode.Less: {
@@ -346,15 +339,15 @@ export class VirtualMachine {
 						break;
 					}
 					case OpCode.Load: {
-						this.push(new RuntimeValue(RuntimeType.Number, this.read()));
+						this.push(new VMValue(VMType.Number, this.read()));
 						break;
 					}
 					case OpCode.Tail:
 					case OpCode.Call: {
 						const numLocals = this.read();
 						const dest = this.pop();
-						if (dest.type !== RuntimeType.Number) {
-							throw new RuntimeError(
+						if (dest.type !== VMType.Number) {
+							throw new VMError(
 								VMStatus.InvalidOperands,
 								"Invalid invocation destination"
 							);
@@ -376,7 +369,7 @@ export class VirtualMachine {
 						// Look up the native function in our host environment
 						const nativeFunction = this.host.functions[nativeFunctionIndex];
 						if (!nativeFunction || nativeFunction.arity !== numLocals) {
-							throw new RuntimeError(
+							throw new VMError(
 								VMStatus.InvalidNativeFunction,
 								"Invalid native function call"
 							);
@@ -398,7 +391,7 @@ export class VirtualMachine {
 							if (!result) {
 								// Native function declares that it will always return a value
 								// but failed to do so (unlikely)
-								throw new RuntimeError(
+								throw new VMError(
 									VMStatus.NativeFunctionError,
 									"Native function failed to return a value"
 								);
@@ -415,10 +408,7 @@ export class VirtualMachine {
 						const numItems = this.read();
 						const list = this.stack.slice(this.stack.length - numItems);
 						if (list.length < numItems) {
-							throw new RuntimeError(
-								VMStatus.StackUnderflow,
-								"Stack Underflow"
-							);
+							throw new VMError(VMStatus.StackUnderflow, "Stack Underflow");
 						}
 						// Drop the items off the stack that have been turned into a list
 						this.dropTo(this.stack.length - numItems);
@@ -430,7 +420,7 @@ export class VirtualMachine {
 					case OpCode.MakeMap: {
 						const numItems = this.read();
 						// Must be divisible by 2 since we expect key/value pairs
-						const map = new Map<string, RuntimeValue>();
+						const map = new Map<string, VMValue>();
 						// Walk through the key/value pairs on the stack two at a time
 						// and construct a map
 						for (
@@ -441,10 +431,7 @@ export class VirtualMachine {
 							const key = this.stack[i];
 							const value = this.stack[i + 1];
 							if (typeof key.value !== "string") {
-								throw new RuntimeError(
-									VMStatus.InvalidMapKey,
-									"Invalid map key"
-								);
+								throw new VMError(VMStatus.InvalidMapKey, "Invalid map key");
 							}
 							map.set(key.value as string, value);
 						}
@@ -465,7 +452,7 @@ export class VirtualMachine {
 							if (value.isPointer) this.gc.read(value.value as number);
 							this.stack.push(value.copy());
 						} else {
-							throw new RuntimeError(
+							throw new VMError(
 								VMStatus.InvalidIndex,
 								"Invalid index " + index.description
 							);
@@ -493,7 +480,7 @@ export class VirtualMachine {
 			);
 		} catch (e) {
 			const code: VMStatus =
-				e instanceof RuntimeError ? e.code : VMStatus.UnknownFailure;
+				e instanceof VMError ? e.code : VMStatus.UnknownFailure;
 			return new VMResult(
 				code,
 				this.top || Nil,
@@ -512,16 +499,16 @@ export class VirtualMachine {
 	 * Read the next value from the code and use it as an offset into the
 	 * context data to return context data
 	 */
-	private constant(index: number): RuntimeValue {
+	private constant(index: number): VMValue {
 		const data = this.constantPool[index];
-		return new RuntimeValue(data.type, data.value);
+		return new VMValue(data.type, data.value);
 	}
 
 	/** Pop an item from the stack and return it if possible */
-	private pop(): RuntimeValue {
+	private pop(): VMValue {
 		const top = this.stack.pop();
 		if (!top) {
-			throw new RuntimeError(VMStatus.StackUnderflow, "Stack underflow");
+			throw new VMError(VMStatus.StackUnderflow, "Stack underflow");
 		}
 		return top;
 	}
@@ -532,7 +519,7 @@ export class VirtualMachine {
 	 */
 	private drop(numItems: number): void {
 		if (this.stack.length < numItems) {
-			throw new RuntimeError(
+			throw new VMError(
 				VMStatus.StackUnderflow,
 				"Stack only has " +
 					this.stack.length +
@@ -552,7 +539,7 @@ export class VirtualMachine {
 	 */
 	private dropTo(length: number): void {
 		if (length > this.stack.length) {
-			throw new RuntimeError(
+			throw new VMError(
 				VMStatus.StackUnderflow,
 				"Stack only has " +
 					this.stack.length +
@@ -566,41 +553,41 @@ export class VirtualMachine {
 	}
 
 	/** Push a value to the stack */
-	private push(value: RuntimeValue): void {
+	private push(value: VMValue): void {
 		this.stack.push(value);
 	}
 
 	/** Get a shallow copy of a value from the stack via an absolute index */
-	private get(index: number): RuntimeValue {
+	private get(index: number): VMValue {
 		const rv = this.stack[index];
-		return new RuntimeValue(rv.type, rv.value);
+		return new VMValue(rv.type, rv.value);
 	}
 
 	/** Get a shallow copy of a value from the stack via a relative index */
-	private getLocal(index: number): RuntimeValue {
+	private getLocal(index: number): VMValue {
 		return this.get(this.frame.basePointer + index);
 	}
 
 	/** Set a specified absolute stack index to a copy of the specified value */
-	private set(index: number, rv: RuntimeValue): void {
-		this.stack[index] = new RuntimeValue(rv.type, rv.value);
+	private set(index: number, rv: VMValue): void {
+		this.stack[index] = new VMValue(rv.type, rv.value);
 	}
 
 	/** Set a specified relative stack index to a copy of the specified value */
-	private setLocal(index: number, rv: RuntimeValue): void {
+	private setLocal(index: number, rv: VMValue): void {
 		return this.set(index + this.frame.basePointer, rv);
 	}
 
 	/** Returns true if the specified runtime value evaluates to true */
-	private isTruthy(value: RuntimeValue): boolean {
+	private isTruthy(value: VMValue): boolean {
 		switch (value.type) {
-			case RuntimeType.Boolean:
+			case VMType.Boolean:
 				return value.value === true;
-			case RuntimeType.Number:
+			case VMType.Number:
 				return value.value !== 0 && value.value !== -0;
-			case RuntimeType.String:
+			case VMType.String:
 				return value.value !== "";
-			case RuntimeType.Pointer:
+			case VMType.Pointer:
 				return value.value !== null && value.value !== undefined;
 		}
 	}
@@ -618,8 +605,8 @@ export class VirtualMachine {
 		const value = this.gc.heap(addr, index.value);
 		// Make sure the value we're asked to mutate is actually
 		// a number
-		if (!value || value.type !== RuntimeType.Number) {
-			throw new RuntimeError(
+		if (!value || value.type !== VMType.Number) {
+			throw new VMError(
 				VMStatus.InvalidIndex,
 				"Invalid index for " + (increment ? "increment" : "decrement")
 			);
@@ -628,22 +615,16 @@ export class VirtualMachine {
 		this.gc.update(
 			addr,
 			index.value,
-			new RuntimeValue(
-				RuntimeType.Number,
-				increment ? value.value + 1 : value.value - 1
-			)
+			new VMValue(VMType.Number, increment ? value.value + 1 : value.value - 1)
 		);
 	}
 
 	/** Allocate data on the heap */
-	private alloc(value: CellDataType): RuntimeValue {
+	private alloc(value: CellDataType): VMValue {
 		try {
-			return new RuntimeValue(
-				RuntimeType.Pointer,
-				this.gc.alloc(value, this.stack)
-			);
+			return new VMValue(VMType.Pointer, this.gc.alloc(value, this.stack));
 		} catch (e) {
-			throw new RuntimeError(
+			throw new VMError(
 				VMStatus.AllocationFailed,
 				"Failed to allocate data on the heap"
 			);
@@ -651,9 +632,9 @@ export class VirtualMachine {
 	}
 
 	/** Throw an error if the specified runtime value is not a pointer */
-	private validatePointer(rv: RuntimeValue): void {
+	private validatePointer(rv: VMValue): void {
 		if (!rv.isPointer) {
-			throw new RuntimeError(
+			throw new VMError(
 				VMStatus.InvalidIndexOperation,
 				"Invalid index operation into non-lhs type " + rv.description
 			);

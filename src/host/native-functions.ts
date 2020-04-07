@@ -1,6 +1,6 @@
-import { RuntimeType } from "src/vm/runtime-type";
-import { Nil, RuntimeValue } from "src/vm/runtime-value";
 import { VirtualMachine } from "src/vm/virtual-machine";
+import { VMType } from "src/vm/vm-type";
+import { Nil, VMValue } from "src/vm/vm-value";
 
 export abstract class NativeFunction {
 	constructor(
@@ -27,9 +27,9 @@ export abstract class NativeFunction {
 	 */
 	public abstract execute(
 		vm: VirtualMachine,
-		args: RuntimeValue[],
-		receiver?: RuntimeValue
-	): RuntimeValue | undefined;
+		args: VMValue[],
+		receiver?: VMValue
+	): VMValue | undefined;
 }
 
 export class ListPush extends NativeFunction {
@@ -38,18 +38,15 @@ export class ListPush extends NativeFunction {
 	}
 	public execute(
 		vm: VirtualMachine,
-		args: RuntimeValue[],
-		context?: RuntimeValue
-	): RuntimeValue | undefined {
+		args: VMValue[],
+		context?: VMValue
+	): VMValue | undefined {
 		// Trigger gc read barrier
 		const addr = vm.gc.read(context!.value as number);
 		// Push the item into the list
-		(vm.gc.toSpace[addr].values.data as RuntimeValue[]).push(args[0]);
+		(vm.gc.toSpace[addr].values.data as VMValue[]).push(args[0]);
 		// Return the new length
-		return new RuntimeValue(
-			RuntimeType.Number,
-			vm.gc.toSpace[addr].values.length
-		);
+		return new VMValue(VMType.Number, vm.gc.toSpace[addr].values.length);
 	}
 }
 
@@ -59,13 +56,13 @@ export class ListPop extends NativeFunction {
 	}
 	public execute(
 		vm: VirtualMachine,
-		args: RuntimeValue[],
-		context?: RuntimeValue
-	): RuntimeValue | undefined {
+		args: VMValue[],
+		context?: VMValue
+	): VMValue | undefined {
 		// Trigger gc read barrier
 		const addr = vm.gc.read(context!.value as number);
 		// Pop item and return it
-		return (vm.gc.toSpace[addr].values.data as RuntimeValue[]).pop() || Nil;
+		return (vm.gc.toSpace[addr].values.data as VMValue[]).pop() || Nil;
 	}
 }
 
@@ -75,18 +72,15 @@ export class ListUnshift extends NativeFunction {
 	}
 	public execute(
 		vm: VirtualMachine,
-		args: RuntimeValue[],
-		context?: RuntimeValue
-	): RuntimeValue | undefined {
+		args: VMValue[],
+		context?: VMValue
+	): VMValue | undefined {
 		// Trigger gc read barrier
 		const addr = vm.gc.read(context!.value as number);
 		// Unshift the item into the list
-		(vm.gc.toSpace[addr].values.data as RuntimeValue[]).unshift(args[0]);
+		(vm.gc.toSpace[addr].values.data as VMValue[]).unshift(args[0]);
 		// Return the new length
-		return new RuntimeValue(
-			RuntimeType.Number,
-			vm.gc.toSpace[addr].values.length
-		);
+		return new VMValue(VMType.Number, vm.gc.toSpace[addr].values.length);
 	}
 }
 
@@ -96,13 +90,13 @@ export class ListShift extends NativeFunction {
 	}
 	public execute(
 		vm: VirtualMachine,
-		args: RuntimeValue[],
-		context?: RuntimeValue
-	): RuntimeValue | undefined {
+		args: VMValue[],
+		context?: VMValue
+	): VMValue | undefined {
 		// Trigger gc read barrier
 		const addr = vm.gc.read(context!.value as number);
 		// Shift item and return it
-		return (vm.gc.toSpace[addr].values.data as RuntimeValue[]).shift() || Nil;
+		return (vm.gc.toSpace[addr].values.data as VMValue[]).shift() || Nil;
 	}
 }
 

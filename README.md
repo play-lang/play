@@ -107,7 +107,7 @@ const code = `return fact(6, 1)
 const result = Play.run(code).value.value // 720
 ```
 
-The convenience method `run` returns a `VMResult` object containing a `RuntimeValue` called `value` with a `value` property containing the actual JavaScript value.
+The convenience method `run` returns a `VMResult` object containing a `VMValue` called `value` with yet another `value` property containing the actual JavaScript value.
 
 Play first scans, parses, type-checks, and compiles the code into stack-based bytecode (not optimized). A dump of the disassembled bytecode can easily be obtained with the following convenience method:
 

@@ -37,8 +37,8 @@ import { ReturnStatementNode } from "src/parser/nodes/return-statement-node";
 import { TernaryConditionalNode } from "src/parser/nodes/ternary-conditional-node";
 import { VariableDeclarationNode } from "src/parser/nodes/variable-declaration-node";
 import { WhileStatementNode } from "src/parser/nodes/while-statement-node";
-import { RuntimeType } from "src/vm/runtime-type";
-import { RuntimeValue } from "src/vm/runtime-value";
+import { VMType } from "src/vm/vm-type";
+import { VMValue } from "src/vm/vm-value";
 
 export class CompilerOptions {
 	constructor(
@@ -76,7 +76,7 @@ export class Compiler implements Visitor {
 	 */
 	public readonly allContexts: Context[] = [];
 	/** Constant pool preceding the code */
-	public readonly constantPool: RuntimeValue[] = [];
+	public readonly constantPool: VMValue[] = [];
 	/**
 	 * Maps constant values to their index in the constant pool to prevent duplicate entries
 	 */
@@ -568,11 +568,11 @@ export class Compiler implements Visitor {
 
 	public visitPrimitiveExpressionNode(node: PrimitiveExpressionNode): void {
 		let value: any;
-		let type: RuntimeType = RuntimeType.Pointer;
+		let type: VMType = VMType.Pointer;
 		switch (node.primitiveType) {
 			case TokenType.String:
 				value = node.primitiveValue;
-				type = RuntimeType.String;
+				type = VMType.String;
 				break;
 			case TokenType.Boolean:
 				value = node.primitiveValue === "true" ? true : false;
@@ -582,14 +582,14 @@ export class Compiler implements Visitor {
 				return;
 			case TokenType.Number:
 				value = Number.parseFloat(node.primitiveValue);
-				type = RuntimeType.Number;
+				type = VMType.Number;
 				break;
 			case TokenType.Nil:
 				this.context.emit(OpCode.Nil);
 				return;
 		}
 		// Add the literal to the data section of the current context
-		const index = this.constant(new RuntimeValue(type, value));
+		const index = this.constant(new VMValue(type, value));
 		// Have the machine push the value of the data at the specified data index
 		// to the top of the stack when this instruction is encountered
 		this.context.emit(OpCode.Const, index);
@@ -689,7 +689,7 @@ export class Compiler implements Visitor {
 	 * @returns The index to the constant in the constant pool
 	 * @param value The constant's runtime value
 	 */
-	private constant(value: RuntimeValue): number {
+	private constant(value: VMValue): number {
 		if (this.constants.has(value.value)) {
 			return this.constants.get(value.value)!;
 		} else {

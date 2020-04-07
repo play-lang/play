@@ -1,13 +1,10 @@
-import { RuntimeValue } from "src/vm/runtime-value";
+import { VMValue } from "src/vm/vm-value";
 
 /** Underlying type represented by the cell data */
-export type CellDataType =
-	| RuntimeValue[]
-	| Map<string, RuntimeValue>
-	| Set<RuntimeValue>;
+export type CellDataType = VMValue[] | Map<string, VMValue> | Set<VMValue>;
 
 /** Type of key used by the underlying data type */
-export type CellDataTypeKey = string | number | RuntimeValue;
+export type CellDataTypeKey = string | number | VMValue;
 
 /**
  * Represents data that is stored in a heap cell
@@ -27,21 +24,21 @@ export class CellData {
 		// Iterate through the underlying array or map accordingly
 		switch (true) {
 			case Array.isArray(this.data): {
-				const data = this.data as RuntimeValue[];
+				const data = this.data as VMValue[];
 				for (let i = 0; i < data.length; i++) {
 					yield i;
 				}
 				break;
 			}
 			case this.data instanceof Map: {
-				const data = this.data as Map<string, RuntimeValue>;
+				const data = this.data as Map<string, VMValue>;
 				for (const key of data.keys()) {
 					yield key;
 				}
 				break;
 			}
 			case this.data instanceof Set: {
-				const data = this.data as Set<RuntimeValue>;
+				const data = this.data as Set<VMValue>;
 				for (const value of Array.from(data.keys())) {
 					yield value;
 				}
@@ -55,36 +52,36 @@ export class CellData {
 	 * This should be called when the garbage collector needs to update a pointer
 	 * contained within the cell data
 	 *
-	 * Note: for sets, the key is simply the old RuntimeValue. It will be removed
+	 * Note: for sets, the key is simply the old VMValue. It will be removed
 	 * from the set and the new value will be added instead to perform an "update"
 	 */
-	public update(key: CellDataTypeKey, value: RuntimeValue): void {
+	public update(key: CellDataTypeKey, value: VMValue): void {
 		switch (true) {
 			case Array.isArray(this.data):
-				(this.data as RuntimeValue[])[key as number] = value;
+				(this.data as VMValue[])[key as number] = value;
 				break;
 			case this.data instanceof Map:
-				(this.data as Map<string, RuntimeValue>).set(key as string, value);
+				(this.data as Map<string, VMValue>).set(key as string, value);
 				break;
 			case this.data instanceof Set: {
 				// Remove the old value and add the new value to perform an "update"
-				const set = this.data as Set<RuntimeValue>;
-				set.delete(key as RuntimeValue);
+				const set = this.data as Set<VMValue>;
+				set.delete(key as VMValue);
 				set.add(value);
 			}
 		}
 	}
 
 	/** Get a value from the underlying array, map, or set */
-	public get(key: CellDataTypeKey): RuntimeValue | undefined {
+	public get(key: CellDataTypeKey): VMValue | undefined {
 		switch (true) {
 			case Array.isArray(this.data):
-				return (this.data as RuntimeValue[])[key as number];
+				return (this.data as VMValue[])[key as number];
 			case this.data instanceof Map:
-				return (this.data as Map<string, RuntimeValue>).get(key as string);
+				return (this.data as Map<string, VMValue>).get(key as string);
 			case this.data instanceof Set: {
-				const set = this.data as Set<RuntimeValue>;
-				return set.has(key as RuntimeValue) ? (key as RuntimeValue) : undefined;
+				const set = this.data as Set<VMValue>;
+				return set.has(key as VMValue) ? (key as VMValue) : undefined;
 			}
 		}
 	}
@@ -95,11 +92,11 @@ export class CellData {
 			/* istanbul ignore next */
 			default:
 			case Array.isArray(this.data):
-				return (this.data as RuntimeValue[]).length;
+				return (this.data as VMValue[]).length;
 			case this.data instanceof Map:
-				return (this.data as Map<string, RuntimeValue>).size;
+				return (this.data as Map<string, VMValue>).size;
 			case this.data instanceof Set:
-				return (this.data as Set<RuntimeValue>).size;
+				return (this.data as Set<VMValue>).size;
 		}
 	}
 }
