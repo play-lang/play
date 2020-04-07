@@ -1,4 +1,5 @@
 import { Describable } from "src/common/describable";
+import { TokenLike } from "src/language/token/token";
 
 /**
  * Exception class
@@ -38,5 +39,16 @@ export class Exception extends Error implements Describable {
 	// MARK: Describable
 	public get description(): string {
 		return this.message;
+	}
+}
+
+export class SemanticException extends Exception {
+	constructor(
+		/** Token where the error occurred */
+		public readonly token: TokenLike,
+		/** Semantic error message */
+		public readonly message: string
+	) {
+		super(message);
 	}
 }
