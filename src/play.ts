@@ -1,8 +1,8 @@
+import { SemanticException } from "src/common/exception";
 import { CompiledProgram } from "src/compiler/compiled-program";
 import { Compiler } from "src/compiler/compiler";
 import { Disassembler } from "src/disassembler/disassembler";
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
-import { SemanticError } from "src/language/semantic-error";
 import { SourceFile } from "src/language/source-file";
 import { TokenLike } from "src/language/token/token";
 import { Lexer } from "src/lexer/lexer";
@@ -51,7 +51,7 @@ export class Play {
 	 * Check the specified code string for errors
 	 * @param code The code to check
 	 */
-	public static check(code: string): SemanticError[] {
+	public static check(code: string): SemanticException[] {
 		const ast = Play.parse(code);
 		const typeChecker = new TypeChecker(ast);
 		typeChecker.check();

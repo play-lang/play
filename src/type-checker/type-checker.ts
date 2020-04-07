@@ -1,6 +1,6 @@
+import { SemanticException } from "src/common/exception";
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
 import { Node } from "src/language/node";
-import { SemanticError } from "src/language/semantic-error";
 import { TokenLike } from "src/language/token/token";
 import { TokenType } from "src/language/token/token-type";
 import { Environment } from "src/language/types/environment";
@@ -49,7 +49,7 @@ export class TypeChecker {
 	}
 
 	/* Type checker errors encountered while checking types */
-	public errors: SemanticError[] = [];
+	public errors: SemanticException[] = [];
 
 	constructor(
 		/** Abstract syntax tree to validate */
@@ -120,7 +120,7 @@ export class TypeChecker {
 		const pretty = expectedType.description;
 		const prefix = this.errorPrefix(token);
 		const hint = `${prefix} Invalid assignment—expected a variable reference to ${pretty}`;
-		const error = new SemanticError(token, hint);
+		const error = new SemanticException(token, hint);
 		this.errors.push(error);
 	}
 
@@ -143,7 +143,7 @@ export class TypeChecker {
 	 * report semantic errors other than type errors
 	 * @param error The error to report
 	 */
-	private report(error: SemanticError): void {
+	private report(error: SemanticException): void {
 		this.errors.push(error);
 	}
 
@@ -277,7 +277,7 @@ export class TypeChecker {
 			const scope = this.env.symbolTable.scope.findScope(node.name);
 			if (!scope) {
 				this.report(
-					new SemanticError(
+					new SemanticException(
 						node.token,
 						"Variable " + node.name + " referenced before declaration"
 					)
@@ -472,7 +472,9 @@ export class TypeChecker {
 	private checkVariableDeclaration(node: VariableDeclarationNode): void {
 		const scope = this.env.symbolTable.scope.findScope(node.variableName);
 		if (!scope) {
-			this.report(new SemanticError(node.token, "Variable not found in scope"));
+			this.report(
+				new SemanticException(node.token, "Variable not found in scope")
+			);
 			return;
 		}
 		// Visit the assignment expression that might follow a variable declaration:
