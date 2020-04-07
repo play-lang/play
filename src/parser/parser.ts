@@ -1,8 +1,8 @@
 import { Host } from "src/host/host";
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
-import { FunctionInfo } from "src/language/function-info";
+import { FunctionInfo } from "src/language/info/function-info";
+import { PropertyInfo } from "src/language/info/property-info";
 import { Expression, Statement } from "src/language/node";
-import { PropertyInfo } from "src/language/property-info";
 import { SourceFile } from "src/language/source-file";
 import { Scope } from "src/language/symbol-table/scope";
 import { SymbolEntry } from "src/language/symbol-table/symbol-entry";
