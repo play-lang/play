@@ -2,7 +2,7 @@ import { CompiledProgram } from "src/compiler/compiled-program";
 import { AbstractSyntaxTree } from "src/language/abstract-syntax-tree";
 import { Context } from "src/language/context/context";
 import { ContextLabels } from "src/language/context/context-labels";
-import { FunctionInfo } from "src/language/function-info";
+import { FunctionInfo } from "src/language/info/function-info";
 import { Expression, Node } from "src/language/node";
 import { OpCode } from "src/language/op-code";
 import { Scope } from "src/language/symbol-table/scope";

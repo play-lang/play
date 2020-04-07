@@ -1,5 +1,5 @@
 import { Host } from "src/host/host";
-import { FunctionInfo } from "src/language/function-info";
+import { FunctionInfo } from "src/language/info/function-info";
 import { SymbolTable } from "src/language/symbol-table/symbol-table";
 import { ModelType, ProtocolType } from "src/language/types/type-system";
 

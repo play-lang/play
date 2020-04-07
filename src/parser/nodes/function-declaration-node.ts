@@ -1,4 +1,4 @@
-import { FunctionInfo } from "src/language/function-info";
+import { FunctionInfo } from "src/language/info/function-info";
 import { NodeState, Statement } from "src/language/node";
 import { TokenLike } from "src/language/token/token";
 import { Environment } from "src/language/types/environment";

@@ -1,5 +1,5 @@
 import { LinkedHashMap } from "../src/common/linked-hash-map";
-import { FunctionInfo } from "../src/language/function-info";
+import { FunctionInfo } from "../src/language/info/function-info";
 import {
 	allowAssignment,
 	Any,
