@@ -1,7 +1,7 @@
 import { Context } from "src/language/context/context";
 import { ContextLabels } from "src/language/context/context-labels";
 import { ExecutableProgram, ObjectCode } from "src/language/program";
-import { RuntimeValue } from "src/vm/runtime-value";
+import { VMValue } from "src/vm/vm-value";
 
 /**
  * Linker output creates a LinkedProgram, which is given to the Patcher
@@ -10,7 +10,7 @@ import { RuntimeValue } from "src/vm/runtime-value";
 export class LinkedProgram implements ObjectCode, ExecutableProgram {
 	constructor(
 		/** Constant pool preceding the code */
-		public readonly constantPool: RuntimeValue[],
+		public readonly constantPool: VMValue[],
 		/** Bytecode instructions, packed together */
 		public readonly bytecode: number[],
 		/**

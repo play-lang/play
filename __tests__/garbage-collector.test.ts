@@ -1,5 +1,5 @@
-import { RuntimeType } from "src/vm/runtime-type";
-import { RuntimeValue } from "src/vm/runtime-value";
+import { VMType } from "src/vm/vm-type";
+import { VMValue } from "src/vm/vm-value";
 import { GarbageCollector } from "../src/vm/gc/garbage-collector";
 
 describe("garbage collector", () => {
@@ -176,18 +176,18 @@ describe("garbage collector", () => {
 	});
 });
 
-function ptr(addr: number): RuntimeValue {
-	return new RuntimeValue(RuntimeType.Pointer, addr);
+function ptr(addr: number): VMValue {
+	return new VMValue(VMType.Pointer, addr);
 }
 
-function ptrs(...addresses: number[]): RuntimeValue[] {
+function ptrs(...addresses: number[]): VMValue[] {
 	return addresses.map(addr => ptr(addr));
 }
 
-function num(value: number): RuntimeValue {
-	return new RuntimeValue(RuntimeType.Number, value);
+function num(value: number): VMValue {
+	return new VMValue(VMType.Number, value);
 }
 
-function nums(...values: number[]): RuntimeValue[] {
+function nums(...values: number[]): VMValue[] {
 	return values.map(value => num(value));
 }

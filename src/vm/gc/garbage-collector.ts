@@ -1,7 +1,7 @@
 import { Exception } from "src/common/exception";
 import { CellData, CellDataType, CellDataTypeKey } from "src/vm/gc/cell-data";
-import { RuntimeType } from "src/vm/runtime-type";
-import { RuntimeValue } from "src/vm/runtime-value";
+import { VMType } from "src/vm/vm-type";
+import { VMValue } from "src/vm/vm-value";
 
 /** Represents a single heap cell containing data */
 export class Cell {
@@ -117,7 +117,7 @@ export class GarbageCollector {
 	}
 
 	/** Read a runtime value from the heap */
-	public heap(addr: number, index: CellDataTypeKey): RuntimeValue | undefined {
+	public heap(addr: number, index: CellDataTypeKey): VMValue | undefined {
 		return this.toSpace[addr].values.get(index);
 	}
 
@@ -128,11 +128,7 @@ export class GarbageCollector {
 	 * For maps, `index` represents the string key to update
 	 * For sets, `index` represents the old value to remove from the set
 	 */
-	public update(
-		addr: number,
-		index: CellDataTypeKey,
-		value: RuntimeValue
-	): void {
+	public update(addr: number, index: CellDataTypeKey, value: VMValue): void {
 		this.toSpace[addr].values.update(index, value);
 	}
 
@@ -145,7 +141,7 @@ export class GarbageCollector {
 	 * a map)
 	 * @param roots Current mutator roots, in case garbage collection is initiated
 	 */
-	public alloc(values: CellDataType, roots: RuntimeValue[]): number {
+	public alloc(values: CellDataType, roots: VMValue[]): number {
 		if (this.outOfMemory) {
 			/* istanbul ignore next */
 			if (this.scanPtr < this.evacPtr) {
@@ -203,7 +199,7 @@ export class GarbageCollector {
 	 * @param values Values to insert
 	 * @param offset Index at which to insert the new value(s)
 	 */
-	public insert(addr: number, values: RuntimeValue[], offset?: number): void {
+	public insert(addr: number, values: VMValue[], offset?: number): void {
 		if (values.length < 1) return;
 		const cell = this.toSpace[addr];
 		if (
@@ -245,7 +241,7 @@ export class GarbageCollector {
 	 * @param key Key to set in the cell's values
 	 * @param value The value to set in the cell's values
 	 */
-	public set(addr: number, key: string, value: RuntimeValue): void {
+	public set(addr: number, key: string, value: VMValue): void {
 		const cell = this.toSpace[addr];
 		if (!cell) throw new GCError(GCErrors.InvalidPointer);
 		if (!(cell.values.data instanceof Map)) {
@@ -255,7 +251,7 @@ export class GarbageCollector {
 	}
 
 	/** Collect all garbage, stop-the-world style */
-	public collect(roots: RuntimeValue[]): void {
+	public collect(roots: VMValue[]): void {
 		this.flip(roots);
 		while (this.scanPtr < this.evacPtr) {
 			this.scan();
@@ -283,8 +279,8 @@ export class GarbageCollector {
 			if (value.isPointer && typeof value.value === "number") {
 				cell.values.update(
 					v,
-					new RuntimeValue(
-						RuntimeType.Pointer,
+					new VMValue(
+						VMType.Pointer,
 						this.copy(this.fromSpace[value.value as number])
 					)
 				);
@@ -293,7 +289,7 @@ export class GarbageCollector {
 	}
 
 	/** Start garbage collection by flipping the heap semi-spaces */
-	private flip(roots: RuntimeValue[]): void {
+	private flip(roots: VMValue[]): void {
 		this.hasFlipped = true;
 		this.fromSpace = this.toSpace;
 		this.toSpace = new Array<Cell>(this.heapSize);
@@ -305,8 +301,8 @@ export class GarbageCollector {
 		// Copy and update root set
 		for (const root of roots) {
 			if (root.isPointer && typeof root.value === "number") {
-				roots[r++] = new RuntimeValue(
-					RuntimeType.Pointer,
+				roots[r++] = new VMValue(
+					VMType.Pointer,
 					this.copy(this.fromSpace[root.value as number])
 				);
 			}

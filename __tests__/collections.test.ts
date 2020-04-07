@@ -1,5 +1,5 @@
 import { Play } from "src/play";
-import { RuntimeError } from "src/vm/runtime-error";
+import { VMError } from "src/vm/vm-error";
 import { VirtualMachine } from "src/vm/virtual-machine";
 
 describe("collections", () => {
@@ -52,11 +52,11 @@ return x[0]
 		describe("increment/decrement", () => {
 			test("inc/dec bad index", () => {
 				const code = `let x = [1, 2, 3]\nx[3]++`;
-				expect(() => Play.run(code)).toThrow(RuntimeError);
+				expect(() => Play.run(code)).toThrow(VMError);
 			});
 			test("inc/dec non-numeric value", () => {
 				const code = `let x = ["a", "b", "c"]\nx[0]++`;
-				expect(() => Play.run(code)).toThrow(RuntimeError);
+				expect(() => Play.run(code)).toThrow(VMError);
 			});
 			test("inc number array value", () => {
 				const code = `let x = [1, 2, 3, 4, 5]\nx[0]++\nreturn x[0]`;
