@@ -1,7 +1,6 @@
 import { AvlTree } from "src/common/avl-tree";
 import { prepareHint } from "src/common/format-messages";
 import { SourceFile } from "src/language/source-file";
-import { stringEscapes } from "src/language/string-escapes";
 import {
 	ErrorToken,
 	Position,
@@ -16,6 +15,7 @@ import {
 	isWhitespace,
 } from "src/lexer/character-mappings";
 import { lexerTrie } from "src/lexer/lexer-trie";
+import { stringEscapes } from "src/lexer/string-escapes";
 
 export class Lexer {
 	/**

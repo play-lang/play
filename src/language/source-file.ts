@@ -1,4 +1,4 @@
-import { directory, filename } from "src/common/path-utility";
+import { PathUtil } from "src/common/path-util";
 
 /** Represents a Play language source file for use with the lexer */
 export class SourceFile {
@@ -14,13 +14,13 @@ export class SourceFile {
 	 * opposed to the full path
 	 */
 	public get name(): string {
-		return filename(this.path);
+		return PathUtil.filename(this.path);
 	}
 
 	/**
 	 * Immediate parent directory of the file
 	 */
 	public get directory(): string {
-		return directory(this.path);
+		return PathUtil.directory(this.path);
 	}
 }
