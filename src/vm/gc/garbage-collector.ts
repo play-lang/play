@@ -1,5 +1,5 @@
 import { Exception } from "src/common/exception";
-import { CellData, CellDataType, CellDataTypeKey } from "src/vm/gc/cell-data";
+import { GCData, GCDataType, GCDataTypeKey } from "src/vm/gc/gc-data";
 import { VMType } from "src/vm/vm-type";
 import { VMValue } from "src/vm/vm-value";
 
@@ -7,7 +7,7 @@ import { VMValue } from "src/vm/vm-value";
 export class Cell {
 	public constructor(
 		/** Array of values contained in this heap cell */
-		public values: CellData,
+		public values: GCData,
 		/** Forwarding address of the cell in to-space, if any */
 		public fwd?: number
 	) {}
@@ -117,7 +117,7 @@ export class GarbageCollector {
 	}
 
 	/** Read a runtime value from the heap */
-	public heap(addr: number, index: CellDataTypeKey): VMValue | undefined {
+	public heap(addr: number, index: GCDataTypeKey): VMValue | undefined {
 		return this.toSpace[addr].values.get(index);
 	}
 
@@ -128,7 +128,7 @@ export class GarbageCollector {
 	 * For maps, `index` represents the string key to update
 	 * For sets, `index` represents the old value to remove from the set
 	 */
-	public update(addr: number, index: CellDataTypeKey, value: VMValue): void {
+	public update(addr: number, index: GCDataTypeKey, value: VMValue): void {
 		this.toSpace[addr].values.update(index, value);
 	}
 
@@ -141,7 +141,7 @@ export class GarbageCollector {
 	 * a map)
 	 * @param roots Current mutator roots, in case garbage collection is initiated
 	 */
-	public alloc(values: CellDataType, roots: VMValue[]): number {
+	public alloc(values: GCDataType, roots: VMValue[]): number {
 		if (this.outOfMemory) {
 			/* istanbul ignore next */
 			if (this.scanPtr < this.evacPtr) {
@@ -162,7 +162,7 @@ export class GarbageCollector {
 			// Still out of memory after copying roots
 			throw new GCError(GCErrors.OutOfMemory);
 		}
-		this.toSpace[this.allocPtr] = new Cell(new CellData(values));
+		this.toSpace[this.allocPtr] = new Cell(new GCData(values));
 		return this.allocPtr--;
 	}
 
@@ -186,7 +186,7 @@ export class GarbageCollector {
 			throw new GCError(GCErrors.InvalidListOperation);
 		}
 		const oldLength = cell.values.length;
-		cell.values = new CellData([
+		cell.values = new GCData([
 			...cell.values.data.slice(0, offset),
 			...cell.values.data.slice(offset + numToRemove),
 		]);
@@ -213,7 +213,7 @@ export class GarbageCollector {
 			throw new GCError(GCErrors.InvalidListOperation);
 		}
 		if (typeof offset !== "number") offset = cell.values.length;
-		cell.values = new CellData([
+		cell.values = new GCData([
 			...cell.values.data.slice(0, offset),
 			...[...values],
 			...cell.values.data.slice(offset + 1),
@@ -318,7 +318,7 @@ export class GarbageCollector {
 		if (cell.hasFwd) return cell.fwd!;
 		// Create a copy of the cell without a forwarding address and put it in
 		// to-space
-		this.toSpace[this.evacPtr] = new Cell(new CellData(cell.values.data));
+		this.toSpace[this.evacPtr] = new Cell(new GCData(cell.values.data));
 		// Update the forwarding address of the old cell
 		cell.fwd = this.evacPtr++;
 		// Return the address of the cell's copy in to-space

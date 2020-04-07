@@ -2,8 +2,8 @@ import { Host } from "src/host/host";
 import { OpCode } from "src/language/op-code";
 import { ExecutableProgram } from "src/language/program";
 import { Frame } from "src/vm/frame";
-import { CellDataType } from "src/vm/gc/cell-data";
 import { GarbageCollector } from "src/vm/gc/garbage-collector";
+import { GCDataType } from "src/vm/gc/gc-data";
 import { VMError } from "src/vm/vm-error";
 import { VMResult } from "src/vm/vm-result";
 import { VMStatus } from "src/vm/vm-status";
@@ -620,7 +620,7 @@ export class VirtualMachine {
 	}
 
 	/** Allocate data on the heap */
-	private alloc(value: CellDataType): VMValue {
+	private alloc(value: GCDataType): VMValue {
 		try {
 			return new VMValue(VMType.Pointer, this.gc.alloc(value, this.stack));
 		} catch (e) {

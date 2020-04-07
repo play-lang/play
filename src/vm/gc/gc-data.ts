@@ -1,10 +1,10 @@
 import { VMValue } from "src/vm/vm-value";
 
 /** Underlying type represented by the cell data */
-export type CellDataType = VMValue[] | Map<string, VMValue> | Set<VMValue>;
+export type GCDataType = VMValue[] | Map<string, VMValue> | Set<VMValue>;
 
 /** Type of key used by the underlying data type */
-export type CellDataTypeKey = string | number | VMValue;
+export type GCDataTypeKey = string | number | VMValue;
 
 /**
  * Represents data that is stored in a heap cell
@@ -17,10 +17,10 @@ export type CellDataTypeKey = string | number | VMValue;
  * This is a simple abstraction (using ES-6 JavaScript magic) that makes the
  * code for the garbage collector a little bit cleaner and easier to maintain
  */
-export class CellData {
-	constructor(public readonly data: CellDataType) {}
+export class GCData {
+	constructor(public readonly data: GCDataType) {}
 
-	public *keys(): IterableIterator<CellDataTypeKey> {
+	public *keys(): IterableIterator<GCDataTypeKey> {
 		// Iterate through the underlying array or map accordingly
 		switch (true) {
 			case Array.isArray(this.data): {
@@ -55,7 +55,7 @@ export class CellData {
 	 * Note: for sets, the key is simply the old VMValue. It will be removed
 	 * from the set and the new value will be added instead to perform an "update"
 	 */
-	public update(key: CellDataTypeKey, value: VMValue): void {
+	public update(key: GCDataTypeKey, value: VMValue): void {
 		switch (true) {
 			case Array.isArray(this.data):
 				(this.data as VMValue[])[key as number] = value;
@@ -73,7 +73,7 @@ export class CellData {
 	}
 
 	/** Get a value from the underlying array, map, or set */
-	public get(key: CellDataTypeKey): VMValue | undefined {
+	public get(key: GCDataTypeKey): VMValue | undefined {
 		switch (true) {
 			case Array.isArray(this.data):
 				return (this.data as VMValue[])[key as number];
