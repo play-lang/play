@@ -207,7 +207,7 @@ The project is designed to be edited in [VSCode](https://code.visualstudio.com/)
 Clone the project:
 
 ```sh
-git clone git@github.com:josephessin/play.git
+git clone git@github.com:play-lang/play.git
 ```
 
 Install development dependencies:
