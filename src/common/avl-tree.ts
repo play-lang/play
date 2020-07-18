@@ -243,6 +243,33 @@ export class AvlTree<K, V> {
 	}
 
 	/**
+	 * Find the next key greater than the specified key, or null if none exists
+	 *
+	 * https://stackoverflow.com/a/48480595
+	 * @param key The key just below the key expecting to be found
+	 */
+	public findUpperBound(key: K): K | null {
+		if (this._root === null) {
+			return null;
+		}
+		let root: Node<K, V> | null = this._root;
+		let bound: K | undefined;
+		while (root) {
+			// -1 if a < b
+			// 0 if a === b
+			// 1 if a > b
+			const result = this._compare(key, root.key);
+			if (result >= 0) {
+				root = root.right;
+			} else {
+				bound = root.key;
+				root = root.left;
+			}
+		}
+		return typeof bound === "undefined" ? null : bound;
+	}
+
+	/**
 	 * Compares two keys with each other.
 	 * @param a The first key to compare.
 	 * @param b The second key to compare.

@@ -44,6 +44,25 @@ describe("avl-tree", () => {
 		expect(tree.findLowerBound(6)).toBe(0);
 	});
 
+	test("should find upper bound", () => {
+		const tree = new TestAvlTree();
+		expect(tree.findUpperBound(17)).toBe(null);
+		tree.insert(50);
+		tree.insert(5);
+		tree.insert(35);
+		tree.insert(10);
+		tree.insert(20);
+		tree.insert(15);
+
+		expect(tree.findUpperBound(0)).toBe(5);
+		expect(tree.findUpperBound(4)).toBe(5);
+		expect(tree.findUpperBound(5)).toBe(10);
+		expect(tree.findUpperBound(8)).toBe(10);
+		expect(tree.findUpperBound(10)).toBe(15);
+		expect(tree.findUpperBound(45)).toBe(50);
+		expect(tree.findUpperBound(55)).toBe(null);
+	});
+
 	/** Tests created by AVL Tree author */
 	test("should return false if the tree is empty", () => {
 		const tree = new TestAvlTree();
